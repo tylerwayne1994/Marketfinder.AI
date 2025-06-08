@@ -1,0 +1,1387 @@
+location_name,location_type,state,month,vacancy_rate
+"Ada County, ID",County,Idaho,2025-01-01,0.0658179587203551
+"Ada County, ID",County,Idaho,2025-02-01,0.0672373369803201
+"Ada County, ID",County,Idaho,2025-03-01,0.0711134753593823
+"Adams County, CO",County,Colorado,2025-01-01,0.0869912485815092
+"Adams County, CO",County,Colorado,2025-02-01,0.0891046932288777
+"Adams County, CO",County,Colorado,2025-03-01,0.0913657444376059
+Alabama,State,Alabama,2025-01-01,0.0957167650202608
+Alabama,State,Alabama,2025-02-01,0.0967277460316484
+Alabama,State,Alabama,2025-03-01,0.0978896356815263
+"Alameda County, CA",County,California,2025-01-01,0.0599830341179361
+"Alameda County, CA",County,California,2025-02-01,0.0582509733275513
+"Alameda County, CA",County,California,2025-03-01,0.0573079580268347
+"Albany-Schenectady-Troy, NY",Metro,New York,2025-01-01,0.0494455347415113
+"Albany-Schenectady-Troy, NY",Metro,New York,2025-02-01,0.0486256348060356
+"Albany-Schenectady-Troy, NY",Metro,New York,2025-03-01,0.0462117266340521
+"Albuquerque, NM",Metro,New Mexico,2025-01-01,0.0600431644903376
+"Albuquerque, NM",City,New Mexico,2025-01-01,0.0599705777349047
+"Albuquerque, NM",Metro,New Mexico,2025-02-01,0.0633988650246012
+"Albuquerque, NM",City,New Mexico,2025-02-01,0.0634608494620564
+"Albuquerque, NM",Metro,New Mexico,2025-03-01,0.0663805099749987
+"Albuquerque, NM",City,New Mexico,2025-03-01,0.0665256310921998
+"Alexandria, VA",City,Virginia,2025-01-01,0.0570357972654005
+"Alexandria, VA",City,Virginia,2025-02-01,0.0565822385856483
+"Alexandria, VA",City,Virginia,2025-03-01,0.0568423588234034
+"Allegheny County, PA",County,Pennsylvania,2025-01-01,0.0605948062625409
+"Allegheny County, PA",County,Pennsylvania,2025-02-01,0.062784831878671
+"Allegheny County, PA",County,Pennsylvania,2025-03-01,0.0653099856345604
+"Allentown-Bethlehem-Easton, PA-NJ",Metro,Pennsylvania,2025-01-01,0.042360668232941
+"Allentown-Bethlehem-Easton, PA-NJ",Metro,Pennsylvania,2025-02-01,0.0428142555522646
+"Allentown-Bethlehem-Easton, PA-NJ",Metro,Pennsylvania,2025-03-01,0.0435760998714286
+"Anaheim, CA",City,California,2025-01-01,0.0715159791178381
+"Anaheim, CA",City,California,2025-02-01,0.067060845644728
+"Anaheim, CA",City,California,2025-03-01,0.0645363619938343
+"Anne Arundel County, MD",County,Maryland,2025-01-01,0.0594089876792779
+"Anne Arundel County, MD",County,Maryland,2025-02-01,0.0602699095362703
+"Anne Arundel County, MD",County,Maryland,2025-03-01,0.0608198330834877
+"Anoka County, MN",County,Minnesota,2025-01-01,0.0578425266171727
+"Anoka County, MN",County,Minnesota,2025-02-01,0.0572890881177138
+"Anoka County, MN",County,Minnesota,2025-03-01,0.056289320338448
+"Arapahoe County, CO",County,Colorado,2025-01-01,0.077065538578446
+"Arapahoe County, CO",County,Colorado,2025-02-01,0.0776324259956729
+"Arapahoe County, CO",County,Colorado,2025-03-01,0.0794888074200428
+Arizona,State,Arizona,2025-01-01,0.0772763481541066
+Arizona,State,Arizona,2025-02-01,0.0778119588703259
+Arizona,State,Arizona,2025-03-01,0.0784123560019636
+Arkansas,State,Arkansas,2025-01-01,0.0589383538536417
+Arkansas,State,Arkansas,2025-02-01,0.059044259595604
+Arkansas,State,Arkansas,2025-03-01,0.0603327174407421
+"Arlington County, VA",County,Virginia,2025-01-01,0.0470521026607837
+"Arlington County, VA",County,Virginia,2025-02-01,0.0464007845494251
+"Arlington County, VA",County,Virginia,2025-03-01,0.0475277715362093
+"Arlington, TX",City,Texas,2025-01-01,0.079757841846209
+"Arlington, TX",City,Texas,2025-02-01,0.0838330271018746
+"Arlington, TX",City,Texas,2025-03-01,0.0866390514452731
+"Arlington, VA",City,Virginia,2025-01-01,0.0470521026607837
+"Arlington, VA",City,Virginia,2025-02-01,0.0464007845494251
+"Arlington, VA",City,Virginia,2025-03-01,0.0475277715362093
+"Asheville, NC",Metro,North Carolina,2025-01-01,0.0841799155074975
+"Asheville, NC",Metro,North Carolina,2025-02-01,0.0876069294560538
+"Asheville, NC",Metro,North Carolina,2025-03-01,0.0875559417343442
+"Atlanta, GA",City,Georgia,2025-01-01,0.0778326262515047
+"Atlanta, GA",City,Georgia,2025-02-01,0.0782506763376961
+"Atlanta, GA",City,Georgia,2025-03-01,0.0795595172552912
+"Atlanta-Sandy Springs-Alpharetta, GA",Metro,Georgia,2025-01-01,0.0755134072299411
+"Atlanta-Sandy Springs-Alpharetta, GA",Metro,Georgia,2025-02-01,0.0755662985794686
+"Atlanta-Sandy Springs-Alpharetta, GA",Metro,Georgia,2025-03-01,0.076015534843492
+"Augusta, GA",City,Georgia,2025-01-01,0.0810745989268625
+"Augusta, GA",City,Georgia,2025-02-01,0.0780588994895831
+"Augusta, GA",City,Georgia,2025-03-01,0.0730054151080402
+"Augusta-Richmond County, GA-SC",Metro,Georgia,2025-01-01,0.0736415604540377
+"Augusta-Richmond County, GA-SC",Metro,Georgia,2025-02-01,0.0713575650313884
+"Augusta-Richmond County, GA-SC",Metro,Georgia,2025-03-01,0.0678651683152812
+"Aurora, CO",City,Colorado,2025-01-01,0.0913179355646781
+"Aurora, CO",City,Colorado,2025-02-01,0.0931680273730995
+"Aurora, CO",City,Colorado,2025-03-01,0.0964493759445536
+"Austin, TX",City,Texas,2025-01-01,0.0953084895143399
+"Austin, TX",City,Texas,2025-02-01,0.095565433334803
+"Austin, TX",City,Texas,2025-03-01,0.0959866643096919
+"Austin-Round Rock-Georgetown, TX",Metro,Texas,2025-01-01,0.0980654126494749
+"Austin-Round Rock-Georgetown, TX",Metro,Texas,2025-02-01,0.0984545812450958
+"Austin-Round Rock-Georgetown, TX",Metro,Texas,2025-03-01,0.0992156130569738
+"Baltimore County, MD",County,Maryland,2025-01-01,0.0401158929950523
+"Baltimore County, MD",County,Maryland,2025-02-01,0.041802074272175
+"Baltimore County, MD",County,Maryland,2025-03-01,0.0429075515260909
+"Baltimore, MD",City,Maryland,2025-01-01,0.0561796369989445
+"Baltimore, MD",City,Maryland,2025-02-01,0.0580761874311138
+"Baltimore, MD",City,Maryland,2025-03-01,0.060337736346613
+"Baltimore-Columbia-Towson, MD",Metro,Maryland,2025-01-01,0.0515532989216759
+"Baltimore-Columbia-Towson, MD",Metro,Maryland,2025-02-01,0.0525827581229697
+"Baltimore-Columbia-Towson, MD",Metro,Maryland,2025-03-01,0.0535362090724259
+"Baton Rouge, LA",Metro,Louisiana,2025-01-01,0.0706506228419432
+"Baton Rouge, LA",City,Louisiana,2025-01-01,0.0707371366706383
+"Baton Rouge, LA",Metro,Louisiana,2025-02-01,0.0717774051166632
+"Baton Rouge, LA",City,Louisiana,2025-02-01,0.0714497998572454
+"Baton Rouge, LA",Metro,Louisiana,2025-03-01,0.0725822065650215
+"Baton Rouge, LA",City,Louisiana,2025-03-01,0.0719743302429533
+"Beaverton, OR",City,Oregon,2025-01-01,0.0645791107123631
+"Beaverton, OR",City,Oregon,2025-02-01,0.0637732836214968
+"Beaverton, OR",City,Oregon,2025-03-01,0.0630392970222428
+"Bell County, TX",County,Texas,2025-01-01,0.0757915883792109
+"Bell County, TX",County,Texas,2025-02-01,0.0751941131957102
+"Bell County, TX",County,Texas,2025-03-01,0.0756003253517608
+"Bellevue, WA",City,Washington,2025-01-01,0.0527054921460505
+"Bellevue, WA",City,Washington,2025-02-01,0.0511523793298396
+"Bellevue, WA",City,Washington,2025-03-01,0.0505522971422577
+"Bergen County, NJ",County,New Jersey,2025-01-01,0.0459944567602285
+"Bergen County, NJ",County,New Jersey,2025-02-01,0.0467037581043192
+"Bergen County, NJ",County,New Jersey,2025-03-01,0.0487073073560613
+"Berkeley County, SC",County,South Carolina,2025-01-01,0.0797699069145641
+"Berkeley County, SC",County,South Carolina,2025-02-01,0.0804368682411389
+"Berkeley County, SC",County,South Carolina,2025-03-01,0.0812285512763945
+"Bernalillo County, NM",County,New Mexico,2025-01-01,0.0599705777349047
+"Bernalillo County, NM",County,New Mexico,2025-02-01,0.0634608494620564
+"Bernalillo County, NM",County,New Mexico,2025-03-01,0.0665611376805446
+"Bexar County, TX",County,Texas,2025-01-01,0.0880432892635947
+"Bexar County, TX",County,Texas,2025-02-01,0.0893728179079019
+"Bexar County, TX",County,Texas,2025-03-01,0.0898915976225803
+"Birmingham, AL",City,Alabama,2025-01-01,0.0895601721320057
+"Birmingham, AL",City,Alabama,2025-02-01,0.0890942488743485
+"Birmingham, AL",City,Alabama,2025-03-01,0.0888525859557721
+"Birmingham-Hoover, AL",Metro,Alabama,2025-01-01,0.104082454837634
+"Birmingham-Hoover, AL",Metro,Alabama,2025-02-01,0.105172946643414
+"Birmingham-Hoover, AL",Metro,Alabama,2025-03-01,0.105474936853715
+"Bloomington, MN",City,Minnesota,2025-01-01,0.0609611592528682
+"Bloomington, MN",City,Minnesota,2025-02-01,0.0600052336563571
+"Bloomington, MN",City,Minnesota,2025-03-01,0.0600201455052903
+"Boca Raton, FL",City,Florida,2025-01-01,0.0593366622863724
+"Boca Raton, FL",City,Florida,2025-02-01,0.0594953630925971
+"Boca Raton, FL",City,Florida,2025-03-01,0.0619103549567898
+"Boise City, ID",Metro,Idaho,2025-01-01,0.0681825208472322
+"Boise City, ID",Metro,Idaho,2025-02-01,0.068813627960173
+"Boise City, ID",Metro,Idaho,2025-03-01,0.0718194464559929
+"Boise, ID",City,Idaho,2025-01-01,0.0657845090436087
+"Boise, ID",City,Idaho,2025-02-01,0.0661159412775765
+"Boise, ID",City,Idaho,2025-03-01,0.0703378911908832
+"Boston, MA",City,Massachusetts,2025-01-01,0.0600793579426934
+"Boston, MA",City,Massachusetts,2025-02-01,0.0596453195413857
+"Boston, MA",City,Massachusetts,2025-03-01,0.0596902900017395
+"Boston-Cambridge-Newton, MA-NH",Metro,Massachusetts,2025-01-01,0.0525801110288937
+"Boston-Cambridge-Newton, MA-NH",Metro,Massachusetts,2025-02-01,0.0522498318206868
+"Boston-Cambridge-Newton, MA-NH",Metro,Massachusetts,2025-03-01,0.052189911659987
+"Boulder County, CO",County,Colorado,2025-01-01,0.082316334544496
+"Boulder County, CO",County,Colorado,2025-02-01,0.0834192273919433
+"Boulder County, CO",County,Colorado,2025-03-01,0.0843239010086388
+"Boulder, CO",Metro,Colorado,2025-01-01,0.082316334544496
+"Boulder, CO",Metro,Colorado,2025-02-01,0.0834192273919433
+"Boulder, CO",Metro,Colorado,2025-03-01,0.0843239010086388
+"Brazoria County, TX",County,Texas,2025-01-01,0.0911891738464388
+"Brazoria County, TX",County,Texas,2025-02-01,0.0925694685421037
+"Brazoria County, TX",County,Texas,2025-03-01,0.0927266725439949
+"Brevard County, FL",County,Florida,2025-01-01,0.0830264982919578
+"Brevard County, FL",County,Florida,2025-02-01,0.0891682752066686
+"Brevard County, FL",County,Florida,2025-03-01,0.0950430911646769
+"Bridgeport-Stamford-Norwalk, CT",Metro,Connecticut,2025-01-01,0.0500572435650508
+"Bridgeport-Stamford-Norwalk, CT",Metro,Connecticut,2025-02-01,0.0512343306872042
+"Bridgeport-Stamford-Norwalk, CT",Metro,Connecticut,2025-03-01,0.052369136363586
+"Broward County, FL",County,Florida,2025-01-01,0.0566081426898324
+"Broward County, FL",County,Florida,2025-02-01,0.0565905037940705
+"Broward County, FL",County,Florida,2025-03-01,0.0571174490559904
+"Bucks County, PA",County,Pennsylvania,2025-01-01,0.0401471712507131
+"Bucks County, PA",County,Pennsylvania,2025-02-01,0.0472697499847998
+"Bucks County, PA",County,Pennsylvania,2025-03-01,0.0568432973534921
+"Buncombe County, NC",County,North Carolina,2025-01-01,0.0805127337068444
+"Buncombe County, NC",County,North Carolina,2025-02-01,0.0839549152173403
+"Buncombe County, NC",County,North Carolina,2025-03-01,0.0847309735131987
+California,State,California,2025-01-01,0.050800365703345
+California,State,California,2025-02-01,0.0499995911669277
+California,State,California,2025-03-01,0.0495127342506635
+"Cambridge, MA",City,Massachusetts,2025-01-01,0.0572947387705216
+"Cambridge, MA",City,Massachusetts,2025-02-01,0.0562001649621504
+"Cambridge, MA",City,Massachusetts,2025-03-01,0.0551013241509484
+"Cape Coral-Fort Myers, FL",Metro,Florida,2025-01-01,0.0949359112598388
+"Cape Coral-Fort Myers, FL",Metro,Florida,2025-02-01,0.0913349505868969
+"Cape Coral-Fort Myers, FL",Metro,Florida,2025-03-01,0.0907599937265438
+"Carrollton, TX",City,Texas,2025-01-01,0.0882705294197821
+"Carrollton, TX",City,Texas,2025-02-01,0.0888475536151856
+"Carrollton, TX",City,Texas,2025-03-01,0.0905002149518244
+"Cary, NC",City,North Carolina,2025-01-01,0.0910968901930549
+"Cary, NC",City,North Carolina,2025-02-01,0.0936807839256062
+"Cary, NC",City,North Carolina,2025-03-01,0.0970697731604955
+"Cass County, ND",County,North Dakota,2025-01-01,0.0819443529172056
+"Cass County, ND",County,North Dakota,2025-02-01,0.078371347114043
+"Cass County, ND",County,North Dakota,2025-03-01,0.0766272809283438
+"Chandler, AZ",City,Arizona,2025-01-01,0.07706753301848
+"Chandler, AZ",City,Arizona,2025-02-01,0.0771088434123872
+"Chandler, AZ",City,Arizona,2025-03-01,0.0770150330992887
+"Charleston County, SC",County,South Carolina,2025-01-01,0.0856563986892145
+"Charleston County, SC",County,South Carolina,2025-02-01,0.0860618186624225
+"Charleston County, SC",County,South Carolina,2025-03-01,0.0850576230630241
+"Charleston, SC",City,South Carolina,2025-01-01,0.0815354054783416
+"Charleston, SC",City,South Carolina,2025-02-01,0.0808773371429886
+"Charleston, SC",City,South Carolina,2025-03-01,0.0806449016785801
+"Charleston-North Charleston, SC",Metro,South Carolina,2025-01-01,0.0815883982030109
+"Charleston-North Charleston, SC",Metro,South Carolina,2025-02-01,0.0820591574929496
+"Charleston-North Charleston, SC",Metro,South Carolina,2025-03-01,0.081845329715661
+"Charlotte, NC",City,North Carolina,2025-01-01,0.0843384492846235
+"Charlotte, NC",City,North Carolina,2025-02-01,0.08504081701677
+"Charlotte, NC",City,North Carolina,2025-03-01,0.0858850596837034
+"Charlotte-Concord-Gastonia, NC-SC",Metro,North Carolina,2025-01-01,0.0826573201985556
+"Charlotte-Concord-Gastonia, NC-SC",Metro,North Carolina,2025-02-01,0.0836764183072387
+"Charlotte-Concord-Gastonia, NC-SC",Metro,North Carolina,2025-03-01,0.0840145391713671
+"Chatham County, GA",County,Georgia,2025-01-01,0.0859916729167228
+"Chatham County, GA",County,Georgia,2025-02-01,0.0828862072902029
+"Chatham County, GA",County,Georgia,2025-03-01,0.0816435230437172
+"Chattanooga, TN",City,Tennessee,2025-01-01,0.0666837684304437
+"Chattanooga, TN",City,Tennessee,2025-02-01,0.0686337996415492
+"Chattanooga, TN",City,Tennessee,2025-03-01,0.0711699347724476
+"Chattanooga, TN-GA",Metro,Tennessee,2025-01-01,0.0643482884680407
+"Chattanooga, TN-GA",Metro,Tennessee,2025-02-01,0.0664642774128954
+"Chattanooga, TN-GA",Metro,Tennessee,2025-03-01,0.0691596338122058
+"Chester County, PA",County,Pennsylvania,2025-01-01,0.0584174918875657
+"Chester County, PA",County,Pennsylvania,2025-02-01,0.0577708195332277
+"Chester County, PA",County,Pennsylvania,2025-03-01,0.0567274199126132
+"Chesterfield County, VA",County,Virginia,2025-01-01,0.0641155485875445
+"Chesterfield County, VA",County,Virginia,2025-02-01,0.0603208703699708
+"Chesterfield County, VA",County,Virginia,2025-03-01,0.0577870516057045
+"Chicago, IL",City,Illinois,2025-01-01,0.051170224135606
+"Chicago, IL",City,Illinois,2025-02-01,0.05000419123792
+"Chicago, IL",City,Illinois,2025-03-01,0.0492626441370726
+"Chicago-Naperville-Elgin, IL-IN-WI",Metro,Illinois,2025-01-01,0.0506303826082042
+"Chicago-Naperville-Elgin, IL-IN-WI",Metro,Illinois,2025-02-01,0.0500612040211855
+"Chicago-Naperville-Elgin, IL-IN-WI",Metro,Illinois,2025-03-01,0.0494045868809859
+"Chula Vista, CA",City,California,2025-01-01,0.0536960405031238
+"Chula Vista, CA",City,California,2025-02-01,0.0511673696173576
+"Chula Vista, CA",City,California,2025-03-01,0.0496850282787061
+"Cincinnati, OH",City,Ohio,2025-01-01,0.0572235513842795
+"Cincinnati, OH",City,Ohio,2025-02-01,0.0566336235546387
+"Cincinnati, OH",City,Ohio,2025-03-01,0.0541744189718157
+"Cincinnati, OH-KY-IN",Metro,Ohio,2025-01-01,0.0537478131415302
+"Cincinnati, OH-KY-IN",Metro,Ohio,2025-02-01,0.0535435567088807
+"Cincinnati, OH-KY-IN",Metro,Ohio,2025-03-01,0.0529019648407906
+"Clackamas County, OR",County,Oregon,2025-01-01,0.0521806067329076
+"Clackamas County, OR",County,Oregon,2025-02-01,0.0511551815089771
+"Clackamas County, OR",County,Oregon,2025-03-01,0.0519987036617715
+"Clark County, NV",County,Nevada,2025-01-01,0.0659634080661512
+"Clark County, NV",County,Nevada,2025-02-01,0.066714568644108
+"Clark County, NV",County,Nevada,2025-03-01,0.0663617313724787
+"Clark County, WA",County,Washington,2025-01-01,0.0535152485203262
+"Clark County, WA",County,Washington,2025-02-01,0.0512806852879163
+"Clark County, WA",County,Washington,2025-03-01,0.0504983986757454
+"Clay County, MO",County,Missouri,2025-01-01,0.0651692948031366
+"Clay County, MO",County,Missouri,2025-02-01,0.0662792716036787
+"Clay County, MO",County,Missouri,2025-03-01,0.0681400630764772
+"Cleveland, OH",City,Ohio,2025-01-01,0.0899199541934674
+"Cleveland, OH",City,Ohio,2025-02-01,0.0905900053246473
+"Cleveland, OH",City,Ohio,2025-03-01,0.089296804806
+"Cleveland-Elyria, OH",Metro,Ohio,2025-01-01,0.0590947303214207
+"Cleveland-Elyria, OH",Metro,Ohio,2025-02-01,0.0589785504784393
+"Cleveland-Elyria, OH",Metro,Ohio,2025-03-01,0.0593904333222709
+"Cobb County, GA",County,Georgia,2025-01-01,0.0696676312233786
+"Cobb County, GA",County,Georgia,2025-02-01,0.0718899881839804
+"Cobb County, GA",County,Georgia,2025-03-01,0.0741967681684606
+"Collin County, TX",County,Texas,2025-01-01,0.0877903399584059
+"Collin County, TX",County,Texas,2025-02-01,0.0878747443184932
+"Collin County, TX",County,Texas,2025-03-01,0.0882510737078721
+Colorado,State,Colorado,2025-01-01,0.08508264520781
+Colorado,State,Colorado,2025-02-01,0.086292916939061
+Colorado,State,Colorado,2025-03-01,0.0874939942926135
+"Colorado Springs, CO",Metro,Colorado,2025-01-01,0.0910637778345341
+"Colorado Springs, CO",City,Colorado,2025-01-01,0.0902918205002309
+"Colorado Springs, CO",Metro,Colorado,2025-02-01,0.0945292743838647
+"Colorado Springs, CO",City,Colorado,2025-02-01,0.0936969158993324
+"Colorado Springs, CO",Metro,Colorado,2025-03-01,0.0976298579533671
+"Colorado Springs, CO",City,Colorado,2025-03-01,0.0970477827963843
+"Columbia, MD",City,Maryland,2025-01-01,0.0632595041795598
+"Columbia, MD",City,Maryland,2025-02-01,0.0619094085944521
+"Columbia, MD",City,Maryland,2025-03-01,0.0602215473841852
+"Columbia, SC",Metro,South Carolina,2025-01-01,0.0658789228842148
+"Columbia, SC",City,South Carolina,2025-01-01,0.0669691227215048
+"Columbia, SC",Metro,South Carolina,2025-02-01,0.0658108714163801
+"Columbia, SC",City,South Carolina,2025-02-01,0.0662992081917977
+"Columbia, SC",Metro,South Carolina,2025-03-01,0.0645200098295386
+"Columbia, SC",City,South Carolina,2025-03-01,0.0636535905474579
+"Columbus, OH",Metro,Ohio,2025-01-01,0.0588500031784495
+"Columbus, OH",City,Ohio,2025-01-01,0.0595997125656721
+"Columbus, OH",Metro,Ohio,2025-02-01,0.0572588831435148
+"Columbus, OH",City,Ohio,2025-02-01,0.0574896647510207
+"Columbus, OH",Metro,Ohio,2025-03-01,0.0566809351362057
+"Columbus, OH",City,Ohio,2025-03-01,0.0564011234094896
+Connecticut,State,Connecticut,2025-01-01,0.061089232141124
+Connecticut,State,Connecticut,2025-02-01,0.0597908135081292
+Connecticut,State,Connecticut,2025-03-01,0.0580001928819579
+"Conroe, TX",City,Texas,2025-01-01,0.0922732389601806
+"Conroe, TX",City,Texas,2025-02-01,0.0930645668923903
+"Conroe, TX",City,Texas,2025-03-01,0.0920936388579172
+"Contra Costa County, CA",County,California,2025-01-01,0.0476711699000353
+"Contra Costa County, CA",County,California,2025-02-01,0.0491258556811542
+"Contra Costa County, CA",County,California,2025-03-01,0.0493486268166059
+"Cook County, IL",County,Illinois,2025-01-01,0.0487690810927901
+"Cook County, IL",County,Illinois,2025-02-01,0.0480001931886283
+"Cook County, IL",County,Illinois,2025-03-01,0.0473799131358106
+"Corpus Christi, TX",Metro,Texas,2025-01-01,0.0931190875742028
+"Corpus Christi, TX",City,Texas,2025-01-01,0.101606573325905
+"Corpus Christi, TX",Metro,Texas,2025-02-01,0.0922229288618823
+"Corpus Christi, TX",City,Texas,2025-02-01,0.100365778305238
+"Corpus Christi, TX",Metro,Texas,2025-03-01,0.0921060361661116
+"Corpus Christi, TX",City,Texas,2025-03-01,0.0997658176917118
+"Cuyahoga County, OH",County,Ohio,2025-01-01,0.0615542629040719
+"Cuyahoga County, OH",County,Ohio,2025-02-01,0.0624111275567077
+"Cuyahoga County, OH",County,Ohio,2025-03-01,0.0641281777993519
+"Dakota County, MN",County,Minnesota,2025-01-01,0.0644817574215058
+"Dakota County, MN",County,Minnesota,2025-02-01,0.0662271377296921
+"Dakota County, MN",County,Minnesota,2025-03-01,0.0668493746510405
+"Dallas County, TX",County,Texas,2025-01-01,0.0813611381350026
+"Dallas County, TX",County,Texas,2025-02-01,0.0815076554857378
+"Dallas County, TX",County,Texas,2025-03-01,0.0816553617932028
+"Dallas, TX",City,Texas,2025-01-01,0.0839929358524862
+"Dallas, TX",City,Texas,2025-02-01,0.0842207245456714
+"Dallas, TX",City,Texas,2025-03-01,0.0841094191479902
+"Dallas-Fort Worth-Arlington, TX",Metro,Texas,2025-01-01,0.0848828767159165
+"Dallas-Fort Worth-Arlington, TX",Metro,Texas,2025-02-01,0.0856784134480337
+"Dallas-Fort Worth-Arlington, TX",Metro,Texas,2025-03-01,0.0861243377314339
+"Dane County, WI",County,Wisconsin,2025-01-01,0.0616309791044408
+"Dane County, WI",County,Wisconsin,2025-02-01,0.0631367303335907
+"Dane County, WI",County,Wisconsin,2025-03-01,0.0656539530264865
+"Davidson County, TN",County,Tennessee,2025-01-01,0.0789104607105261
+"Davidson County, TN",County,Tennessee,2025-02-01,0.0802554545139649
+"Davidson County, TN",County,Tennessee,2025-03-01,0.0820376620100382
+"Davis County, UT",County,Utah,2025-01-01,0.0680006759647831
+"Davis County, UT",County,Utah,2025-02-01,0.0677375579607002
+"Davis County, UT",County,Utah,2025-03-01,0.0689054252265269
+"Dayton-Kettering, OH",Metro,Ohio,2025-01-01,0.058574496042661
+"Dayton-Kettering, OH",Metro,Ohio,2025-02-01,0.0579474772596128
+"Dayton-Kettering, OH",Metro,Ohio,2025-03-01,0.0565509814682148
+"DeKalb County, GA",County,Georgia,2025-01-01,0.0855914166464335
+"DeKalb County, GA",County,Georgia,2025-02-01,0.0870539595290763
+"DeKalb County, GA",County,Georgia,2025-03-01,0.0875332107306218
+"Decatur, GA",City,Georgia,2025-01-01,0.161443162893069
+"Decatur, GA",City,Georgia,2025-02-01,0.160175856047612
+"Decatur, GA",City,Georgia,2025-03-01,0.155045711901624
+"Delaware County, PA",County,Pennsylvania,2025-01-01,0.0487226486638734
+"Delaware County, PA",County,Pennsylvania,2025-02-01,0.0497989048248896
+"Delaware County, PA",County,Pennsylvania,2025-03-01,0.0516812698101958
+"Deltona-Daytona Beach-Ormond Beach, FL",Metro,Florida,2025-01-01,0.0755268417699647
+"Deltona-Daytona Beach-Ormond Beach, FL",Metro,Florida,2025-02-01,0.0754575198029784
+"Deltona-Daytona Beach-Ormond Beach, FL",Metro,Florida,2025-03-01,0.0749283728887054
+"Denton County, TX",County,Texas,2025-01-01,0.0908011716005267
+"Denton County, TX",County,Texas,2025-02-01,0.0922866945327874
+"Denton County, TX",County,Texas,2025-03-01,0.0931851684881186
+"Denton, TX",City,Texas,2025-01-01,0.121238795706522
+"Denton, TX",City,Texas,2025-02-01,0.1211318699544
+"Denton, TX",City,Texas,2025-03-01,0.123359171133348
+"Denver County, CO",County,Colorado,2025-01-01,0.0900887939446243
+"Denver County, CO",County,Colorado,2025-02-01,0.0901654048359835
+"Denver County, CO",County,Colorado,2025-03-01,0.0903008086706066
+"Denver, CO",City,Colorado,2025-01-01,0.0886952435897777
+"Denver, CO",City,Colorado,2025-02-01,0.0890669768082832
+"Denver, CO",City,Colorado,2025-03-01,0.0896124726474599
+"Denver-Aurora-Lakewood, CO",Metro,Colorado,2025-01-01,0.0844006203426316
+"Denver-Aurora-Lakewood, CO",Metro,Colorado,2025-02-01,0.085051251349803
+"Denver-Aurora-Lakewood, CO",Metro,Colorado,2025-03-01,0.0859620090171212
+"Des Moines, IA",City,Iowa,2025-01-01,0.0710668933388691
+"Des Moines, IA",City,Iowa,2025-02-01,0.0743136665335326
+"Des Moines, IA",City,Iowa,2025-03-01,0.0778163816851614
+"Des Moines-West Des Moines, IA",Metro,Iowa,2025-01-01,0.0755891700753741
+"Des Moines-West Des Moines, IA",Metro,Iowa,2025-02-01,0.077982841473287
+"Des Moines-West Des Moines, IA",Metro,Iowa,2025-03-01,0.0797006326509914
+"Detroit, MI",City,Michigan,2025-01-01,0.0580867732626314
+"Detroit, MI",City,Michigan,2025-02-01,0.0564189077473786
+"Detroit, MI",City,Michigan,2025-03-01,0.0546429364545454
+"Detroit-Warren-Dearborn, MI",Metro,Michigan,2025-01-01,0.0527607907600686
+"Detroit-Warren-Dearborn, MI",Metro,Michigan,2025-02-01,0.0518212101020112
+"Detroit-Warren-Dearborn, MI",Metro,Michigan,2025-03-01,0.0511793313865366
+District of Columbia,State,District of Columbia,2025-01-01,0.0578558749409826
+District of Columbia,State,District of Columbia,2025-02-01,0.0584639412074736
+District of Columbia,State,District of Columbia,2025-03-01,0.060545902816391
+"District of Columbia County, DC",County,District of Columbia,2025-01-01,0.057774996293534
+"District of Columbia County, DC",County,District of Columbia,2025-02-01,0.0583783158594695
+"District of Columbia County, DC",County,District of Columbia,2025-03-01,0.0604710239022764
+"Douglas County, CO",County,Colorado,2025-01-01,0.0833269717376095
+"Douglas County, CO",County,Colorado,2025-02-01,0.086627637270425
+"Douglas County, CO",County,Colorado,2025-03-01,0.089681450216775
+"Douglas County, NE",County,Nebraska,2025-01-01,0.0593401911017451
+"Douglas County, NE",County,Nebraska,2025-02-01,0.0579062468214642
+"Douglas County, NE",County,Nebraska,2025-03-01,0.0562030075479118
+"DuPage County, IL",County,Illinois,2025-01-01,0.0543998585697301
+"DuPage County, IL",County,Illinois,2025-02-01,0.0547685076772366
+"DuPage County, IL",County,Illinois,2025-03-01,0.0553997598697576
+"Duluth, GA",City,Georgia,2025-01-01,0.0703397948528719
+"Duluth, GA",City,Georgia,2025-02-01,0.0710775799449186
+"Duluth, GA",City,Georgia,2025-03-01,0.0706226213516138
+"Durham County, NC",County,North Carolina,2025-01-01,0.0745456077933287
+"Durham County, NC",County,North Carolina,2025-02-01,0.0757162945511214
+"Durham County, NC",County,North Carolina,2025-03-01,0.076826992027448
+"Durham, NC",City,North Carolina,2025-01-01,0.0717124929695409
+"Durham, NC",City,North Carolina,2025-02-01,0.0731424587041039
+"Durham, NC",City,North Carolina,2025-03-01,0.0742548991900564
+"Durham-Chapel Hill, NC",Metro,North Carolina,2025-01-01,0.0727885715616262
+"Durham-Chapel Hill, NC",Metro,North Carolina,2025-02-01,0.0749615463048716
+"Durham-Chapel Hill, NC",Metro,North Carolina,2025-03-01,0.0773029834799358
+"Duval County, FL",County,Florida,2025-01-01,0.0707248992139049
+"Duval County, FL",County,Florida,2025-02-01,0.0710591795019347
+"Duval County, FL",County,Florida,2025-03-01,0.0703977035251792
+"East Baton Rouge County, LA",County,Louisiana,2025-01-01,0.0695573026414381
+"East Baton Rouge County, LA",County,Louisiana,2025-02-01,0.0702521359440238
+"East Baton Rouge County, LA",County,Louisiana,2025-03-01,0.0707018887640567
+"El Paso County, CO",County,Colorado,2025-01-01,0.0913853196908836
+"El Paso County, CO",County,Colorado,2025-02-01,0.0947474641187986
+"El Paso County, CO",County,Colorado,2025-03-01,0.0977580386780482
+"Englewood, CO",City,Colorado,2025-01-01,0.0786079733423351
+"Englewood, CO",City,Colorado,2025-02-01,0.0744364864222894
+"Englewood, CO",City,Colorado,2025-03-01,0.0720820174228714
+"Essex County, MA",County,Massachusetts,2025-01-01,0.0453342802527277
+"Essex County, MA",County,Massachusetts,2025-02-01,0.0444134495382201
+"Essex County, MA",County,Massachusetts,2025-03-01,0.0439915303437209
+"Essex County, NJ",County,New Jersey,2025-01-01,0.0557980913439418
+"Essex County, NJ",County,New Jersey,2025-02-01,0.0550213681974647
+"Essex County, NJ",County,New Jersey,2025-03-01,0.0544277644427884
+"Everett, WA",City,Washington,2025-01-01,0.0490360606244164
+"Everett, WA",City,Washington,2025-02-01,0.0484770858725608
+"Everett, WA",City,Washington,2025-03-01,0.0487172568859844
+"Fairfax County, VA",County,Virginia,2025-01-01,0.0530698059280565
+"Fairfax County, VA",County,Virginia,2025-02-01,0.0523547810785556
+"Fairfax County, VA",County,Virginia,2025-03-01,0.0523807654390904
+"Fairfield County, CT",County,Connecticut,2025-01-01,0.0500572435650508
+"Fairfield County, CT",County,Connecticut,2025-02-01,0.0512343306872042
+"Fairfield County, CT",County,Connecticut,2025-03-01,0.052369136363586
+"Fargo, ND",City,North Dakota,2025-01-01,0.0822305973337983
+"Fargo, ND",City,North Dakota,2025-02-01,0.0781269675731625
+"Fargo, ND",City,North Dakota,2025-03-01,0.0755971536897783
+"Fargo, ND-MN",Metro,North Dakota,2025-01-01,0.0808322634326527
+"Fargo, ND-MN",Metro,North Dakota,2025-02-01,0.0772099357941056
+"Fargo, ND-MN",Metro,North Dakota,2025-03-01,0.0753925541736099
+"Fayette County, KY",County,Kentucky,2025-01-01,0.0470029241031206
+"Fayette County, KY",County,Kentucky,2025-02-01,0.0486690692025205
+"Fayette County, KY",County,Kentucky,2025-03-01,0.0510381062578479
+"Fayetteville-Springdale-Rogers, AR",Metro,Arkansas,2025-01-01,0.0532727012612594
+"Fayetteville-Springdale-Rogers, AR",Metro,Arkansas,2025-02-01,0.054416331872497
+"Fayetteville-Springdale-Rogers, AR",Metro,Arkansas,2025-03-01,0.0541299941472652
+Florida,State,Florida,2025-01-01,0.0685911655299469
+Florida,State,Florida,2025-02-01,0.0695024349264943
+Florida,State,Florida,2025-03-01,0.071113042779789
+"Forsyth County, NC",County,North Carolina,2025-01-01,0.0652895637119112
+"Forsyth County, NC",County,North Carolina,2025-02-01,0.0675763768003398
+"Forsyth County, NC",County,North Carolina,2025-03-01,0.0696279428355074
+"Fort Bend County, TX",County,Texas,2025-01-01,0.0719610575778176
+"Fort Bend County, TX",County,Texas,2025-02-01,0.0729282120587527
+"Fort Bend County, TX",County,Texas,2025-03-01,0.0734999348057792
+"Fort Collins, CO",Metro,Colorado,2025-01-01,0.0898691670980166
+"Fort Collins, CO",Metro,Colorado,2025-02-01,0.0946076598061812
+"Fort Collins, CO",Metro,Colorado,2025-03-01,0.0953023663807761
+"Fort Lauderdale, FL",City,Florida,2025-01-01,0.0669711493758009
+"Fort Lauderdale, FL",City,Florida,2025-02-01,0.0660037793918663
+"Fort Lauderdale, FL",City,Florida,2025-03-01,0.0651478223062313
+"Fort Myers, FL",City,Florida,2025-01-01,0.0949907827774529
+"Fort Myers, FL",City,Florida,2025-02-01,0.0873133135200621
+"Fort Myers, FL",City,Florida,2025-03-01,0.0844172426409213
+"Fort Worth, TX",City,Texas,2025-01-01,0.0981274037039733
+"Fort Worth, TX",City,Texas,2025-02-01,0.0982066348227443
+"Fort Worth, TX",City,Texas,2025-03-01,0.0975062096492881
+"Franklin County, OH",County,Ohio,2025-01-01,0.0570275312770876
+"Franklin County, OH",County,Ohio,2025-02-01,0.0551628390693251
+"Franklin County, OH",County,Ohio,2025-03-01,0.0544593282961583
+"Frederick County, MD",County,Maryland,2025-01-01,0.0518517670054884
+"Frederick County, MD",County,Maryland,2025-02-01,0.057032804874488
+"Frederick County, MD",County,Maryland,2025-03-01,0.0663234458135325
+"Fremont, CA",City,California,2025-01-01,0.0518710104626317
+"Fremont, CA",City,California,2025-02-01,0.04868274324092
+"Fremont, CA",City,California,2025-03-01,0.0470360906131962
+"Frisco, TX",City,Texas,2025-01-01,0.0786322968681331
+"Frisco, TX",City,Texas,2025-02-01,0.078819572805351
+"Frisco, TX",City,Texas,2025-03-01,0.0787749676818272
+"Fulton County, GA",County,Georgia,2025-01-01,0.0774816921222261
+"Fulton County, GA",County,Georgia,2025-02-01,0.0768220559181949
+"Fulton County, GA",County,Georgia,2025-03-01,0.0773232196294963
+"Galveston County, TX",County,Texas,2025-01-01,0.0701036570804518
+"Galveston County, TX",County,Texas,2025-02-01,0.0697016069103396
+"Galveston County, TX",County,Texas,2025-03-01,0.0698369745078808
+"Garland, TX",City,Texas,2025-01-01,0.0762358308054857
+"Garland, TX",City,Texas,2025-02-01,0.0758703618543225
+"Garland, TX",City,Texas,2025-03-01,0.0765872125569881
+Georgia,State,Georgia,2025-01-01,0.0775463749542349
+Georgia,State,Georgia,2025-02-01,0.0771393891102531
+Georgia,State,Georgia,2025-03-01,0.0771663851385728
+"Gilbert, AZ",City,Arizona,2025-01-01,0.080740887104137
+"Gilbert, AZ",City,Arizona,2025-02-01,0.0805535783447932
+"Gilbert, AZ",City,Arizona,2025-03-01,0.0815344503520227
+"Glendale, AZ",City,Arizona,2025-01-01,0.0779613120674301
+"Glendale, AZ",City,Arizona,2025-02-01,0.0794565728357379
+"Glendale, AZ",City,Arizona,2025-03-01,0.0786790292018915
+"Grand Forks County, ND",County,North Dakota,2025-01-01,0.0410123439268526
+"Grand Forks County, ND",County,North Dakota,2025-02-01,0.0388628638777372
+"Grand Forks County, ND",County,North Dakota,2025-03-01,0.0374048295242459
+"Grand Forks, ND",City,North Dakota,2025-01-01,0.0410123439268526
+"Grand Forks, ND",City,North Dakota,2025-02-01,0.0388628638777372
+"Grand Forks, ND",City,North Dakota,2025-03-01,0.0374048295242459
+"Grand Forks, ND-MN",Metro,North Dakota,2025-01-01,0.0422961204921271
+"Grand Forks, ND-MN",Metro,North Dakota,2025-02-01,0.041044044496528
+"Grand Forks, ND-MN",Metro,North Dakota,2025-03-01,0.0398077021779512
+"Grand Prairie, TX",City,Texas,2025-01-01,0.0814703582832252
+"Grand Prairie, TX",City,Texas,2025-02-01,0.0830853705974834
+"Grand Prairie, TX",City,Texas,2025-03-01,0.0842357810639034
+"Grand Rapids-Kentwood, MI",Metro,Michigan,2025-01-01,0.0796828795142657
+"Grand Rapids-Kentwood, MI",Metro,Michigan,2025-02-01,0.0744579481721742
+"Grand Rapids-Kentwood, MI",Metro,Michigan,2025-03-01,0.0709923360682243
+"Greensboro, NC",City,North Carolina,2025-01-01,0.0696052519016949
+"Greensboro, NC",City,North Carolina,2025-02-01,0.0678651030893374
+"Greensboro, NC",City,North Carolina,2025-03-01,0.0649297910337446
+"Greensboro-High Point, NC",Metro,North Carolina,2025-01-01,0.0685406662178572
+"Greensboro-High Point, NC",Metro,North Carolina,2025-02-01,0.0674037755978888
+"Greensboro-High Point, NC",Metro,North Carolina,2025-03-01,0.0654716572753635
+"Greenville County, SC",County,South Carolina,2025-01-01,0.065411904970474
+"Greenville County, SC",County,South Carolina,2025-02-01,0.0652985710320485
+"Greenville County, SC",County,South Carolina,2025-03-01,0.0678473104431183
+"Greenville, SC",City,South Carolina,2025-01-01,0.062914072780502
+"Greenville, SC",City,South Carolina,2025-02-01,0.0608222739598635
+"Greenville, SC",City,South Carolina,2025-03-01,0.064801917057742
+"Greenville-Anderson, SC",Metro,South Carolina,2025-01-01,0.0660179682097901
+"Greenville-Anderson, SC",Metro,South Carolina,2025-02-01,0.0660935129360549
+"Greenville-Anderson, SC",Metro,South Carolina,2025-03-01,0.0681867230034897
+"Gresham, OR",City,Oregon,2025-01-01,0.0493934915926466
+"Gresham, OR",City,Oregon,2025-02-01,0.0482850189413796
+"Gresham, OR",City,Oregon,2025-03-01,0.0477983650102181
+"Guilford County, NC",County,North Carolina,2025-01-01,0.0682576540399111
+"Guilford County, NC",County,North Carolina,2025-02-01,0.0670624553610277
+"Guilford County, NC",County,North Carolina,2025-03-01,0.0650896503248464
+"Gwinnett County, GA",County,Georgia,2025-01-01,0.0691285646125692
+"Gwinnett County, GA",County,Georgia,2025-02-01,0.0693001504586595
+"Gwinnett County, GA",County,Georgia,2025-03-01,0.0697684348449305
+"Hamilton County, IN",County,Indiana,2025-01-01,0.094600182821486
+"Hamilton County, IN",County,Indiana,2025-02-01,0.0936951777914398
+"Hamilton County, IN",County,Indiana,2025-03-01,0.091971096188407
+"Hamilton County, OH",County,Ohio,2025-01-01,0.0591388423095641
+"Hamilton County, OH",County,Ohio,2025-02-01,0.0587629963475673
+"Hamilton County, OH",County,Ohio,2025-03-01,0.0562372949703038
+"Hamilton County, TN",County,Tennessee,2025-01-01,0.0651145567833112
+"Hamilton County, TN",County,Tennessee,2025-02-01,0.0671670830814093
+"Hamilton County, TN",County,Tennessee,2025-03-01,0.0697725849717558
+"Harris County, TX",County,Texas,2025-01-01,0.0788592861484058
+"Harris County, TX",County,Texas,2025-02-01,0.0801774686628197
+"Harris County, TX",County,Texas,2025-03-01,0.0820003230870465
+"Hartford County, CT",County,Connecticut,2025-01-01,0.0529275488170755
+"Hartford County, CT",County,Connecticut,2025-02-01,0.05484431641127
+"Hartford County, CT",County,Connecticut,2025-03-01,0.0559459857249563
+"Hartford-East Hartford-Middletown, CT",Metro,Connecticut,2025-01-01,0.0565876092858294
+"Hartford-East Hartford-Middletown, CT",Metro,Connecticut,2025-02-01,0.0540646558872794
+"Hartford-East Hartford-Middletown, CT",Metro,Connecticut,2025-03-01,0.0496290133029695
+"Hays County, TX",County,Texas,2025-01-01,0.106136142858617
+"Hays County, TX",County,Texas,2025-02-01,0.0983704806747486
+"Hays County, TX",County,Texas,2025-03-01,0.0920445884820395
+"Henderson, NV",City,Nevada,2025-01-01,0.0666921421289633
+"Henderson, NV",City,Nevada,2025-02-01,0.0658551428041629
+"Henderson, NV",City,Nevada,2025-03-01,0.06465542961391
+"Hennepin County, MN",County,Minnesota,2025-01-01,0.0752802893212464
+"Hennepin County, MN",County,Minnesota,2025-02-01,0.0744532327940182
+"Hennepin County, MN",County,Minnesota,2025-03-01,0.0749858779747523
+"Hillsborough County, FL",County,Florida,2025-01-01,0.0665091803339879
+"Hillsborough County, FL",County,Florida,2025-02-01,0.0663008888219249
+"Hillsborough County, FL",County,Florida,2025-03-01,0.0677149224051406
+"Horry County, SC",County,South Carolina,2025-01-01,0.08981116071329
+"Horry County, SC",County,South Carolina,2025-02-01,0.0857381159833797
+"Horry County, SC",County,South Carolina,2025-03-01,0.0824804883326529
+"Houston, TX",City,Texas,2025-01-01,0.0776710468466595
+"Houston, TX",City,Texas,2025-02-01,0.0789094260991286
+"Houston, TX",City,Texas,2025-03-01,0.080699303927181
+"Houston-The Woodlands-Sugar Land, TX",Metro,Texas,2025-01-01,0.0790472784728292
+"Houston-The Woodlands-Sugar Land, TX",Metro,Texas,2025-02-01,0.0802230455627842
+"Houston-The Woodlands-Sugar Land, TX",Metro,Texas,2025-03-01,0.0816920515065021
+"Howard County, MD",County,Maryland,2025-01-01,0.0542013891471481
+"Howard County, MD",County,Maryland,2025-02-01,0.0522042305038734
+"Howard County, MD",County,Maryland,2025-03-01,0.0507020217612364
+"Hudson County, NJ",County,New Jersey,2025-01-01,0.0579932459725381
+"Hudson County, NJ",County,New Jersey,2025-02-01,0.0558389271523471
+"Hudson County, NJ",County,New Jersey,2025-03-01,0.0547401422620448
+"Huntsville, AL",Metro,Alabama,2025-01-01,0.0966618028347328
+"Huntsville, AL",City,Alabama,2025-01-01,0.0846128308980255
+"Huntsville, AL",Metro,Alabama,2025-02-01,0.0945924611754462
+"Huntsville, AL",City,Alabama,2025-02-01,0.0825608034659581
+"Huntsville, AL",Metro,Alabama,2025-03-01,0.0945746880991325
+"Huntsville, AL",City,Alabama,2025-03-01,0.0817009164816567
+Idaho,State,Idaho,2025-01-01,0.0703783038820732
+Idaho,State,Idaho,2025-02-01,0.0692461738912579
+Idaho,State,Idaho,2025-03-01,0.0696518706452336
+Illinois,State,Illinois,2025-01-01,0.0497585453092334
+Illinois,State,Illinois,2025-02-01,0.0493777964917968
+Illinois,State,Illinois,2025-03-01,0.0488793241415304
+Indiana,State,Indiana,2025-01-01,0.0561510651885746
+Indiana,State,Indiana,2025-02-01,0.0573705315114284
+Indiana,State,Indiana,2025-03-01,0.0579921661340073
+"Indianapolis, IN",City,Indiana,2025-01-01,0.0542535609021562
+"Indianapolis, IN",City,Indiana,2025-02-01,0.0552177228043693
+"Indianapolis, IN",City,Indiana,2025-03-01,0.0555181637456573
+"Indianapolis-Carmel-Anderson, IN",Metro,Indiana,2025-01-01,0.0611410974187117
+"Indianapolis-Carmel-Anderson, IN",Metro,Indiana,2025-02-01,0.0619976430594238
+"Indianapolis-Carmel-Anderson, IN",Metro,Indiana,2025-03-01,0.0622077935354396
+Iowa,State,Iowa,2025-01-01,0.0693161258741494
+Iowa,State,Iowa,2025-02-01,0.0714126675663266
+Iowa,State,Iowa,2025-03-01,0.0730182229456678
+"Irving, TX",City,Texas,2025-01-01,0.0819689672713056
+"Irving, TX",City,Texas,2025-02-01,0.0793560613152233
+"Irving, TX",City,Texas,2025-03-01,0.077593757581556
+"Jackson County, MO",County,Missouri,2025-01-01,0.0798268998394369
+"Jackson County, MO",County,Missouri,2025-02-01,0.0793755751580933
+"Jackson County, MO",County,Missouri,2025-03-01,0.0791114588996391
+"Jackson, MS",Metro,Mississippi,2025-01-01,0.0623758990403636
+"Jackson, MS",Metro,Mississippi,2025-02-01,0.0624778494151765
+"Jackson, MS",Metro,Mississippi,2025-03-01,0.0630654184925633
+"Jacksonville, FL",Metro,Florida,2025-01-01,0.0731359311175009
+"Jacksonville, FL",City,Florida,2025-01-01,0.0728772536489648
+"Jacksonville, FL",Metro,Florida,2025-02-01,0.0743628415167599
+"Jacksonville, FL",City,Florida,2025-02-01,0.0724200784200018
+"Jacksonville, FL",Metro,Florida,2025-03-01,0.0748580255602604
+"Jacksonville, FL",City,Florida,2025-03-01,0.0708322726845817
+"Jefferson County, AL",County,Alabama,2025-01-01,0.114601046054376
+"Jefferson County, AL",County,Alabama,2025-02-01,0.115818987049025
+"Jefferson County, AL",County,Alabama,2025-03-01,0.116493075274937
+"Jefferson County, CO",County,Colorado,2025-01-01,0.0754066591017684
+"Jefferson County, CO",County,Colorado,2025-02-01,0.0749285995002994
+"Jefferson County, CO",County,Colorado,2025-03-01,0.074388261254598
+"Jefferson County, KY",County,Kentucky,2025-01-01,0.0649090994971332
+"Jefferson County, KY",County,Kentucky,2025-02-01,0.0640798681259019
+"Jefferson County, KY",County,Kentucky,2025-03-01,0.0641702218144397
+"Jersey City, NJ",City,New Jersey,2025-01-01,0.0489438271184607
+"Jersey City, NJ",City,New Jersey,2025-02-01,0.0461822471183206
+"Jersey City, NJ",City,New Jersey,2025-03-01,0.0440111948235239
+"Johnson County, KS",County,Kansas,2025-01-01,0.0560940897503991
+"Johnson County, KS",County,Kansas,2025-02-01,0.055707629725297
+"Johnson County, KS",County,Kansas,2025-03-01,0.0545780706699368
+Kansas,State,Kansas,2025-01-01,0.0571418892688485
+Kansas,State,Kansas,2025-02-01,0.0572989557722084
+Kansas,State,Kansas,2025-03-01,0.0565924270104492
+"Kansas City, MO",City,Missouri,2025-01-01,0.0741575039337088
+"Kansas City, MO",City,Missouri,2025-02-01,0.0738530488187134
+"Kansas City, MO",City,Missouri,2025-03-01,0.0732385559389066
+"Kansas City, MO-KS",Metro,Missouri,2025-01-01,0.066201514729504
+"Kansas City, MO-KS",Metro,Missouri,2025-02-01,0.066693254158941
+"Kansas City, MO-KS",Metro,Missouri,2025-03-01,0.0665320904612569
+"Katy, TX",City,Texas,2025-01-01,0.0880729695922417
+"Katy, TX",City,Texas,2025-02-01,0.0890677452087654
+"Katy, TX",City,Texas,2025-03-01,0.090188259886145
+"Kennewick-Richland, WA",Metro,Washington,2025-01-01,0.0691885420388181
+"Kennewick-Richland, WA",Metro,Washington,2025-02-01,0.0693473186433156
+"Kennewick-Richland, WA",Metro,Washington,2025-03-01,0.069588241194248
+"Kent County, MI",County,Michigan,2025-01-01,0.0804595297244442
+"Kent County, MI",County,Michigan,2025-02-01,0.0750110137962043
+"Kent County, MI",County,Michigan,2025-03-01,0.0719407593352261
+"Kent, WA",City,Washington,2025-01-01,0.0607408974465133
+"Kent, WA",City,Washington,2025-02-01,0.061312452125612
+"Kent, WA",City,Washington,2025-03-01,0.0605810416756818
+Kentucky,State,Kentucky,2025-01-01,0.0590016322220243
+Kentucky,State,Kentucky,2025-02-01,0.0589006105695444
+Kentucky,State,Kentucky,2025-03-01,0.0594110548255422
+"Killeen-Temple, TX",Metro,Texas,2025-01-01,0.074943365676083
+"Killeen-Temple, TX",Metro,Texas,2025-02-01,0.0740715550606583
+"Killeen-Temple, TX",Metro,Texas,2025-03-01,0.0743657248890765
+"King County, WA",County,Washington,2025-01-01,0.0606426689492004
+"King County, WA",County,Washington,2025-02-01,0.0600690695230431
+"King County, WA",County,Washington,2025-03-01,0.0592387105387182
+"Kirkland, WA",City,Washington,2025-01-01,0.0615008440061468
+"Kirkland, WA",City,Washington,2025-02-01,0.060212272478729
+"Kirkland, WA",City,Washington,2025-03-01,0.057403735236378
+"Kissimmee, FL",City,Florida,2025-01-01,0.0818125532114736
+"Kissimmee, FL",City,Florida,2025-02-01,0.0828141946834106
+"Kissimmee, FL",City,Florida,2025-03-01,0.0825024333667627
+"Knox County, TN",County,Tennessee,2025-01-01,0.0556021163978975
+"Knox County, TN",County,Tennessee,2025-02-01,0.0570268778264323
+"Knox County, TN",County,Tennessee,2025-03-01,0.0579783188593858
+"Knoxville, TN",Metro,Tennessee,2025-01-01,0.0573141932135572
+"Knoxville, TN",City,Tennessee,2025-01-01,0.0548037239836774
+"Knoxville, TN",Metro,Tennessee,2025-02-01,0.0590278751250324
+"Knoxville, TN",City,Tennessee,2025-02-01,0.0560746702828578
+"Knoxville, TN",Metro,Tennessee,2025-03-01,0.060024833701798
+"Knoxville, TN",City,Tennessee,2025-03-01,0.0570571778650331
+"Lakeland-Winter Haven, FL",Metro,Florida,2025-01-01,0.0854743659582457
+"Lakeland-Winter Haven, FL",Metro,Florida,2025-02-01,0.0843007277072463
+"Lakeland-Winter Haven, FL",Metro,Florida,2025-03-01,0.0861854205291403
+"Lakewood, CO",City,Colorado,2025-01-01,0.0742878855101855
+"Lakewood, CO",City,Colorado,2025-02-01,0.0736086536883864
+"Lakewood, CO",City,Colorado,2025-03-01,0.0728122835585094
+"Lancaster County, NE",County,Nebraska,2025-01-01,0.0402430213803928
+"Lancaster County, NE",County,Nebraska,2025-02-01,0.0388127483840593
+"Lancaster County, NE",County,Nebraska,2025-03-01,0.0372987613434548
+"Larimer County, CO",County,Colorado,2025-01-01,0.0898691670980166
+"Larimer County, CO",County,Colorado,2025-02-01,0.0946076598061812
+"Larimer County, CO",County,Colorado,2025-03-01,0.0953023663807761
+"Las Vegas, NV",City,Nevada,2025-01-01,0.0658989030977829
+"Las Vegas, NV",City,Nevada,2025-02-01,0.0671418805855142
+"Las Vegas, NV",City,Nevada,2025-03-01,0.0672659206767966
+"Las Vegas-Henderson-Paradise, NV",Metro,Nevada,2025-01-01,0.0659634080661512
+"Las Vegas-Henderson-Paradise, NV",Metro,Nevada,2025-02-01,0.066714568644108
+"Las Vegas-Henderson-Paradise, NV",Metro,Nevada,2025-03-01,0.0663617313724786
+"Lawrenceville, GA",City,Georgia,2025-01-01,0.071560812646889
+"Lawrenceville, GA",City,Georgia,2025-02-01,0.0733714621862018
+"Lawrenceville, GA",City,Georgia,2025-03-01,0.0757150228014579
+"Lee County, FL",County,Florida,2025-01-01,0.0949359112598388
+"Lee County, FL",County,Florida,2025-02-01,0.0913349505868969
+"Lee County, FL",County,Florida,2025-03-01,0.0907599937265438
+"Lewisville, TX",City,Texas,2025-01-01,0.0823460265618773
+"Lewisville, TX",City,Texas,2025-02-01,0.0837312530159366
+"Lewisville, TX",City,Texas,2025-03-01,0.0839278458802641
+"Lexington, KY",City,Kentucky,2025-01-01,0.0470029241031206
+"Lexington, KY",City,Kentucky,2025-02-01,0.0486690692025205
+"Lexington, KY",City,Kentucky,2025-03-01,0.0510381062578479
+"Lexington-Fayette, KY",Metro,Kentucky,2025-01-01,0.0466996896523453
+"Lexington-Fayette, KY",Metro,Kentucky,2025-02-01,0.0484641414196235
+"Lexington-Fayette, KY",Metro,Kentucky,2025-03-01,0.0507676518589978
+"Lincoln, NE",Metro,Nebraska,2025-01-01,0.0402430213803928
+"Lincoln, NE",City,Nebraska,2025-01-01,0.0383514131824776
+"Lincoln, NE",Metro,Nebraska,2025-02-01,0.0388127483840593
+"Lincoln, NE",City,Nebraska,2025-02-01,0.0369335335016461
+"Lincoln, NE",Metro,Nebraska,2025-03-01,0.0372987613434548
+"Lincoln, NE",City,Nebraska,2025-03-01,0.0353558950389561
+"Little Rock, AR",City,Arkansas,2025-01-01,0.0650609485420806
+"Little Rock, AR",City,Arkansas,2025-02-01,0.0648602386961756
+"Little Rock, AR",City,Arkansas,2025-03-01,0.0684293907872407
+"Little Rock-North Little Rock-Conway, AR",Metro,Arkansas,2025-01-01,0.064118711299716
+"Little Rock-North Little Rock-Conway, AR",Metro,Arkansas,2025-02-01,0.0643012421301809
+"Little Rock-North Little Rock-Conway, AR",Metro,Arkansas,2025-03-01,0.0666905870163892
+"Littleton, CO",City,Colorado,2025-01-01,0.0650285245056195
+"Littleton, CO",City,Colorado,2025-02-01,0.0661682526375184
+"Littleton, CO",City,Colorado,2025-03-01,0.0666918757046435
+"Los Angeles County, CA",County,California,2025-01-01,0.0494843596504122
+"Los Angeles County, CA",County,California,2025-02-01,0.0486635357958423
+"Los Angeles County, CA",County,California,2025-03-01,0.0480696725632539
+"Los Angeles, CA",City,California,2025-01-01,0.0524602976191063
+"Los Angeles, CA",City,California,2025-02-01,0.0524639338256611
+"Los Angeles, CA",City,California,2025-03-01,0.0528920897007034
+"Los Angeles-Long Beach-Anaheim, CA",Metro,California,2025-01-01,0.0519136746826087
+"Los Angeles-Long Beach-Anaheim, CA",Metro,California,2025-02-01,0.0510516657824569
+"Los Angeles-Long Beach-Anaheim, CA",Metro,California,2025-03-01,0.0505007056930899
+Louisiana,State,Louisiana,2025-01-01,0.0655451853943085
+Louisiana,State,Louisiana,2025-02-01,0.0659024357007797
+Louisiana,State,Louisiana,2025-03-01,0.0653912167952692
+"Louisville, KY",City,Kentucky,2025-01-01,0.0652829854997819
+"Louisville, KY",City,Kentucky,2025-02-01,0.0643922891014102
+"Louisville, KY",City,Kentucky,2025-03-01,0.0644403819125689
+"Louisville/Jefferson County, KY-IN",Metro,Kentucky,2025-01-01,0.0640857335948
+"Louisville/Jefferson County, KY-IN",Metro,Kentucky,2025-02-01,0.0636973235719557
+"Louisville/Jefferson County, KY-IN",Metro,Kentucky,2025-03-01,0.0638931930512407
+"Macomb County, MI",County,Michigan,2025-01-01,0.0504449845213604
+"Macomb County, MI",County,Michigan,2025-02-01,0.0463384360898227
+"Macomb County, MI",County,Michigan,2025-03-01,0.0448318709155742
+"Madison County, AL",County,Alabama,2025-01-01,0.0922010316874475
+"Madison County, AL",County,Alabama,2025-02-01,0.089946143819885
+"Madison County, AL",County,Alabama,2025-03-01,0.0898995722193993
+"Madison, WI",Metro,Wisconsin,2025-01-01,0.0616309791044408
+"Madison, WI",Metro,Wisconsin,2025-02-01,0.0631367303335907
+"Madison, WI",Metro,Wisconsin,2025-03-01,0.0656539530264865
+"Manatee County, FL",County,Florida,2025-01-01,0.0725373099124535
+"Manatee County, FL",County,Florida,2025-02-01,0.0729151403404793
+"Manatee County, FL",County,Florida,2025-03-01,0.0749732483815775
+"Maricopa County, AZ",County,Arizona,2025-01-01,0.076339585626785
+"Maricopa County, AZ",County,Arizona,2025-02-01,0.0767925619027002
+"Maricopa County, AZ",County,Arizona,2025-03-01,0.0774086032681466
+"Marietta, GA",City,Georgia,2025-01-01,0.0645389719132305
+"Marietta, GA",City,Georgia,2025-02-01,0.0673466709820343
+"Marietta, GA",City,Georgia,2025-03-01,0.069476773142824
+"Marion County, IN",County,Indiana,2025-01-01,0.0545280986706956
+"Marion County, IN",County,Indiana,2025-02-01,0.0556752234998611
+"Marion County, IN",County,Indiana,2025-03-01,0.0560083244828354
+Maryland,State,Maryland,2025-01-01,0.0515478085918321
+Maryland,State,Maryland,2025-02-01,0.0526663253989045
+Maryland,State,Maryland,2025-03-01,0.0537037338816112
+Massachusetts,State,Massachusetts,2025-01-01,0.0534706175908236
+Massachusetts,State,Massachusetts,2025-02-01,0.0529652939981831
+Massachusetts,State,Massachusetts,2025-03-01,0.0527970688717589
+"McKinney, TX",City,Texas,2025-01-01,0.0763522871828311
+"McKinney, TX",City,Texas,2025-02-01,0.0789415374798571
+"McKinney, TX",City,Texas,2025-03-01,0.0801650058279045
+"Mecklenburg County, NC",County,North Carolina,2025-01-01,0.0837778429157319
+"Mecklenburg County, NC",County,North Carolina,2025-02-01,0.0848290583869988
+"Mecklenburg County, NC",County,North Carolina,2025-03-01,0.0857347863587476
+"Memphis, TN",City,Tennessee,2025-01-01,0.0901110828874607
+"Memphis, TN",City,Tennessee,2025-02-01,0.0883068568537722
+"Memphis, TN",City,Tennessee,2025-03-01,0.0864264613466776
+"Memphis, TN-MS-AR",Metro,Tennessee,2025-01-01,0.0876978038386119
+"Memphis, TN-MS-AR",Metro,Tennessee,2025-02-01,0.0863845448410159
+"Memphis, TN-MS-AR",Metro,Tennessee,2025-03-01,0.0843506022459562
+"Mesa, AZ",City,Arizona,2025-01-01,0.0692709877276684
+"Mesa, AZ",City,Arizona,2025-02-01,0.0713189206780393
+"Mesa, AZ",City,Arizona,2025-03-01,0.0724208967421368
+"Miami, FL",City,Florida,2025-01-01,0.0607504005526874
+"Miami, FL",City,Florida,2025-02-01,0.0598923003949598
+"Miami, FL",City,Florida,2025-03-01,0.059164649705315
+"Miami-Dade County, FL",County,Florida,2025-01-01,0.0571963028514367
+"Miami-Dade County, FL",County,Florida,2025-02-01,0.0563790029873342
+"Miami-Dade County, FL",County,Florida,2025-03-01,0.0559599447831862
+"Miami-Fort Lauderdale-Pompano Beach, FL",Metro,Florida,2025-01-01,0.0574137428979929
+"Miami-Fort Lauderdale-Pompano Beach, FL",Metro,Florida,2025-02-01,0.057205120913445
+"Miami-Fort Lauderdale-Pompano Beach, FL",Metro,Florida,2025-03-01,0.0576663724932111
+Michigan,State,Michigan,2025-01-01,0.0573480815015032
+Michigan,State,Michigan,2025-02-01,0.0555537076859703
+Michigan,State,Michigan,2025-03-01,0.0538507734333041
+"Middlesex County, MA",County,Massachusetts,2025-01-01,0.051731757588513
+"Middlesex County, MA",County,Massachusetts,2025-02-01,0.0520581724463389
+"Middlesex County, MA",County,Massachusetts,2025-03-01,0.0521280796014449
+"Middlesex County, NJ",County,New Jersey,2025-01-01,0.0350954062304805
+"Middlesex County, NJ",County,New Jersey,2025-02-01,0.035796909867481
+"Middlesex County, NJ",County,New Jersey,2025-03-01,0.0362812758531563
+"Midland County, TX",County,Texas,2025-01-01,0.0597958038566704
+"Midland County, TX",County,Texas,2025-02-01,0.0596862422712377
+"Midland County, TX",County,Texas,2025-03-01,0.0605825107540988
+"Midland, TX",Metro,Texas,2025-01-01,0.0597958038566704
+"Midland, TX",City,Texas,2025-01-01,0.0601105240625053
+"Midland, TX",Metro,Texas,2025-02-01,0.0596862422712377
+"Midland, TX",City,Texas,2025-02-01,0.0599201760488596
+"Midland, TX",Metro,Texas,2025-03-01,0.0605825107540988
+"Midland, TX",City,Texas,2025-03-01,0.0608390149382999
+"Milwaukee County, WI",County,Wisconsin,2025-01-01,0.0800858478542484
+"Milwaukee County, WI",County,Wisconsin,2025-02-01,0.0768336925081229
+"Milwaukee County, WI",County,Wisconsin,2025-03-01,0.0731438946041847
+"Milwaukee, WI",City,Wisconsin,2025-01-01,0.117466706787171
+"Milwaukee, WI",City,Wisconsin,2025-02-01,0.113605866074398
+"Milwaukee, WI",City,Wisconsin,2025-03-01,0.10877573744537
+"Milwaukee-Waukesha, WI",Metro,Wisconsin,2025-01-01,0.0761617286244031
+"Milwaukee-Waukesha, WI",Metro,Wisconsin,2025-02-01,0.0728353797500121
+"Milwaukee-Waukesha, WI",Metro,Wisconsin,2025-03-01,0.0694752337063349
+"Minneapolis, MN",City,Minnesota,2025-01-01,0.0857740010967271
+"Minneapolis, MN",City,Minnesota,2025-02-01,0.0838010268725566
+"Minneapolis, MN",City,Minnesota,2025-03-01,0.0847602209045574
+"Minneapolis-St. Paul-Bloomington, MN-WI",Metro,Minnesota,2025-01-01,0.0684866529803602
+"Minneapolis-St. Paul-Bloomington, MN-WI",Metro,Minnesota,2025-02-01,0.068544760631369
+"Minneapolis-St. Paul-Bloomington, MN-WI",Metro,Minnesota,2025-03-01,0.0695299956862783
+"Minnehaha County, SD",County,South Dakota,2025-01-01,0.112497379688928
+"Minnehaha County, SD",County,South Dakota,2025-02-01,0.115621493782986
+"Minnehaha County, SD",County,South Dakota,2025-03-01,0.118318705964977
+Minnesota,State,Minnesota,2025-01-01,0.0692191558781274
+Minnesota,State,Minnesota,2025-02-01,0.069012431648135
+Minnesota,State,Minnesota,2025-03-01,0.0697329075675583
+"Minot, ND",Metro,North Dakota,2025-01-01,0.0547543984367219
+"Minot, ND",City,North Dakota,2025-01-01,0.0543490194034777
+"Minot, ND",Metro,North Dakota,2025-02-01,0.05536861085395
+"Minot, ND",City,North Dakota,2025-02-01,0.0551495152232554
+"Minot, ND",Metro,North Dakota,2025-03-01,0.0568085857352249
+"Minot, ND",City,North Dakota,2025-03-01,0.0568783660263909
+Mississippi,State,Mississippi,2025-01-01,0.0575399915192494
+Mississippi,State,Mississippi,2025-02-01,0.0593097778517536
+Mississippi,State,Mississippi,2025-03-01,0.0597093170507514
+Missouri,State,Missouri,2025-01-01,0.0690249269086612
+Missouri,State,Missouri,2025-02-01,0.0702341884459379
+Missouri,State,Missouri,2025-03-01,0.0706618280895504
+"Montgomery County, MD",County,Maryland,2025-01-01,0.0528521682404135
+"Montgomery County, MD",County,Maryland,2025-02-01,0.0535536166034058
+"Montgomery County, MD",County,Maryland,2025-03-01,0.0542762968124875
+"Montgomery County, PA",County,Pennsylvania,2025-01-01,0.0542364385153854
+"Montgomery County, PA",County,Pennsylvania,2025-02-01,0.0528584693922189
+"Montgomery County, PA",County,Pennsylvania,2025-03-01,0.052664645949845
+"Montgomery County, TX",County,Texas,2025-01-01,0.0849168620328738
+"Montgomery County, TX",County,Texas,2025-02-01,0.084875503316258
+"Montgomery County, TX",County,Texas,2025-03-01,0.0842926551528573
+"Mountain View, CA",City,California,2025-01-01,0.0641931236433499
+"Mountain View, CA",City,California,2025-02-01,0.0630807849244854
+"Mountain View, CA",City,California,2025-03-01,0.0673300164615861
+"Multnomah County, OR",County,Oregon,2025-01-01,0.0747066824372612
+"Multnomah County, OR",County,Oregon,2025-02-01,0.074817591814819
+"Multnomah County, OR",County,Oregon,2025-03-01,0.0737518945464774
+"Murfreesboro, TN",City,Tennessee,2025-01-01,0.0656821034663291
+"Murfreesboro, TN",City,Tennessee,2025-02-01,0.0655595949224884
+"Murfreesboro, TN",City,Tennessee,2025-03-01,0.0664733638264735
+"Myrtle Beach-Conway-North Myrtle Beach, SC-NC",Metro,South Carolina,2025-01-01,0.0973360707834434
+"Myrtle Beach-Conway-North Myrtle Beach, SC-NC",Metro,South Carolina,2025-02-01,0.0993833916966466
+"Myrtle Beach-Conway-North Myrtle Beach, SC-NC",Metro,South Carolina,2025-03-01,0.0997867870739352
+"Nashville, TN",City,Tennessee,2025-01-01,0.0784411364109126
+"Nashville, TN",City,Tennessee,2025-02-01,0.0798292842707492
+"Nashville, TN",City,Tennessee,2025-03-01,0.0817447933206069
+"Nashville-Davidson--Murfreesboro--Franklin, TN",Metro,Tennessee,2025-01-01,0.077836189242381
+"Nashville-Davidson--Murfreesboro--Franklin, TN",Metro,Tennessee,2025-02-01,0.0790481556152531
+"Nashville-Davidson--Murfreesboro--Franklin, TN",Metro,Tennessee,2025-03-01,0.0808351975947473
+Nebraska,State,Nebraska,2025-01-01,0.0577843640452831
+Nebraska,State,Nebraska,2025-02-01,0.0573220620245409
+Nebraska,State,Nebraska,2025-03-01,0.0566699797367349
+Nevada,State,Nevada,2025-01-01,0.0644448468013382
+Nevada,State,Nevada,2025-02-01,0.064753662666363
+Nevada,State,Nevada,2025-03-01,0.0642087060375722
+New Hampshire,State,New Hampshire,2025-01-01,0.0525660038337633
+New Hampshire,State,New Hampshire,2025-02-01,0.0534662775999535
+New Hampshire,State,New Hampshire,2025-03-01,0.054750366739553
+"New Hanover County, NC",County,North Carolina,2025-01-01,0.0840768898805806
+"New Hanover County, NC",County,North Carolina,2025-02-01,0.0856213305940149
+"New Hanover County, NC",County,North Carolina,2025-03-01,0.0894921049644911
+"New Haven County, CT",County,Connecticut,2025-01-01,0.0833262606007616
+"New Haven County, CT",County,Connecticut,2025-02-01,0.0842451613255159
+"New Haven County, CT",County,Connecticut,2025-03-01,0.0856603170225954
+"New Haven-Milford, CT",Metro,Connecticut,2025-01-01,0.0833262606007616
+"New Haven-Milford, CT",Metro,Connecticut,2025-02-01,0.0842451613255159
+"New Haven-Milford, CT",Metro,Connecticut,2025-03-01,0.0856603170225954
+New Jersey,State,New Jersey,2025-01-01,0.0462220019666473
+New Jersey,State,New Jersey,2025-02-01,0.046077455101865
+New Jersey,State,New Jersey,2025-03-01,0.0462141025377478
+New Mexico,State,New Mexico,2025-01-01,0.0638400860508841
+New Mexico,State,New Mexico,2025-02-01,0.066570166778721
+New Mexico,State,New Mexico,2025-03-01,0.0690522895501583
+"New Orleans-Metairie, LA",Metro,Louisiana,2025-01-01,0.0491877611331961
+"New Orleans-Metairie, LA",Metro,Louisiana,2025-02-01,0.0484801612223881
+"New Orleans-Metairie, LA",Metro,Louisiana,2025-03-01,0.0482810222542274
+New York,State,New York,2025-01-01,0.0477542511593856
+New York,State,New York,2025-02-01,0.0473874627638756
+New York,State,New York,2025-03-01,0.0470523479195171
+"New York City, NY",City,New York,2025-01-01,0.0315856823534617
+"New York City, NY",City,New York,2025-02-01,0.0318534696226714
+"New York City, NY",City,New York,2025-03-01,0.0316545423865655
+"New York County, NY",County,New York,2025-01-01,0.03086054518482
+"New York County, NY",County,New York,2025-02-01,0.0308098061902528
+"New York County, NY",County,New York,2025-03-01,0.0303563412133877
+"New York-Newark-Jersey City, NY-NJ-PA",Metro,New York,2025-01-01,0.0493339422544079
+"New York-Newark-Jersey City, NY-NJ-PA",Metro,New York,2025-02-01,0.048794776544477
+"New York-Newark-Jersey City, NY-NJ-PA",Metro,New York,2025-03-01,0.048594686136475
+"Newport News, VA",City,Virginia,2025-01-01,0.0555650431965728
+"Newport News, VA",City,Virginia,2025-02-01,0.0558777711848523
+"Newport News, VA",City,Virginia,2025-03-01,0.0531538969331151
+"Norfolk County, MA",County,Massachusetts,2025-01-01,0.0492366470647572
+"Norfolk County, MA",County,Massachusetts,2025-02-01,0.0486658341809436
+"Norfolk County, MA",County,Massachusetts,2025-03-01,0.0485600122875863
+"Norfolk, VA",City,Virginia,2025-01-01,0.0609525595473742
+"Norfolk, VA",City,Virginia,2025-02-01,0.0581663765914299
+"Norfolk, VA",City,Virginia,2025-03-01,0.055488596032835
+North Carolina,State,North Carolina,2025-01-01,0.0817551977292716
+North Carolina,State,North Carolina,2025-02-01,0.082717508952846
+North Carolina,State,North Carolina,2025-03-01,0.0835214917140905
+North Dakota,State,North Dakota,2025-01-01,0.0595913584557572
+North Dakota,State,North Dakota,2025-02-01,0.0570546412663366
+North Dakota,State,North Dakota,2025-03-01,0.0556806849894715
+"North Port-Sarasota-Bradenton, FL",Metro,Florida,2025-01-01,0.107430052259875
+"North Port-Sarasota-Bradenton, FL",Metro,Florida,2025-02-01,0.109271957775864
+"North Port-Sarasota-Bradenton, FL",Metro,Florida,2025-03-01,0.111867344014121
+"Nueces County, TX",County,Texas,2025-01-01,0.101392134683279
+"Nueces County, TX",County,Texas,2025-02-01,0.100067988395366
+"Nueces County, TX",County,Texas,2025-03-01,0.0994560170311125
+"Oakland County, MI",County,Michigan,2025-01-01,0.0583854446328626
+"Oakland County, MI",County,Michigan,2025-02-01,0.0581953592397667
+"Oakland County, MI",County,Michigan,2025-03-01,0.0572593138247608
+"Oakland, CA",City,California,2025-01-01,0.0775825205833992
+"Oakland, CA",City,California,2025-02-01,0.0758442488508302
+"Oakland, CA",City,California,2025-03-01,0.0748836655835041
+"Ogden-Clearfield, UT",Metro,Utah,2025-01-01,0.0671202940289793
+"Ogden-Clearfield, UT",Metro,Utah,2025-02-01,0.0673842111341489
+"Ogden-Clearfield, UT",Metro,Utah,2025-03-01,0.0684681422448576
+Ohio,State,Ohio,2025-01-01,0.0579661901535889
+Ohio,State,Ohio,2025-02-01,0.0573009083406584
+Ohio,State,Ohio,2025-03-01,0.0567381652775007
+Oklahoma,State,Oklahoma,2025-01-01,0.0521923471175396
+Oklahoma,State,Oklahoma,2025-02-01,0.0526075470128364
+Oklahoma,State,Oklahoma,2025-03-01,0.0540220527739447
+"Oklahoma City, OK",Metro,Oklahoma,2025-01-01,0.056149561231897
+"Oklahoma City, OK",City,Oklahoma,2025-01-01,0.0537896814826057
+"Oklahoma City, OK",Metro,Oklahoma,2025-02-01,0.0568022372914359
+"Oklahoma City, OK",City,Oklahoma,2025-02-01,0.0556235810927148
+"Oklahoma City, OK",Metro,Oklahoma,2025-03-01,0.0596591590975536
+"Oklahoma City, OK",City,Oklahoma,2025-03-01,0.0598784426362655
+"Oklahoma County, OK",County,Oklahoma,2025-01-01,0.0550895408676148
+"Oklahoma County, OK",County,Oklahoma,2025-02-01,0.0567744935360131
+"Oklahoma County, OK",County,Oklahoma,2025-03-01,0.0612320042749335
+"Olympia-Lacey-Tumwater, WA",Metro,Washington,2025-01-01,0.0800964593952861
+"Olympia-Lacey-Tumwater, WA",Metro,Washington,2025-02-01,0.0741315730486957
+"Olympia-Lacey-Tumwater, WA",Metro,Washington,2025-03-01,0.0725764517848526
+"Omaha, NE",City,Nebraska,2025-01-01,0.0576108497904903
+"Omaha, NE",City,Nebraska,2025-02-01,0.0560754602788602
+"Omaha, NE",City,Nebraska,2025-03-01,0.0543480366087066
+"Omaha-Council Bluffs, NE-IA",Metro,Nebraska,2025-01-01,0.061295853314917
+"Omaha-Council Bluffs, NE-IA",Metro,Nebraska,2025-02-01,0.0611901518240934
+"Omaha-Council Bluffs, NE-IA",Metro,Nebraska,2025-03-01,0.0606831469618854
+"Orange County, CA",County,California,2025-01-01,0.0578724694276881
+"Orange County, CA",County,California,2025-02-01,0.0569197693295785
+"Orange County, CA",County,California,2025-03-01,0.0565424775194504
+"Orange County, FL",County,Florida,2025-01-01,0.0671843371696157
+"Orange County, FL",County,Florida,2025-02-01,0.0686218835934574
+"Orange County, FL",County,Florida,2025-03-01,0.0707162766839771
+"Orange County, NC",County,North Carolina,2025-01-01,0.0666356312025118
+"Orange County, NC",County,North Carolina,2025-02-01,0.0701217071886651
+"Orange County, NC",County,North Carolina,2025-03-01,0.0743734568532873
+Oregon,State,Oregon,2025-01-01,0.067209214846209
+Oregon,State,Oregon,2025-02-01,0.0671283197377618
+Oregon,State,Oregon,2025-03-01,0.0665691476732154
+"Orlando, FL",City,Florida,2025-01-01,0.065493605196417
+"Orlando, FL",City,Florida,2025-02-01,0.0670421314805386
+"Orlando, FL",City,Florida,2025-03-01,0.0688130240721678
+"Orlando-Kissimmee-Sanford, FL",Metro,Florida,2025-01-01,0.0689512138310343
+"Orlando-Kissimmee-Sanford, FL",Metro,Florida,2025-02-01,0.0699125928776394
+"Orlando-Kissimmee-Sanford, FL",Metro,Florida,2025-03-01,0.07128374076401
+"Osceola County, FL",County,Florida,2025-01-01,0.0751391279679628
+"Osceola County, FL",County,Florida,2025-02-01,0.0765545255278837
+"Osceola County, FL",County,Florida,2025-03-01,0.0770529905438213
+"Overland Park, KS",City,Kansas,2025-01-01,0.0590244361350573
+"Overland Park, KS",City,Kansas,2025-02-01,0.058880946711945
+"Overland Park, KS",City,Kansas,2025-03-01,0.0580532787317214
+"Oxnard-Thousand Oaks-Ventura, CA",Metro,California,2025-01-01,0.0528367887465402
+"Oxnard-Thousand Oaks-Ventura, CA",Metro,California,2025-02-01,0.0496744190992095
+"Oxnard-Thousand Oaks-Ventura, CA",Metro,California,2025-03-01,0.0478653081099662
+"Palm Bay-Melbourne-Titusville, FL",Metro,Florida,2025-01-01,0.0830264982919578
+"Palm Bay-Melbourne-Titusville, FL",Metro,Florida,2025-02-01,0.0891682752066686
+"Palm Bay-Melbourne-Titusville, FL",Metro,Florida,2025-03-01,0.0950430911646769
+"Palm Beach County, FL",County,Florida,2025-01-01,0.0591181870796168
+"Palm Beach County, FL",County,Florida,2025-02-01,0.0597390663127457
+"Palm Beach County, FL",County,Florida,2025-03-01,0.0616457872315926
+"Pasadena, CA",City,California,2025-01-01,0.0461179267997738
+"Pasadena, CA",City,California,2025-02-01,0.0371615796996165
+"Pasadena, CA",City,California,2025-03-01,0.0274673208055851
+Pennsylvania,State,Pennsylvania,2025-01-01,0.0558187659244031
+Pennsylvania,State,Pennsylvania,2025-02-01,0.0571359593896498
+Pennsylvania,State,Pennsylvania,2025-03-01,0.0589438530563673
+"Philadelphia County, PA",County,Pennsylvania,2025-01-01,0.0626667812114596
+"Philadelphia County, PA",County,Pennsylvania,2025-02-01,0.0645721175699408
+"Philadelphia County, PA",County,Pennsylvania,2025-03-01,0.0664670808575787
+"Philadelphia, PA",City,Pennsylvania,2025-01-01,0.0627169418038543
+"Philadelphia, PA",City,Pennsylvania,2025-02-01,0.0645951363038627
+"Philadelphia, PA",City,Pennsylvania,2025-03-01,0.0664583532611878
+"Philadelphia-Camden-Wilmington, PA-NJ-DE-MD",Metro,Pennsylvania,2025-01-01,0.0523779512771397
+"Philadelphia-Camden-Wilmington, PA-NJ-DE-MD",Metro,Pennsylvania,2025-02-01,0.0537200352729971
+"Philadelphia-Camden-Wilmington, PA-NJ-DE-MD",Metro,Pennsylvania,2025-03-01,0.0552842644019574
+"Phoenix, AZ",City,Arizona,2025-01-01,0.0752025837665649
+"Phoenix, AZ",City,Arizona,2025-02-01,0.0749683149706317
+"Phoenix, AZ",City,Arizona,2025-03-01,0.0749769343949535
+"Phoenix-Mesa-Chandler, AZ",Metro,Arizona,2025-01-01,0.0767781534104293
+"Phoenix-Mesa-Chandler, AZ",Metro,Arizona,2025-02-01,0.0774449610256797
+"Phoenix-Mesa-Chandler, AZ",Metro,Arizona,2025-03-01,0.0781696233432264
+"Pierce County, WA",County,Washington,2025-01-01,0.0635365627075175
+"Pierce County, WA",County,Washington,2025-02-01,0.0643012972738638
+"Pierce County, WA",County,Washington,2025-03-01,0.0646412981859157
+"Pima County, AZ",County,Arizona,2025-01-01,0.0842677075367654
+"Pima County, AZ",County,Arizona,2025-02-01,0.0835976903408829
+"Pima County, AZ",County,Arizona,2025-03-01,0.0828025089587575
+"Pinellas County, FL",County,Florida,2025-01-01,0.0476228306146792
+"Pinellas County, FL",County,Florida,2025-02-01,0.0485352279920358
+"Pinellas County, FL",County,Florida,2025-03-01,0.0521558679332775
+"Pittsburgh, PA",Metro,Pennsylvania,2025-01-01,0.0617112208965871
+"Pittsburgh, PA",City,Pennsylvania,2025-01-01,0.0616262495013354
+"Pittsburgh, PA",Metro,Pennsylvania,2025-02-01,0.0640479166289209
+"Pittsburgh, PA",City,Pennsylvania,2025-02-01,0.0613089626567138
+"Pittsburgh, PA",Metro,Pennsylvania,2025-03-01,0.0667587123882176
+"Pittsburgh, PA",City,Pennsylvania,2025-03-01,0.0615856887757452
+"Placer County, CA",County,California,2025-01-01,0.0342894937227762
+"Placer County, CA",County,California,2025-02-01,0.0346322797108608
+"Placer County, CA",County,California,2025-03-01,0.0343677321376711
+"Plano, TX",City,Texas,2025-01-01,0.0764056501453727
+"Plano, TX",City,Texas,2025-02-01,0.0755601141572573
+"Plano, TX",City,Texas,2025-03-01,0.0762523598954163
+"Polk County, FL",County,Florida,2025-01-01,0.0854743659582457
+"Polk County, FL",County,Florida,2025-02-01,0.0843007277072463
+"Polk County, FL",County,Florida,2025-03-01,0.0861854205291403
+"Polk County, IA",County,Iowa,2025-01-01,0.0736871123088755
+"Polk County, IA",County,Iowa,2025-02-01,0.0771825396523515
+"Polk County, IA",County,Iowa,2025-03-01,0.0802202132224877
+"Port St. Lucie, FL",Metro,Florida,2025-01-01,0.0891714688554465
+"Port St. Lucie, FL",Metro,Florida,2025-02-01,0.0863063002649697
+"Port St. Lucie, FL",Metro,Florida,2025-03-01,0.0885227705632892
+"Portland, OR",City,Oregon,2025-01-01,0.0771449498620392
+"Portland, OR",City,Oregon,2025-02-01,0.0773484843676325
+"Portland, OR",City,Oregon,2025-03-01,0.0760021890864943
+"Portland-Vancouver-Hillsboro, OR-WA",Metro,Oregon,2025-01-01,0.0640029253705715
+"Portland-Vancouver-Hillsboro, OR-WA",Metro,Oregon,2025-02-01,0.0633004611617705
+"Portland-Vancouver-Hillsboro, OR-WA",Metro,Oregon,2025-03-01,0.0626983812386732
+"Prince George's County, MD",County,Maryland,2025-01-01,0.0506618930922248
+"Prince George's County, MD",County,Maryland,2025-02-01,0.0521442948561791
+"Prince George's County, MD",County,Maryland,2025-03-01,0.0528801655845545
+"Prince William County, VA",County,Virginia,2025-01-01,0.0596731563561831
+"Prince William County, VA",County,Virginia,2025-02-01,0.0601454577604857
+"Prince William County, VA",County,Virginia,2025-03-01,0.0603915536539107
+"Providence-Warwick, RI-MA",Metro,Rhode Island,2025-01-01,0.0426374791457455
+"Providence-Warwick, RI-MA",Metro,Rhode Island,2025-02-01,0.0414448152011151
+"Providence-Warwick, RI-MA",Metro,Rhode Island,2025-03-01,0.0411452075400772
+"Provo-Orem, UT",Metro,Utah,2025-01-01,0.10685631196545
+"Provo-Orem, UT",Metro,Utah,2025-02-01,0.104756968730876
+"Provo-Orem, UT",Metro,Utah,2025-03-01,0.102263483327731
+"Pulaski County, AR",County,Arkansas,2025-01-01,0.0653428030650557
+"Pulaski County, AR",County,Arkansas,2025-02-01,0.0650901054815192
+"Pulaski County, AR",County,Arkansas,2025-03-01,0.0672297599951556
+"Raleigh, NC",City,North Carolina,2025-01-01,0.0847799577595645
+"Raleigh, NC",City,North Carolina,2025-02-01,0.0832650800452929
+"Raleigh, NC",City,North Carolina,2025-03-01,0.0818357667981164
+"Raleigh-Cary, NC",Metro,North Carolina,2025-01-01,0.0875941426253111
+"Raleigh-Cary, NC",Metro,North Carolina,2025-02-01,0.0871794784325461
+"Raleigh-Cary, NC",Metro,North Carolina,2025-03-01,0.0869449720655666
+"Ramsey County, MN",County,Minnesota,2025-01-01,0.0543730880018989
+"Ramsey County, MN",County,Minnesota,2025-02-01,0.0556393106057951
+"Ramsey County, MN",County,Minnesota,2025-03-01,0.0574454846312464
+"Redmond, WA",City,Washington,2025-01-01,0.0543902919240075
+"Redmond, WA",City,Washington,2025-02-01,0.0568313096281514
+"Redmond, WA",City,Washington,2025-03-01,0.0574598295318966
+"Reno, NV",Metro,Nevada,2025-01-01,0.057051785257573
+"Reno, NV",City,Nevada,2025-01-01,0.0582711034198106
+"Reno, NV",Metro,Nevada,2025-02-01,0.0553810353453634
+"Reno, NV",City,Nevada,2025-02-01,0.0566078889945939
+"Reno, NV",Metro,Nevada,2025-03-01,0.0542130974548972
+"Reno, NV",City,Nevada,2025-03-01,0.0556835527330465
+"Renton, WA",City,Washington,2025-01-01,0.0561275239913157
+"Renton, WA",City,Washington,2025-02-01,0.0572115466868514
+"Renton, WA",City,Washington,2025-03-01,0.0554334684644093
+"Richardson, TX",City,Texas,2025-01-01,0.080496823475193
+"Richardson, TX",City,Texas,2025-02-01,0.0819657259805521
+"Richardson, TX",City,Texas,2025-03-01,0.083025481090633
+"Richland County, SC",County,South Carolina,2025-01-01,0.0706315356801512
+"Richland County, SC",County,South Carolina,2025-02-01,0.0700631812359888
+"Richland County, SC",County,South Carolina,2025-03-01,0.0676307992107122
+"Richmond County, GA",County,Georgia,2025-01-01,0.0800445877797737
+"Richmond County, GA",County,Georgia,2025-02-01,0.07734774312401
+"Richmond County, GA",County,Georgia,2025-03-01,0.0728360047008434
+"Richmond, VA",Metro,Virginia,2025-01-01,0.0673217066137851
+"Richmond, VA",City,Virginia,2025-01-01,0.0723012293477768
+"Richmond, VA",Metro,Virginia,2025-02-01,0.0669526693773736
+"Richmond, VA",City,Virginia,2025-02-01,0.0725825176835799
+"Richmond, VA",Metro,Virginia,2025-03-01,0.0668140663969579
+"Richmond, VA",City,Virginia,2025-03-01,0.0737316259145901
+"Riverside County, CA",County,California,2025-01-01,0.0488000147551425
+"Riverside County, CA",County,California,2025-02-01,0.0482944876474941
+"Riverside County, CA",County,California,2025-03-01,0.0487923017466991
+"Riverside, CA",City,California,2025-01-01,0.0564795726830008
+"Riverside, CA",City,California,2025-02-01,0.0565307135416774
+"Riverside, CA",City,California,2025-03-01,0.0567875292966481
+"Riverside-San Bernardino-Ontario, CA",Metro,California,2025-01-01,0.0425596160996539
+"Riverside-San Bernardino-Ontario, CA",Metro,California,2025-02-01,0.0418605020916573
+"Riverside-San Bernardino-Ontario, CA",Metro,California,2025-03-01,0.0415873287170082
+"Round Rock, TX",City,Texas,2025-01-01,0.0994492977686343
+"Round Rock, TX",City,Texas,2025-02-01,0.101061729305098
+"Round Rock, TX",City,Texas,2025-03-01,0.102449615329856
+"Rutherford County, TN",County,Tennessee,2025-01-01,0.0631245267434775
+"Rutherford County, TN",County,Tennessee,2025-02-01,0.0628322949327973
+"Rutherford County, TN",County,Tennessee,2025-03-01,0.0636148688532654
+"Sacramento County, CA",County,California,2025-01-01,0.0481662942042106
+"Sacramento County, CA",County,California,2025-02-01,0.0477907033875881
+"Sacramento County, CA",County,California,2025-03-01,0.0465350984911271
+"Sacramento, CA",City,California,2025-01-01,0.0501409305130648
+"Sacramento, CA",City,California,2025-02-01,0.0497766075133208
+"Sacramento, CA",City,California,2025-03-01,0.0482424108316033
+"Sacramento-Roseville-Folsom, CA",Metro,California,2025-01-01,0.0458550280473481
+"Sacramento-Roseville-Folsom, CA",Metro,California,2025-02-01,0.045475735158876
+"Sacramento-Roseville-Folsom, CA",Metro,California,2025-03-01,0.0442959267598999
+"Salt Lake City, UT",Metro,Utah,2025-01-01,0.0790774625043137
+"Salt Lake City, UT",City,Utah,2025-01-01,0.0876810084533335
+"Salt Lake City, UT",Metro,Utah,2025-02-01,0.0794093187209993
+"Salt Lake City, UT",City,Utah,2025-02-01,0.0873663184968045
+"Salt Lake City, UT",Metro,Utah,2025-03-01,0.0802715329926876
+"Salt Lake City, UT",City,Utah,2025-03-01,0.0868475188592592
+"Salt Lake County, UT",County,Utah,2025-01-01,0.0790774625043137
+"Salt Lake County, UT",County,Utah,2025-02-01,0.0794093187209993
+"Salt Lake County, UT",County,Utah,2025-03-01,0.0802715329926876
+"San Antonio, TX",City,Texas,2025-01-01,0.0881542990973708
+"San Antonio, TX",City,Texas,2025-02-01,0.0895805508789657
+"San Antonio, TX",City,Texas,2025-03-01,0.0902244788971559
+"San Antonio-New Braunfels, TX",Metro,Texas,2025-01-01,0.0899848900742137
+"San Antonio-New Braunfels, TX",Metro,Texas,2025-02-01,0.0913580550465076
+"San Antonio-New Braunfels, TX",Metro,Texas,2025-03-01,0.091822618398899
+"San Bernardino County, CA",County,California,2025-01-01,0.037708350758406
+"San Bernardino County, CA",County,California,2025-02-01,0.0367801840050698
+"San Bernardino County, CA",County,California,2025-03-01,0.035844766989042
+"San Diego County, CA",County,California,2025-01-01,0.0577875385233325
+"San Diego County, CA",County,California,2025-02-01,0.0589666978328619
+"San Diego County, CA",County,California,2025-03-01,0.0609849695029261
+"San Diego, CA",City,California,2025-01-01,0.0605320701854661
+"San Diego, CA",City,California,2025-02-01,0.0615884536926017
+"San Diego, CA",City,California,2025-03-01,0.0641403169753384
+"San Diego-Chula Vista-Carlsbad, CA",Metro,California,2025-01-01,0.0577875385233325
+"San Diego-Chula Vista-Carlsbad, CA",Metro,California,2025-02-01,0.0589666978328619
+"San Diego-Chula Vista-Carlsbad, CA",Metro,California,2025-03-01,0.0609849695029261
+"San Francisco County, CA",County,California,2025-01-01,0.0383302065755389
+"San Francisco County, CA",County,California,2025-02-01,0.0366382803991258
+"San Francisco County, CA",County,California,2025-03-01,0.0352766450505213
+"San Francisco, CA",City,California,2025-01-01,0.0383302065755389
+"San Francisco, CA",City,California,2025-02-01,0.0366382803991258
+"San Francisco, CA",City,California,2025-03-01,0.0352766450505213
+"San Francisco-Oakland-Berkeley, CA",Metro,California,2025-01-01,0.0496209801116736
+"San Francisco-Oakland-Berkeley, CA",Metro,California,2025-02-01,0.0480167955223478
+"San Francisco-Oakland-Berkeley, CA",Metro,California,2025-03-01,0.0467773233605513
+"San Jose, CA",City,California,2025-01-01,0.0504196754858255
+"San Jose, CA",City,California,2025-02-01,0.0491884636896909
+"San Jose, CA",City,California,2025-03-01,0.0479131885100358
+"San Jose-Sunnyvale-Santa Clara, CA",Metro,California,2025-01-01,0.0544201405378691
+"San Jose-Sunnyvale-Santa Clara, CA",Metro,California,2025-02-01,0.0531071385072738
+"San Jose-Sunnyvale-Santa Clara, CA",Metro,California,2025-03-01,0.0520907359028191
+"San Mateo County, CA",County,California,2025-01-01,0.049596012674206
+"San Mateo County, CA",County,California,2025-02-01,0.0467799433949676
+"San Mateo County, CA",County,California,2025-03-01,0.0446568493173085
+"Sandy Springs, GA",City,Georgia,2025-01-01,0.0764205666417498
+"Sandy Springs, GA",City,Georgia,2025-02-01,0.0768008385876272
+"Sandy Springs, GA",City,Georgia,2025-03-01,0.0766050455820726
+"Santa Clara County, CA",County,California,2025-01-01,0.0544201405378691
+"Santa Clara County, CA",County,California,2025-02-01,0.0531071385072738
+"Santa Clara County, CA",County,California,2025-03-01,0.0520907359028191
+"Santa Clara, CA",City,California,2025-01-01,0.0585112384805646
+"Santa Clara, CA",City,California,2025-02-01,0.0583546740228414
+"Santa Clara, CA",City,California,2025-03-01,0.0539832996508621
+"Sarpy County, NE",County,Nebraska,2025-01-01,0.0726926619785465
+"Sarpy County, NE",County,Nebraska,2025-02-01,0.0755293536728348
+"Sarpy County, NE",County,Nebraska,2025-03-01,0.0774335904774911
+"Savannah, GA",Metro,Georgia,2025-01-01,0.0857053666014259
+"Savannah, GA",City,Georgia,2025-01-01,0.0762452318994657
+"Savannah, GA",Metro,Georgia,2025-02-01,0.0840876274118978
+"Savannah, GA",City,Georgia,2025-02-01,0.0721187532602926
+"Savannah, GA",Metro,Georgia,2025-03-01,0.0845272906928261
+"Savannah, GA",City,Georgia,2025-03-01,0.069395603755368
+"Scottsdale, AZ",City,Arizona,2025-01-01,0.0622337073166737
+"Scottsdale, AZ",City,Arizona,2025-02-01,0.0622829734798059
+"Scottsdale, AZ",City,Arizona,2025-03-01,0.0647897326194097
+"Seattle, WA",City,Washington,2025-01-01,0.0653914509838753
+"Seattle, WA",City,Washington,2025-02-01,0.0636522810356173
+"Seattle, WA",City,Washington,2025-03-01,0.0621866928389619
+"Seattle-Tacoma-Bellevue, WA",Metro,Washington,2025-01-01,0.0593279911497709
+"Seattle-Tacoma-Bellevue, WA",Metro,Washington,2025-02-01,0.0589668444173027
+"Seattle-Tacoma-Bellevue, WA",Metro,Washington,2025-03-01,0.0584385781654062
+"Seminole County, FL",County,Florida,2025-01-01,0.0660168636556319
+"Seminole County, FL",County,Florida,2025-02-01,0.0640869715658884
+"Seminole County, FL",County,Florida,2025-03-01,0.0625303024294672
+"Shelby County, TN",County,Tennessee,2025-01-01,0.0887751107127662
+"Shelby County, TN",County,Tennessee,2025-02-01,0.086827337060484
+"Shelby County, TN",County,Tennessee,2025-03-01,0.0848094645543995
+"Silver Spring, MD",City,Maryland,2025-01-01,0.0516962629979232
+"Silver Spring, MD",City,Maryland,2025-02-01,0.0533508281880776
+"Silver Spring, MD",City,Maryland,2025-03-01,0.0537385313363476
+"Sioux Falls, SD",Metro,South Dakota,2025-01-01,0.118410337838187
+"Sioux Falls, SD",City,South Dakota,2025-01-01,0.118607253306694
+"Sioux Falls, SD",Metro,South Dakota,2025-02-01,0.118419436592308
+"Sioux Falls, SD",City,South Dakota,2025-02-01,0.118483309686072
+"Sioux Falls, SD",Metro,South Dakota,2025-03-01,0.114888156306918
+"Sioux Falls, SD",City,South Dakota,2025-03-01,0.114960121969731
+"Snohomish County, WA",County,Washington,2025-01-01,0.0479438228552455
+"Snohomish County, WA",County,Washington,2025-02-01,0.0476329072165599
+"Snohomish County, WA",County,Washington,2025-03-01,0.0478587840141099
+"Solano County, CA",County,California,2025-01-01,0.0523779263538565
+"Solano County, CA",County,California,2025-02-01,0.0515365783196328
+"Solano County, CA",County,California,2025-03-01,0.0517454848297761
+South Carolina,State,South Carolina,2025-01-01,0.073946321031107
+South Carolina,State,South Carolina,2025-02-01,0.0741857329320945
+South Carolina,State,South Carolina,2025-03-01,0.0739888424665689
+South Dakota,State,South Dakota,2025-01-01,0.118577750732968
+South Dakota,State,South Dakota,2025-02-01,0.118628055285085
+South Dakota,State,South Dakota,2025-03-01,0.114648390964941
+"Spokane County, WA",County,Washington,2025-01-01,0.0525262340680314
+"Spokane County, WA",County,Washington,2025-02-01,0.0516314471966519
+"Spokane County, WA",County,Washington,2025-03-01,0.0508828054700299
+"Spokane, WA",City,Washington,2025-01-01,0.0644067577541731
+"Spokane, WA",City,Washington,2025-02-01,0.0639097171679441
+"Spokane, WA",City,Washington,2025-03-01,0.061693387287437
+"Spokane-Spokane Valley, WA",Metro,Washington,2025-01-01,0.0525262340680314
+"Spokane-Spokane Valley, WA",Metro,Washington,2025-02-01,0.0516314471966519
+"Spokane-Spokane Valley, WA",Metro,Washington,2025-03-01,0.0508828054700299
+"Spring, TX",City,Texas,2025-01-01,0.0806076686715674
+"Spring, TX",City,Texas,2025-02-01,0.0799360367885125
+"Spring, TX",City,Texas,2025-03-01,0.0785075856874068
+"St. Louis County, MO",County,Missouri,2025-01-01,0.052012734243728
+"St. Louis County, MO",County,Missouri,2025-02-01,0.0524188008144352
+"St. Louis County, MO",County,Missouri,2025-03-01,0.0514208196353154
+"St. Louis Park, MN",City,Minnesota,2025-01-01,0.089957363264565
+"St. Louis Park, MN",City,Minnesota,2025-02-01,0.0894525065171035
+"St. Louis Park, MN",City,Minnesota,2025-03-01,0.0908395529209032
+"St. Louis, MO",City,Missouri,2025-01-01,0.0812969245028581
+"St. Louis, MO",City,Missouri,2025-02-01,0.0832896551800137
+"St. Louis, MO",City,Missouri,2025-03-01,0.0831255288663402
+"St. Louis, MO-IL",Metro,Missouri,2025-01-01,0.0658197597499396
+"St. Louis, MO-IL",Metro,Missouri,2025-02-01,0.0671286720055799
+"St. Louis, MO-IL",Metro,Missouri,2025-03-01,0.0668662306441418
+"St. Paul, MN",City,Minnesota,2025-01-01,0.0521615986451549
+"St. Paul, MN",City,Minnesota,2025-02-01,0.0525219411001281
+"St. Paul, MN",City,Minnesota,2025-03-01,0.0539717450294627
+"St. Petersburg, FL",City,Florida,2025-01-01,0.0540785840505791
+"St. Petersburg, FL",City,Florida,2025-02-01,0.056803187681457
+"St. Petersburg, FL",City,Florida,2025-03-01,0.0631277241909191
+"Suffolk County, MA",County,Massachusetts,2025-01-01,0.059915053569844
+"Suffolk County, MA",County,Massachusetts,2025-02-01,0.0593966809244948
+"Suffolk County, MA",County,Massachusetts,2025-03-01,0.0594228112905032
+"Sunnyvale, CA",City,California,2025-01-01,0.0474044814200072
+"Sunnyvale, CA",City,California,2025-02-01,0.0438648585265078
+"Sunnyvale, CA",City,California,2025-03-01,0.041696107927993
+"Tacoma, WA",City,Washington,2025-01-01,0.0667651744494929
+"Tacoma, WA",City,Washington,2025-02-01,0.0710523643109233
+"Tacoma, WA",City,Washington,2025-03-01,0.07432419294114
+"Tampa, FL",City,Florida,2025-01-01,0.0645090688076456
+"Tampa, FL",City,Florida,2025-02-01,0.0641125455500097
+"Tampa, FL",City,Florida,2025-03-01,0.0658930608055151
+"Tampa-St. Petersburg-Clearwater, FL",Metro,Florida,2025-01-01,0.0616052937595409
+"Tampa-St. Petersburg-Clearwater, FL",Metro,Florida,2025-02-01,0.0617218819680476
+"Tampa-St. Petersburg-Clearwater, FL",Metro,Florida,2025-03-01,0.0637136218263247
+"Tarrant County, TX",County,Texas,2025-01-01,0.0861443907185027
+"Tarrant County, TX",County,Texas,2025-02-01,0.0875046963745273
+"Tarrant County, TX",County,Texas,2025-03-01,0.087749093797343
+"Tempe, AZ",City,Arizona,2025-01-01,0.0737925911818511
+"Tempe, AZ",City,Arizona,2025-02-01,0.0737910634382887
+"Tempe, AZ",City,Arizona,2025-03-01,0.0749860386785311
+Tennessee,State,Tennessee,2025-01-01,0.0754634290756919
+Tennessee,State,Tennessee,2025-02-01,0.0761349806121632
+Tennessee,State,Tennessee,2025-03-01,0.0772689421095223
+Texas,State,Texas,2025-01-01,0.0851381458877066
+Texas,State,Texas,2025-02-01,0.0860090182267164
+Texas,State,Texas,2025-03-01,0.086793787447359
+"The Woodlands, TX",City,Texas,2025-01-01,0.0761042164876532
+"The Woodlands, TX",City,Texas,2025-02-01,0.0762053304327867
+"The Woodlands, TX",City,Texas,2025-03-01,0.0767063562344227
+"Thurston County, WA",County,Washington,2025-01-01,0.0800964593952861
+"Thurston County, WA",County,Washington,2025-02-01,0.0741315730486957
+"Thurston County, WA",County,Washington,2025-03-01,0.0725764517848526
+"Travis County, TX",County,Texas,2025-01-01,0.0949216947068697
+"Travis County, TX",County,Texas,2025-02-01,0.0951936546624544
+"Travis County, TX",County,Texas,2025-03-01,0.0957925373724164
+"Tucson, AZ",Metro,Arizona,2025-01-01,0.0842677075367654
+"Tucson, AZ",City,Arizona,2025-01-01,0.0813029562045464
+"Tucson, AZ",Metro,Arizona,2025-02-01,0.0835976903408829
+"Tucson, AZ",City,Arizona,2025-02-01,0.0802082934191493
+"Tucson, AZ",Metro,Arizona,2025-03-01,0.0828025089587575
+"Tucson, AZ",City,Arizona,2025-03-01,0.0791171425103817
+"Tulsa County, OK",County,Oklahoma,2025-01-01,0.0463460212669725
+"Tulsa County, OK",County,Oklahoma,2025-02-01,0.0463589501504808
+"Tulsa County, OK",County,Oklahoma,2025-03-01,0.0460187846801375
+"Tulsa, OK",Metro,Oklahoma,2025-01-01,0.046613094954322
+"Tulsa, OK",City,Oklahoma,2025-01-01,0.0442517918794142
+"Tulsa, OK",Metro,Oklahoma,2025-02-01,0.0466589968760284
+"Tulsa, OK",City,Oklahoma,2025-02-01,0.0442663785343411
+"Tulsa, OK",Metro,Oklahoma,2025-03-01,0.0463784978498386
+"Tulsa, OK",City,Oklahoma,2025-03-01,0.04361138776359
+United States,National,,2025-01-01,0.0684798338244413
+United States,National,,2025-02-01,0.0688103845698169
+United States,National,,2025-03-01,0.0692630444848674
+Utah,State,Utah,2025-01-01,0.0812474687341589
+Utah,State,Utah,2025-02-01,0.081424397922169
+Utah,State,Utah,2025-03-01,0.0817435430967887
+"Utah County, UT",County,Utah,2025-01-01,0.10685631196545
+"Utah County, UT",County,Utah,2025-02-01,0.104756968730876
+"Utah County, UT",County,Utah,2025-03-01,0.102263483327731
+"Vallejo, CA",Metro,California,2025-01-01,0.0523779263538565
+"Vallejo, CA",Metro,California,2025-02-01,0.0515365783196328
+"Vallejo, CA",Metro,California,2025-03-01,0.0517454848297761
+"Vancouver, WA",City,Washington,2025-01-01,0.0505535103184433
+"Vancouver, WA",City,Washington,2025-02-01,0.0488083602137321
+"Vancouver, WA",City,Washington,2025-03-01,0.048720874941231
+"Ventura County, CA",County,California,2025-01-01,0.0528367887465402
+"Ventura County, CA",County,California,2025-02-01,0.0496744190992095
+"Ventura County, CA",County,California,2025-03-01,0.0478653081099662
+Virginia,State,Virginia,2025-01-01,0.0571007242375083
+Virginia,State,Virginia,2025-02-01,0.0569112182890412
+Virginia,State,Virginia,2025-03-01,0.0569967287232027
+"Virginia Beach, VA",City,Virginia,2025-01-01,0.0661315613147904
+"Virginia Beach, VA",City,Virginia,2025-02-01,0.0670902618794975
+"Virginia Beach, VA",City,Virginia,2025-03-01,0.0654903811490705
+"Virginia Beach-Norfolk-Newport News, VA-NC",Metro,Virginia,2025-01-01,0.0593893469191088
+"Virginia Beach-Norfolk-Newport News, VA-NC",Metro,Virginia,2025-02-01,0.0606287628152257
+"Virginia Beach-Norfolk-Newport News, VA-NC",Metro,Virginia,2025-03-01,0.0604597221972275
+"Volusia County, FL",County,Florida,2025-01-01,0.0722901415311683
+"Volusia County, FL",County,Florida,2025-02-01,0.072938160511203
+"Volusia County, FL",County,Florida,2025-03-01,0.0723600990924902
+"Wake County, NC",County,North Carolina,2025-01-01,0.0868622092031104
+"Wake County, NC",County,North Carolina,2025-02-01,0.0862999816804569
+"Wake County, NC",County,North Carolina,2025-03-01,0.0859706580327642
+"Ward County, ND",County,North Dakota,2025-01-01,0.0547543984367219
+"Ward County, ND",County,North Dakota,2025-02-01,0.05536861085395
+"Ward County, ND",County,North Dakota,2025-03-01,0.0568085857352249
+Washington,State,Washington,2025-01-01,0.058990344396076
+Washington,State,Washington,2025-02-01,0.0583952069477975
+Washington,State,Washington,2025-03-01,0.0580174396791947
+"Washington County, MN",County,Minnesota,2025-01-01,0.0610479627416876
+"Washington County, MN",County,Minnesota,2025-02-01,0.057802670286345
+"Washington County, MN",County,Minnesota,2025-03-01,0.0573206048650712
+"Washington County, OR",County,Oregon,2025-01-01,0.0612893634233531
+"Washington County, OR",County,Oregon,2025-02-01,0.0605110140402416
+"Washington County, OR",County,Oregon,2025-03-01,0.0601288722209333
+"Washington, DC",City,District of Columbia,2025-01-01,0.0578558749409826
+"Washington, DC",City,District of Columbia,2025-02-01,0.0584639412074736
+"Washington, DC",City,District of Columbia,2025-03-01,0.060545902816391
+"Washington-Arlington-Alexandria, DC-VA-MD-WV",Metro,District of Columbia,2025-01-01,0.0540574560714682
+"Washington-Arlington-Alexandria, DC-VA-MD-WV",Metro,District of Columbia,2025-02-01,0.0543610564924285
+"Washington-Arlington-Alexandria, DC-VA-MD-WV",Metro,District of Columbia,2025-03-01,0.055261000624136
+"Washoe County, NV",County,Nevada,2025-01-01,0.057051785257573
+"Washoe County, NV",County,Nevada,2025-02-01,0.0553810353453635
+"Washoe County, NV",County,Nevada,2025-03-01,0.0542130974548972
+"Wayne County, MI",County,Michigan,2025-01-01,0.0423665266672809
+"Wayne County, MI",County,Michigan,2025-02-01,0.0421410263747418
+"Wayne County, MI",County,Michigan,2025-03-01,0.0422689940172465
+"Westchester County, NY",County,New York,2025-01-01,0.076601662559695
+"Westchester County, NY",County,New York,2025-02-01,0.0762254154107724
+"Westchester County, NY",County,New York,2025-03-01,0.0770972193680732
+"Williams County, ND",County,North Dakota,2025-01-01,0.0487046842412507
+"Williams County, ND",County,North Dakota,2025-02-01,0.0492224698020733
+"Williams County, ND",County,North Dakota,2025-03-01,0.0512317911588211
+"Williamson County, TN",County,Tennessee,2025-01-01,0.0987225827936839
+"Williamson County, TN",County,Tennessee,2025-02-01,0.0988161322417496
+"Williamson County, TN",County,Tennessee,2025-03-01,0.0996310867784105
+"Williamson County, TX",County,Texas,2025-01-01,0.106371350563593
+"Williamson County, TX",County,Texas,2025-02-01,0.107524395237685
+"Williamson County, TX",County,Texas,2025-03-01,0.10918203013094
+"Williston, ND",Metro,North Dakota,2025-01-01,0.0487046842412507
+"Williston, ND",City,North Dakota,2025-01-01,0.0498033207339742
+"Williston, ND",Metro,North Dakota,2025-02-01,0.0492224698020733
+"Williston, ND",City,North Dakota,2025-02-01,0.0503654476464812
+"Williston, ND",Metro,North Dakota,2025-03-01,0.0512317911588211
+"Williston, ND",City,North Dakota,2025-03-01,0.0523516762149683
+"Wilmington, NC",Metro,North Carolina,2025-01-01,0.0853545744221559
+"Wilmington, NC",City,North Carolina,2025-01-01,0.0855228620094362
+"Wilmington, NC",Metro,North Carolina,2025-02-01,0.0879483013304489
+"Wilmington, NC",City,North Carolina,2025-02-01,0.0871775166287114
+"Wilmington, NC",Metro,North Carolina,2025-03-01,0.0927347759769331
+"Wilmington, NC",City,North Carolina,2025-03-01,0.0912607844893961
+"Winston-Salem, NC",Metro,North Carolina,2025-01-01,0.0652895637119112
+"Winston-Salem, NC",City,North Carolina,2025-01-01,0.0669459761082028
+"Winston-Salem, NC",Metro,North Carolina,2025-02-01,0.0675763768003398
+"Winston-Salem, NC",City,North Carolina,2025-02-01,0.0683706747576887
+"Winston-Salem, NC",Metro,North Carolina,2025-03-01,0.0696279428355074
+"Winston-Salem, NC",City,North Carolina,2025-03-01,0.0686545069859341
+Wisconsin,State,Wisconsin,2025-01-01,0.0685201435111026
+Wisconsin,State,Wisconsin,2025-02-01,0.0663639856701718
+Wisconsin,State,Wisconsin,2025-03-01,0.0649871190764789

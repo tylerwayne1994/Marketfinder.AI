@@ -1,0 +1,187 @@
+THIS OPERATING AGREEMENT ("Agreement") is made and entered into as of [Effective Date], by and between [Your Name], hereinafter referred to as the "Managing Member," and [Seller Name], hereinafter referred to as the "Equity Member," collectively referred to as the "Members," for the formation and operation of [Property Address] Holdings, LLC, a limited liability company formed under the laws of the State of [State].
+temlate 1 
+Article I: Formation
+1.1 Formation. The Members hereby form a Limited Liability Company ("Company") pursuant to the laws of the State of [State].
+1.2 Name. The name of the Company shall be "[Property Address] Holdings, LLC."
+1.3 Registered Office and Agent. As stated in the Articles of Organization.
+
+Article II: Purpose
+To acquire, hold, manage, lease, and otherwise deal with the property located at [Property Address].
+
+Article III: Members and Capital Contributions
+3.1 Members and Percentage Interests:
+- [Your Name]: 70%
+- [Seller Name]: 30%
+3.2 Contributions:
+- Managing Member: $0
+- Equity Member: $90,000 in equity
+
+Article IV: Management
+4.1 The Company shall be managed solely by the Managing Member with full authority.
+
+Article V: Allocations and Distributions
+5.1 Profits and losses allocated by ownership percentage.
+5.2 Distributions made at Managing Member’s discretion.
+
+Article VI: Buyout
+6.1 Right to buy out the Equity Member within 5 years.
+6.2 Buyout Price: greater of $90,000 or 30% of appraised value minus debts.
+
+Article VII: Miscellaneous
+Governing Law: [State]. This Agreement constitutes the entire agreement.
+This EQUITY BUYOUT AGREEMENT ("Agreement") is entered into as of [Effective Date], between [Your Name] ("Managing Member") and [Seller Name] ("Equity Member") related to [Property Address] Holdings, LLC.
+
+1. Buyout Option
+Managing Member has the exclusive right to buy out the Equity Member’s 30% equity at any time prior to the fifth anniversary.
+
+2. Payment Terms
+Total: $90,000
+Interest: 8% annually
+Monthly: $600 interest-only payments
+Balloon: Remaining balance due by [Balloon Payment Date]
+
+3. Prepayment
+Allowed at any time without penalty.
+
+4. Default
+Non-payment triggers full acceleration. Legal remedies available.
+
+5. Governing Law
+State of [State].
+
+Signatures:
+_________________________ [Your Name]
+_________________________ [Seller Name]
+Seller Equity Participation Term Sheet
+
+Property: [Property Address]
+Purchase Price: $300,000
+
+Capital Stack:
+- Bank Loan: $210,000 (70%)
+- Seller Equity: $90,000 (30%)
+- Buyer Out-of-Pocket: $0
+
+Equity Member:
+- 30% ownership in LLC
+- No voting rights
+- Monthly interest payments ($600/mo at 8% APR)
+- Balloon buyout within 5 years
+
+Exit Strategy:
+- Refinance or internal buyout from rental profits
+
+Documents Included:
+- Operating Agreement
+- Equity Buyout Agreement
+- Promissory Note
+- Disclosure Form
+SECURED PROMISSORY NOTE
+
+Date: [Effective Date]
+
+Borrower: [Your Name]
+Lender: [Seller Name]
+Principal: $90,000
+Interest Rate: 8% per annum
+
+Payments:
+Monthly interest-only: $600
+Balloon due: [Balloon Payment Date]
+
+Security:
+Secured by Borrower's equity interest in [Property Address] Holdings, LLC.
+
+Default:
+Entire balance due if payment is missed by 30+ days.
+
+Governing Law: State of [State]
+
+_________________________ [Your Name]
+_________________________ [Seller Name]
+Seller Equity Participation Pitch Deck
+
+Slide 1: Deal Overview
+Property: [Property Address]
+Price: $300,000
+Structure: Bank loan + seller equity
+
+Slide 2: Why It Works
+- You get full price
+- No commissions or closing delays
+- Passive income monthly
+
+Slide 3: Terms
+- $210K bank loan
+- $90K seller equity
+- $0 buyer capital
+
+Slide 4: Returns
+- $600/month interest
+- Balloon buyout in 3–5 years
+
+Slide 5: Exit
+- Refi or internal cash-out
+Seller Financing Disclosure Statement
+
+This Seller Financing Disclosure Statement is made as of [Effective Date], in connection with the sale of the property located at [Property Address] by [Seller Name] ("Seller") to [Your Name] ("Buyer"). This disclosure is intended to provide transparency regarding the terms and structure of seller financing utilized in this transaction.
+
+1. Property Information
+
+- Address: [Property Address]
+- Purchase Price: $300,000
+
+2. Financing Terms
+
+- Primary Loan: $210,000 (70%) from a third-party lender
+- Seller Contribution: $90,000 (30%) equity in lieu of down payment
+- Buyer Cash at Closing: $0
+
+3. Seller Equity Structure
+
+- Seller holds a 30% equity interest in [Property Address] Holdings, LLC
+- Seller is a passive member with no management or voting rights
+
+4. Repayment Terms
+
+- Monthly interest-only payments at 8% APR ($600/month)
+- Final balloon payment of $90,000 due by [Balloon Payment Date]
+- Buyer may prepay early without penalty
+
+5. Risk Disclosure
+
+- Seller acknowledges that repayment of equity contribution is subject to buyer’s ability to refinance or secure capital
+- Buyer acknowledges obligation to fulfill monthly and balloon payments in full and on time
+
+6. Acknowledgment
+
+Both parties acknowledge and agree to the terms disclosed herein and have had the opportunity to seek legal counsel prior to signing.
+
+______________________________    ______________________________
+[Your Name], Buyer                         [Seller Name], Seller
+
+
+
+template 2 This EQUITY BUYOUT AGREEMENT ("Agreement") is entered into as of [Effective Date], between [Your Name] ("Managing Member") and [Seller Name] ("Equity Member") related to [Property Address] Holdings, LLC.
+
+1. Buyout Option
+Managing Member has the exclusive right to buy out the Equity Member’s 30% equity at any time prior to the fifth anniversary.
+
+2. Payment Terms
+Total: $90,000
+Interest: 8% annually
+Monthly: $600 interest-only payments
+Balloon: Remaining balance due by [Balloon Payment Date]
+
+3. Prepayment
+Allowed at any time without penalty.
+
+4. Default
+Non-payment triggers full acceleration. Legal remedies available.
+
+5. Governing Law
+State of [State].
+
+Signatures:
+_________________________ [Your Name]
+_________________________ [Seller Name]

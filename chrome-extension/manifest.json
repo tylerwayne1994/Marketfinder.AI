@@ -1,0 +1,53 @@
+{
+  "manifest_version": 3,
+  "name": "Buy Box Property Scanner",
+  "description": "Automatically scan and save commercial real estate properties with financial data",
+  "version": "1.0",
+  "permissions": [
+    "activeTab",
+    "storage",
+    "background"
+  ],
+  "host_permissions": [
+    "https://www.loopnet.com/*",
+    "https://www.crexi.com/*",
+    "https://probable-guide-97x7r747w79p2p5qx-3001.app.github.dev/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "https://www.loopnet.com/Listing/*",
+        "https://www.loopnet.com/search*"
+      ],
+      "js": ["loopnet-scraper.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://www.crexi.com/properties/*",
+        "https://www.crexi.com/search*"
+      ],
+      "js": ["crexi-scraper.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Buy Box Scanner",
+    "default_icon": {
+      "16": "icon.jpg",
+      "32": "icon.jpg",
+      "48": "icon.jpg",
+      "128": "icon.jpg"
+    }
+  },
+  "icons": {
+    "16": "icon.jpg",
+    "32": "icon.jpg",
+    "48": "icon.jpg",
+    "128": "icon.jpg"
+  }
+}

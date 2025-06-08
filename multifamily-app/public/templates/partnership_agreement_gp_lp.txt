@@ -1,0 +1,114 @@
+template 1 
+Partnership Agreement- Equity Partner
+	
+
+1.	General Partnership Agreement
+This outlines the overarching terms and responsibilities between you as the General Partner (GP) and the Limited Partner (LP).
+	2.	Buyout Agreement
+This details the terms under which the GP can buy out the LP’s equity, including interest calculations and timelines.
+
+1. Partnership Agreement for a Multi-Family Property
+
+This Partnership Agreement (the “Agreement”) is made and entered into as of 			, by and between:
+	•	                                   hereinafter referred to as the “General Partner (GP)”
+	•	                                   hereinafter referred to as the “Limited Partner (LP)”
+
+1. Purpose
+
+The purpose of this partnership is to acquire, own, operate, and manage a multi-family property located at         
+
+2. Capital Contributions
+
+	•	The LP agrees to provide the down payment in the amount of $                    for the acquisition of the Property.
+	•	The GP will manage the operations, financing, and maintenance of the Property.
+
+3. Ownership Structure
+
+	•	The GP retains 50.1% of the equity in the Property.
+	•	The LP receives 49.9% of the equity in exchange for their capital contribution.
+
+4. Distribution of Cash Flow
+
+	•	Net cash flow from the Property, after expenses and reserves, shall be distributed as follows:
+	•	GP: 50.1%
+	•	LP: 49.9%
+
+5. Tax Benefits
+
+	•	The LP shall be entitled to the depreciation and other tax benefits resulting from a cost segregation analysis conducted on the Property.
+	•	The GP will cooperate in providing all necessary documentation for the LP to claim these benefits.
+
+6. Management and Operations
+
+	•	The GP will have full control over the day-to-day management of the Property, including leasing, maintenance, and financial management.
+	•	The LP shall have no authority to make decisions regarding the operations of the Property.
+
+7. Buyout Clause
+
+	•	The GP may buy out the LP’s equity at any time through refinancing, selling the Property, or other means.
+	•	The buyout amount shall include:
+	•	The original capital contribution of $		
+	•	Interest of 8	% per annum, compounded annually, on the LP’s capital contribution from the date of investment until the date of buyout.
+
+8. Dispute Resolution
+
+	•	Any disputes arising from this Agreement shall be resolved through mediation. If mediation fails, disputes shall be settled by binding arbitration under the rules of the American Arbitration Association.
+
+9. Confidentiality
+
+	•	All terms of this Agreement and any financial information related to the Property shall remain confidential.
+
+10. Termination
+
+	•	The Agreement shall terminate upon the sale of the Property, the buyout of the LP, or mutual consent of both parties.
+
+11. Governing Law
+
+	•	This Agreement shall be governed by and construed in accordance with the laws of the State of 				
+
+2. Buyout Agreement
+
+This Buyout Agreement (the “Agreement”) is made as a supplement to the Partnership Agreement dated 		, by and between:
+	•					(the “General Partner” or “GP”)
+	•					 (the “Limited Partner” or “LP”)
+
+1. Purpose
+
+This Agreement outlines the terms and conditions under which the GP may buy out the LP’s equity in the Property.
+
+2. Buyout Price
+
+	•	The Buyout Price shall be the sum of:
+	•	The LP’s original investment of $			
+	•	Interest at the rate of 		% per annum, compounded annually, on the capital contribution from the date of investment until the buyout date.
+
+3. Buyout Process
+
+	•	The GP shall provide written notice to the LP at least 30 days prior to initiating the buyout.
+	•	The buyout funds shall be delivered via wire transfer or certified check to the LP on or before the agreed buyout date.
+
+4. Release of Claims
+
+	•	Upon receipt of the full Buyout Price, the LP agrees to release all claims to the Property and its future profits.
+
+5. Early Termination
+
+	•	If the GP fails to buy out the LP within		 after providing notice, the original partnership terms shall remain in effect unless otherwise renegotiated.
+
+6. Tax Implications
+
+	•	Both parties agree to consult their respective tax advisors to understand and address any tax liabilities arising from the buyout.
+
+7. Governing Law
+
+	•	This Agreement shall be governed by and construed in accordance with the laws of the State of 			.
+
+Additional Clauses for Both Agreements
+
+	1.	Indemnification Clause
+Each party agrees to indemnify and hold harmless the other from any liabilities, claims, or losses arising from their respective roles in the partnership.
+	2.	Assignment Clause
+Neither party may assign their interests without the written consent of the other.
+	3.	Non-Compete Clause
+The LP agrees not to engage in competing ventures within a  50  mile radius of the Property during the term of the Agreement.
+

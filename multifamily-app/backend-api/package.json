@@ -1,0 +1,21 @@
+{
+  "name": "buybox-backend-api",
+  "version": "1.0.0",
+  "description": "Backend API for Buy Box Property Scanner",
+  "main": "simple-server.js",
+  "scripts": {
+    "start": "node simple-server.js",
+    "dev": "node simple-server.js"
+  },
+  "keywords": [
+    "real-estate",
+    "api",
+    "property-scanner"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.21.2"
+  }
+}

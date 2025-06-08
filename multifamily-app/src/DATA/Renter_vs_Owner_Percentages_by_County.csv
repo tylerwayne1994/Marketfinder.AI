@@ -1,0 +1,855 @@
+County,Percent Owner-Occupied,Percent Renter-Occupied
+"Baldwin County, Alabama",77.9,22.1
+"Calhoun County, Alabama",86.5,13.5
+"Cullman County, Alabama",89.2,10.8
+"DeKalb County, Alabama",87.2,12.8
+"Elmore County, Alabama",89.7,10.3
+"Etowah County, Alabama",83.8,16.2
+"Houston County, Alabama",88.7,11.3
+"Jefferson County, Alabama",87.2,12.8
+"Lauderdale County, Alabama",91.3,8.7
+"Lee County, Alabama",91.3,8.7
+"Limestone County, Alabama",96.1,3.9
+"Madison County, Alabama",92.8,7.2
+"Marshall County, Alabama",86.4,13.6
+"Mobile County, Alabama",87.8,12.2
+"Montgomery County, Alabama",87.1,12.9
+"Morgan County, Alabama",91.9,8.1
+"St. Clair County, Alabama",88.5,11.5
+"Shelby County, Alabama",94.7,5.3
+"Talladega County, Alabama",87.8,12.2
+"Tuscaloosa County, Alabama",88.9,11.1
+"Anchorage Municipality, Alaska",90.2,9.8
+"Fairbanks North Star Borough, Alaska",87.9,12.1
+"Matanuska-Susitna Borough, Alaska",77.8,22.2
+"Apache County, Arizona",82.3,17.7
+"Cochise County, Arizona",84.6,15.4
+"Coconino County, Arizona",80.2,19.8
+"Maricopa County, Arizona",91.6,8.4
+"Mohave County, Arizona",80.4,19.6
+"Navajo County, Arizona",72.2,27.8
+"Pima County, Arizona",92.0,8.0
+"Pinal County, Arizona",88.8,11.2
+"Yavapai County, Arizona",88.5,11.5
+"Yuma County, Arizona",86.8,13.2
+"Benton County, Arkansas",92.2,7.8
+"Craighead County, Arkansas",94.4,5.6
+"Faulkner County, Arkansas",92.9,7.1
+"Garland County, Arkansas",85.4,14.6
+"Jefferson County, Arkansas",77.8,22.2
+"Lonoke County, Arkansas",94.2,5.8
+"Pulaski County, Arkansas",86.9,13.1
+"Saline County, Arkansas",94.7,5.3
+"Sebastian County, Arkansas",89.2,10.8
+"Washington County, Arkansas",92.5,7.5
+"White County, Arkansas",89.9,10.1
+"Alameda County, California",94.2,5.8
+"Butte County, California",91.9,8.1
+"Contra Costa County, California",96.3,3.7
+"El Dorado County, California",81.6,18.4
+"Fresno County, California",94.5,5.5
+"Humboldt County, California",88.7,11.3
+"Imperial County, California",85.1,14.9
+"Kern County, California",93.6,6.4
+"Kings County, California",93.3,6.7
+"Lake County, California",75.9,24.1
+"Los Angeles County, California",93.9,6.1
+"Madera County, California",90.4,9.6
+"Marin County, California",90.4,9.6
+"Mendocino County, California",83.5,16.5
+"Merced County, California",95.4,4.6
+"Monterey County, California",90.3,9.7
+"Napa County, California",91.3,8.7
+"Nevada County, California",78.3,21.7
+"Orange County, California",94.7,5.3
+"Placer County, California",87.7,12.3
+"Riverside County, California",90.2,9.8
+"Sacramento County, California",95.0,5.0
+"San Benito County, California",93.1,6.9
+"San Bernardino County, California",91.1,8.9
+"San Diego County, California",93.6,6.4
+"San Francisco County, California",89.0,11.0
+"San Joaquin County, California",94.7,5.3
+"San Luis Obispo County, California",87.0,13.0
+"San Mateo County, California",92.0,8.0
+"Santa Barbara County, California",93.2,6.8
+"Santa Clara County, California",94.5,5.5
+"Santa Cruz County, California",92.5,7.5
+"Shasta County, California",90.1,9.9
+"Solano County, California",95.3,4.7
+"Sonoma County, California",92.2,7.8
+"Stanislaus County, California",96.2,3.8
+"Sutter County, California",95.3,4.7
+"Tehama County, California",90.4,9.6
+"Tulare County, California",93.7,6.3
+"Ventura County, California",95.3,4.7
+"Yolo County, California",92.3,7.7
+"Yuba County, California",93.6,6.4
+"Adams County, Colorado",96.3,3.7
+"Arapahoe County, Colorado",96.0,4.0
+"Boulder County, Colorado",93.9,6.1
+"Broomfield County, Colorado",97.4,2.6
+"Denver County, Colorado",93.5,6.5
+"Douglas County, Colorado",97.9,2.1
+"El Paso County, Colorado",95.7,4.3
+"Jefferson County, Colorado",94.7,5.3
+"Larimer County, Colorado",93.5,6.5
+"Mesa County, Colorado",95.4,4.6
+"Pueblo County, Colorado",92.2,7.8
+"Weld County, Colorado",96.0,4.0
+"Capitol Planning Region, Connecticut",93.7,6.3
+"Greater Bridgeport Planning Region, Connecticut",94.5,5.5
+"Lower Connecticut River Valley Planning Region, Connecticut",91.4,8.6
+"Naugatuck Valley Planning Region, Connecticut",93.8,6.2
+"Northeastern Connecticut Planning Region, Connecticut",96.4,3.6
+"Northwest Hills Planning Region, Connecticut",90.0,10.0
+"South Central Connecticut Planning Region, Connecticut",93.5,6.5
+"Southeastern Connecticut Planning Region, Connecticut",90.2,9.8
+"Western Connecticut Planning Region, Connecticut",94.0,6.0
+"Kent County, Delaware",95.2,4.8
+"New Castle County, Delaware",95.4,4.6
+"Sussex County, Delaware",71.3,28.7
+"District of Columbia, District of Columbia",91.2,8.8
+"Alachua County, Florida",93.5,6.5
+"Bay County, Florida",72.8,27.2
+"Brevard County, Florida",85.1,14.9
+"Broward County, Florida",87.4,12.6
+"Charlotte County, Florida",73.2,26.8
+"Citrus County, Florida",87.6,12.4
+"Clay County, Florida",95.8,4.2
+"Collier County, Florida",67.7,32.3
+"Columbia County, Florida",89.2,10.8
+"Duval County, Florida",92.1,7.9
+"Escambia County, Florida",86.9,13.1
+"Flagler County, Florida",87.9,12.1
+"Hernando County, Florida",91.2,8.8
+"Highlands County, Florida",79.8,20.2
+"Hillsborough County, Florida",92.0,8.0
+"Indian River County, Florida",83.1,16.9
+"Lake County, Florida",89.9,10.1
+"Lee County, Florida",72.2,27.8
+"Leon County, Florida",89.2,10.8
+"Manatee County, Florida",83.1,16.9
+"Marion County, Florida",88.2,11.8
+"Martin County, Florida",82.2,17.8
+"Miami-Dade County, Florida",89.3,10.7
+"Monroe County, Florida",59.1,40.9
+"Nassau County, Florida",88.1,11.9
+"Okaloosa County, Florida",82.6,17.4
+"Orange County, Florida",92.8,7.2
+"Osceola County, Florida",86.3,13.7
+"Palm Beach County, Florida",83.4,16.6
+"Pasco County, Florida",85.8,14.2
+"Pinellas County, Florida",84.3,15.7
+"Polk County, Florida",87.0,13.0
+"Putnam County, Florida",84.8,15.2
+"St. Johns County, Florida",89.3,10.7
+"St. Lucie County, Florida",87.4,12.6
+"Santa Rosa County, Florida",89.2,10.8
+"Sarasota County, Florida",79.9,20.1
+"Seminole County, Florida",93.5,6.5
+"Sumter County, Florida",82.6,17.4
+"Volusia County, Florida",85.0,15.0
+"Walton County, Florida",55.7,44.3
+"Barrow County, Georgia",96.7,3.3
+"Bartow County, Georgia",90.0,10.0
+"Bibb County, Georgia",84.7,15.3
+"Bulloch County, Georgia",89.5,10.5
+"Carroll County, Georgia",91.5,8.5
+"Catoosa County, Georgia",91.1,8.9
+"Chatham County, Georgia",88.4,11.6
+"Cherokee County, Georgia",94.1,5.9
+"Clarke County, Georgia",93.4,6.6
+"Clayton County, Georgia",92.1,7.9
+"Cobb County, Georgia",94.4,5.6
+"Columbia County, Georgia",91.7,8.3
+"Coweta County, Georgia",95.1,4.9
+"DeKalb County, Georgia",87.4,12.6
+"Dougherty County, Georgia",86.3,13.7
+"Douglas County, Georgia",93.3,6.7
+"Effingham County, Georgia",95.4,4.6
+"Fayette County, Georgia",95.8,4.2
+"Floyd County, Georgia",91.9,8.1
+"Forsyth County, Georgia",95.2,4.8
+"Fulton County, Georgia",89.0,11.0
+"Glynn County, Georgia",85.3,14.7
+"Gwinnett County, Georgia",95.5,4.5
+"Hall County, Georgia",91.8,8.2
+"Henry County, Georgia",94.9,5.1
+"Houston County, Georgia",91.7,8.3
+"Jackson County, Georgia",94.1,5.9
+"Liberty County, Georgia",87.4,12.6
+"Lowndes County, Georgia",91.5,8.5
+"Muscogee County, Georgia",88.2,11.8
+"Newton County, Georgia",95.9,4.1
+"Paulding County, Georgia",94.5,5.5
+"Richmond County, Georgia",82.3,17.7
+"Rockdale County, Georgia",96.2,3.8
+"Spalding County, Georgia",92.1,7.9
+"Troup County, Georgia",93.9,6.1
+"Walker County, Georgia",87.2,12.8
+"Walton County, Georgia",96.3,3.7
+"Whitfield County, Georgia",92.7,7.3
+"Hawaii County, Hawaii",80.8,19.2
+"Honolulu County, Hawaii",90.0,10.0
+"Kauai County, Hawaii",80.4,19.6
+"Maui County, Hawaii",77.3,22.7
+"Ada County, Idaho",96.1,3.9
+"Bannock County, Idaho",91.8,8.2
+"Bonneville County, Idaho",93.3,6.7
+"Canyon County, Idaho",95.4,4.6
+"Kootenai County, Idaho",89.8,10.2
+"Twin Falls County, Idaho",94.2,5.8
+"Champaign County, Illinois",92.9,7.1
+"Cook County, Illinois",92.8,7.2
+"DeKalb County, Illinois",96.0,4.0
+"DuPage County, Illinois",96.1,3.9
+"Kane County, Illinois",96.9,3.1
+"Kankakee County, Illinois",90.4,9.6
+"Kendall County, Illinois",95.3,4.7
+"Lake County, Illinois",95.9,4.1
+"LaSalle County, Illinois",88.9,11.1
+"McHenry County, Illinois",97.6,2.4
+"McLean County, Illinois",94.0,6.0
+"Macon County, Illinois",87.9,12.1
+"Madison County, Illinois",92.9,7.1
+"Peoria County, Illinois",91.3,8.7
+"Rock Island County, Illinois",93.5,6.5
+"St. Clair County, Illinois",88.3,11.7
+"Sangamon County, Illinois",91.4,8.6
+"Tazewell County, Illinois",92.2,7.8
+"Vermilion County, Illinois",89.6,10.4
+"Will County, Illinois",96.2,3.8
+"Williamson County, Illinois",91.6,8.4
+"Winnebago County, Illinois",92.4,7.6
+"Allen County, Indiana",95.3,4.7
+"Bartholomew County, Indiana",94.1,5.9
+"Boone County, Indiana",97.3,2.7
+"Clark County, Indiana",92.7,7.3
+"Delaware County, Indiana",85.7,14.3
+"Elkhart County, Indiana",90.8,9.2
+"Floyd County, Indiana",90.8,9.2
+"Grant County, Indiana",92.5,7.5
+"Hamilton County, Indiana",94.0,6.0
+"Hancock County, Indiana",95.9,4.1
+"Hendricks County, Indiana",97.8,2.2
+"Howard County, Indiana",88.8,11.2
+"Johnson County, Indiana",95.7,4.3
+"Kosciusko County, Indiana",82.3,17.7
+"Lake County, Indiana",90.4,9.6
+"LaPorte County, Indiana",91.1,8.9
+"Madison County, Indiana",91.2,8.8
+"Marion County, Indiana",92.2,7.8
+"Monroe County, Indiana",92.0,8.0
+"Morgan County, Indiana",96.1,3.9
+"Porter County, Indiana",93.1,6.9
+"St. Joseph County, Indiana",89.7,10.3
+"Tippecanoe County, Indiana",93.2,6.8
+"Vanderburgh County, Indiana",90.1,9.9
+"Vigo County, Indiana",89.9,10.1
+"Warrick County, Indiana",92.6,7.4
+"Wayne County, Indiana",87.2,12.8
+"Black Hawk County, Iowa",91.1,8.9
+"Dallas County, Iowa",94.4,5.6
+"Dubuque County, Iowa",98.4,1.6
+"Johnson County, Iowa",92.2,7.8
+"Linn County, Iowa",92.8,7.2
+"Polk County, Iowa",93.4,6.6
+"Pottawattamie County, Iowa",95.2,4.8
+"Scott County, Iowa",95.4,4.6
+"Story County, Iowa",91.9,8.1
+"Woodbury County, Iowa",92.5,7.5
+"Butler County, Kansas",93.7,6.3
+"Douglas County, Kansas",94.3,5.7
+"Johnson County, Kansas",95.7,4.3
+"Leavenworth County, Kansas",94.0,6.0
+"Riley County, Kansas",90.2,9.8
+"Sedgwick County, Kansas",92.0,8.0
+"Shawnee County, Kansas",90.9,9.1
+"Wyandotte County, Kansas",90.2,9.8
+"Boone County, Kentucky",95.8,4.2
+"Bullitt County, Kentucky",94.9,5.1
+"Campbell County, Kentucky",95.2,4.8
+"Christian County, Kentucky",87.6,12.4
+"Daviess County, Kentucky",94.4,5.6
+"Fayette County, Kentucky",94.2,5.8
+"Hardin County, Kentucky",94.5,5.5
+"Jefferson County, Kentucky",91.8,8.2
+"Kenton County, Kentucky",91.2,8.8
+"McCracken County, Kentucky",89.4,10.6
+"Madison County, Kentucky",91.4,8.6
+"Oldham County, Kentucky",96.8,3.2
+"Pulaski County, Kentucky",82.4,17.6
+"Warren County, Kentucky",93.9,6.1
+"Ascension Parish, Louisiana",91.4,8.6
+"Bossier Parish, Louisiana",94.5,5.5
+"Caddo Parish, Louisiana",87.7,12.3
+"Calcasieu Parish, Louisiana",82.0,18.0
+"East Baton Rouge Parish, Louisiana",85.4,14.6
+"Iberia Parish, Louisiana",84.2,15.8
+"Jefferson Parish, Louisiana",90.8,9.2
+"Lafayette Parish, Louisiana",89.7,10.3
+"Lafourche Parish, Louisiana",92.4,7.6
+"Livingston Parish, Louisiana",91.2,8.8
+"Orleans Parish, Louisiana",78.9,21.1
+"Ouachita Parish, Louisiana",88.1,11.9
+"Rapides Parish, Louisiana",85.4,14.6
+"St. Landry Parish, Louisiana",92.7,7.3
+"St. Tammany Parish, Louisiana",91.8,8.2
+"Tangipahoa Parish, Louisiana",88.8,11.2
+"Terrebonne Parish, Louisiana",89.2,10.8
+"Androscoggin County, Maine",94.9,5.1
+"Aroostook County, Maine",84.8,15.2
+"Cumberland County, Maine",86.5,13.5
+"Kennebec County, Maine",86.8,13.2
+"Penobscot County, Maine",87.5,12.5
+"York County, Maine",80.6,19.4
+"Allegany County, Maryland",86.3,13.7
+"Anne Arundel County, Maryland",95.2,4.8
+"Baltimore County, Maryland",94.6,5.4
+"Calvert County, Maryland",92.7,7.3
+"Carroll County, Maryland",96.0,4.0
+"Cecil County, Maryland",92.5,7.5
+"Charles County, Maryland",96.7,3.3
+"Frederick County, Maryland",96.4,3.6
+"Harford County, Maryland",97.6,2.4
+"Howard County, Maryland",96.2,3.8
+"Montgomery County, Maryland",96.5,3.5
+"Prince George's County, Maryland",95.2,4.8
+"St. Mary's County, Maryland",92.7,7.3
+"Washington County, Maryland",92.1,7.9
+"Wicomico County, Maryland",89.4,10.6
+"Baltimore city, Maryland",88.1,11.9
+"Barnstable County, Massachusetts",65.6,34.4
+"Berkshire County, Massachusetts",83.9,16.1
+"Bristol County, Massachusetts",95.2,4.8
+"Essex County, Massachusetts",94.8,5.2
+"Franklin County, Massachusetts",93.8,6.2
+"Hampden County, Massachusetts",93.4,6.6
+"Hampshire County, Massachusetts",92.1,7.9
+"Middlesex County, Massachusetts",94.9,5.1
+"Norfolk County, Massachusetts",96.4,3.6
+"Plymouth County, Massachusetts",92.5,7.5
+"Suffolk County, Massachusetts",92.2,7.8
+"Worcester County, Massachusetts",94.2,5.8
+"Allegan County, Michigan",87.2,12.8
+"Bay County, Michigan",91.2,8.8
+"Berrien County, Michigan",84.0,16.0
+"Calhoun County, Michigan",91.4,8.6
+"Clinton County, Michigan",94.4,5.6
+"Eaton County, Michigan",94.3,5.7
+"Genesee County, Michigan",89.1,10.9
+"Grand Traverse County, Michigan",89.4,10.6
+"Ingham County, Michigan",92.5,7.5
+"Ionia County, Michigan",94.6,5.4
+"Jackson County, Michigan",89.1,10.9
+"Kalamazoo County, Michigan",93.7,6.3
+"Kent County, Michigan",95.2,4.8
+"Lapeer County, Michigan",92.3,7.7
+"Lenawee County, Michigan",91.4,8.6
+"Livingston County, Michigan",95.0,5.0
+"Macomb County, Michigan",95.8,4.2
+"Marquette County, Michigan",85.2,14.8
+"Midland County, Michigan",96.0,4.0
+"Monroe County, Michigan",93.8,6.2
+"Montcalm County, Michigan",87.3,12.7
+"Muskegon County, Michigan",92.5,7.5
+"Oakland County, Michigan",94.7,5.3
+"Ottawa County, Michigan",95.9,4.1
+"Saginaw County, Michigan",89.4,10.6
+"St. Clair County, Michigan",94.6,5.4
+"Shiawassee County, Michigan",88.7,11.3
+"Van Buren County, Michigan",82.8,17.2
+"Washtenaw County, Michigan",93.3,6.7
+"Wayne County, Michigan",86.6,13.4
+"Anoka County, Minnesota",96.5,3.5
+"Blue Earth County, Minnesota",89.6,10.4
+"Carver County, Minnesota",97.8,2.2
+"Clay County, Minnesota",96.6,3.4
+"Crow Wing County, Minnesota",72.9,27.1
+"Dakota County, Minnesota",97.5,2.5
+"Hennepin County, Minnesota",94.1,5.9
+"Olmsted County, Minnesota",91.9,8.1
+"Ramsey County, Minnesota",95.3,4.7
+"Rice County, Minnesota",92.4,7.6
+"St. Louis County, Minnesota",83.8,16.2
+"Scott County, Minnesota",96.9,3.1
+"Sherburne County, Minnesota",95.3,4.7
+"Stearns County, Minnesota",90.4,9.6
+"Washington County, Minnesota",97.6,2.4
+"Wright County, Minnesota",94.1,5.9
+"DeSoto County, Mississippi",91.7,8.3
+"Forrest County, Mississippi",89.2,10.8
+"Harrison County, Mississippi",89.4,10.6
+"Hinds County, Mississippi",83.3,16.7
+"Jackson County, Mississippi",92.4,7.6
+"Jones County, Mississippi",88.8,11.2
+"Lamar County, Mississippi",94.5,5.5
+"Lauderdale County, Mississippi",88.5,11.5
+"Lee County, Mississippi",84.9,15.1
+"Madison County, Mississippi",95.0,5.0
+"Rankin County, Mississippi",93.2,6.8
+"Boone County, Missouri",93.0,7.0
+"Buchanan County, Missouri",86.3,13.7
+"Cape Girardeau County, Missouri",92.7,7.3
+"Cass County, Missouri",94.0,6.0
+"Christian County, Missouri",95.6,4.4
+"Clay County, Missouri",95.4,4.6
+"Cole County, Missouri",94.7,5.3
+"Franklin County, Missouri",94.0,6.0
+"Greene County, Missouri",94.4,5.6
+"Jackson County, Missouri",91.6,8.4
+"Jasper County, Missouri",93.9,6.1
+"Jefferson County, Missouri",93.8,6.2
+"Platte County, Missouri",94.7,5.3
+"St. Charles County, Missouri",96.1,3.9
+"St. Francois County, Missouri",88.0,12.0
+"St. Louis County, Missouri",93.8,6.2
+"St. Louis city, Missouri",86.0,14.0
+"Cascade County, Montana",91.3,8.7
+"Flathead County, Montana",86.5,13.5
+"Gallatin County, Montana",91.1,8.9
+"Lewis and Clark County, Montana",89.8,10.2
+"Missoula County, Montana",94.5,5.5
+"Yellowstone County, Montana",96.2,3.8
+"Douglas County, Nebraska",95.3,4.7
+"Lancaster County, Nebraska",96.4,3.6
+"Sarpy County, Nebraska",95.9,4.1
+"Clark County, Nevada",91.4,8.6
+"Washoe County, Nevada",89.9,10.1
+"Belknap County, New Hampshire",68.9,31.1
+"Cheshire County, New Hampshire",88.5,11.5
+"Grafton County, New Hampshire",77.3,22.7
+"Hillsborough County, New Hampshire",95.6,4.4
+"Merrimack County, New Hampshire",93.1,6.9
+"Rockingham County, New Hampshire",91.4,8.6
+"Strafford County, New Hampshire",93.8,6.2
+"Atlantic County, New Jersey",84.1,15.9
+"Bergen County, New Jersey",96.2,3.8
+"Burlington County, New Jersey",96.1,3.9
+"Camden County, New Jersey",94.3,5.7
+"Cape May County, New Jersey",47.8,52.2
+"Cumberland County, New Jersey",95.0,5.0
+"Essex County, New Jersey",95.5,4.5
+"Gloucester County, New Jersey",96.0,4.0
+"Hudson County, New Jersey",94.0,6.0
+"Hunterdon County, New Jersey",98.0,2.0
+"Mercer County, New Jersey",96.7,3.3
+"Middlesex County, New Jersey",97.5,2.5
+"Monmouth County, New Jersey",93.3,6.7
+"Morris County, New Jersey",96.6,3.4
+"Ocean County, New Jersey",82.8,17.2
+"Passaic County, New Jersey",95.8,4.2
+"Salem County, New Jersey",90.9,9.1
+"Somerset County, New Jersey",98.0,2.0
+"Sussex County, New Jersey",93.3,6.7
+"Union County, New Jersey",96.5,3.5
+"Warren County, New Jersey",96.6,3.4
+"Bernalillo County, New Mexico",93.9,6.1
+"Doña Ana County, New Mexico",93.3,6.7
+"Lea County, New Mexico",86.6,13.4
+"McKinley County, New Mexico",83.8,16.2
+"Otero County, New Mexico",76.9,23.1
+"Sandoval County, New Mexico",94.7,5.3
+"San Juan County, New Mexico",88.1,11.9
+"Santa Fe County, New Mexico",89.5,10.5
+"Valencia County, New Mexico",95.9,4.1
+"Albany County, New York",90.9,9.1
+"Bronx County, New York",95.2,4.8
+"Broome County, New York",85.6,14.4
+"Cattaraugus County, New York",80.0,20.0
+"Cayuga County, New York",88.7,11.3
+"Chautauqua County, New York",81.7,18.3
+"Chemung County, New York",90.4,9.6
+"Clinton County, New York",91.7,8.3
+"Dutchess County, New York",93.5,6.5
+"Erie County, New York",92.8,7.2
+"Jefferson County, New York",81.5,18.5
+"Kings County, New York",93.2,6.8
+"Madison County, New York",86.9,13.1
+"Monroe County, New York",93.3,6.7
+"Nassau County, New York",95.5,4.5
+"New York County, New York",84.8,15.2
+"Niagara County, New York",91.3,8.7
+"Oneida County, New York",91.5,8.5
+"Onondaga County, New York",93.6,6.4
+"Ontario County, New York",90.3,9.7
+"Orange County, New York",91.9,8.1
+"Oswego County, New York",87.2,12.8
+"Putnam County, New York",94.4,5.6
+"Queens County, New York",94.2,5.8
+"Rensselaer County, New York",89.1,10.9
+"Richmond County, New York",91.7,8.3
+"Rockland County, New York",95.4,4.6
+"St. Lawrence County, New York",82.3,17.7
+"Saratoga County, New York",91.6,8.4
+"Schenectady County, New York",95.3,4.7
+"Steuben County, New York",81.1,18.9
+"Suffolk County, New York",87.4,12.6
+"Sullivan County, New York",61.3,38.7
+"Tompkins County, New York",89.3,10.7
+"Ulster County, New York",85.1,14.9
+"Warren County, New York",76.4,23.6
+"Wayne County, New York",91.8,8.2
+"Westchester County, New York",94.1,5.9
+"Alamance County, North Carolina",90.4,9.6
+"Brunswick County, North Carolina",70.9,29.1
+"Buncombe County, North Carolina",76.0,24.0
+"Burke County, North Carolina",91.7,8.3
+"Cabarrus County, North Carolina",94.1,5.9
+"Caldwell County, North Carolina",91.3,8.7
+"Carteret County, North Carolina",65.3,34.7
+"Catawba County, North Carolina",91.6,8.4
+"Chatham County, North Carolina",92.1,7.9
+"Cleveland County, North Carolina",88.2,11.8
+"Craven County, North Carolina",85.1,14.9
+"Cumberland County, North Carolina",90.9,9.1
+"Davidson County, North Carolina",92.3,7.7
+"Durham County, North Carolina",91.5,8.5
+"Forsyth County, North Carolina",93.4,6.6
+"Franklin County, North Carolina",94.3,5.7
+"Gaston County, North Carolina",94.3,5.7
+"Guilford County, North Carolina",92.7,7.3
+"Harnett County, North Carolina",88.2,11.8
+"Henderson County, North Carolina",89.1,10.9
+"Iredell County, North Carolina",90.2,9.8
+"Johnston County, North Carolina",93.2,6.8
+"Lee County, North Carolina",94.8,5.2
+"Lincoln County, North Carolina",92.7,7.3
+"Mecklenburg County, North Carolina",92.4,7.6
+"Moore County, North Carolina",90.6,9.4
+"Nash County, North Carolina",89.2,10.8
+"New Hanover County, North Carolina",86.3,13.7
+"Onslow County, North Carolina",86.5,13.5
+"Orange County, North Carolina",94.0,6.0
+"Pender County, North Carolina",83.1,16.9
+"Pitt County, North Carolina",89.1,10.9
+"Randolph County, North Carolina",94.2,5.8
+"Robeson County, North Carolina",88.4,11.6
+"Rockingham County, North Carolina",89.1,10.9
+"Rowan County, North Carolina",92.6,7.4
+"Rutherford County, North Carolina",81.3,18.7
+"Stanly County, North Carolina",87.2,12.8
+"Surry County, North Carolina",90.7,9.3
+"Union County, North Carolina",96.1,3.9
+"Wake County, North Carolina",94.0,6.0
+"Wayne County, North Carolina",87.2,12.8
+"Wilkes County, North Carolina",81.9,18.1
+"Wilson County, North Carolina",92.0,8.0
+"Burleigh County, North Dakota",95.7,4.3
+"Cass County, North Dakota",93.1,6.9
+"Grand Forks County, North Dakota",94.2,5.8
+"Ward County, North Dakota",87.5,12.5
+"Allen County, Ohio",93.8,6.2
+"Ashtabula County, Ohio",80.5,19.5
+"Belmont County, Ohio",86.6,13.4
+"Butler County, Ohio",95.2,4.8
+"Clark County, Ohio",90.3,9.7
+"Clermont County, Ohio",97.8,2.2
+"Columbiana County, Ohio",91.8,8.2
+"Cuyahoga County, Ohio",89.6,10.4
+"Delaware County, Ohio",95.7,4.3
+"Erie County, Ohio",86.8,13.2
+"Fairfield County, Ohio",97.0,3.0
+"Franklin County, Ohio",93.3,6.7
+"Geauga County, Ohio",96.2,3.8
+"Greene County, Ohio",96.2,3.8
+"Hamilton County, Ohio",94.2,5.8
+"Hancock County, Ohio",92.9,7.1
+"Lake County, Ohio",96.9,3.1
+"Licking County, Ohio",93.2,6.8
+"Lorain County, Ohio",93.7,6.3
+"Lucas County, Ohio",90.7,9.3
+"Mahoning County, Ohio",91.5,8.5
+"Marion County, Ohio",91.3,8.7
+"Medina County, Ohio",96.1,3.9
+"Miami County, Ohio",94.1,5.9
+"Montgomery County, Ohio",92.9,7.1
+"Muskingum County, Ohio",85.5,14.5
+"Portage County, Ohio",91.5,8.5
+"Richland County, Ohio",93.2,6.8
+"Ross County, Ohio",90.0,10.0
+"Scioto County, Ohio",91.1,8.9
+"Stark County, Ohio",92.6,7.4
+"Summit County, Ohio",93.2,6.8
+"Trumbull County, Ohio",93.1,6.9
+"Tuscarawas County, Ohio",95.6,4.4
+"Union County, Ohio",97.8,2.2
+"Warren County, Ohio",95.9,4.1
+"Wayne County, Ohio",94.3,5.7
+"Wood County, Ohio",94.0,6.0
+"Canadian County, Oklahoma",92.8,7.2
+"Cleveland County, Oklahoma",93.9,6.1
+"Comanche County, Oklahoma",87.2,12.8
+"Creek County, Oklahoma",90.9,9.1
+"Muskogee County, Oklahoma",89.7,10.3
+"Oklahoma County, Oklahoma",92.1,7.9
+"Payne County, Oklahoma",87.9,12.1
+"Pottawatomie County, Oklahoma",89.3,10.7
+"Rogers County, Oklahoma",92.5,7.5
+"Tulsa County, Oklahoma",91.7,8.3
+"Wagoner County, Oklahoma",90.6,9.4
+"Benton County, Oregon",92.9,7.1
+"Clackamas County, Oregon",94.7,5.3
+"Deschutes County, Oregon",87.1,12.9
+"Douglas County, Oregon",93.7,6.3
+"Jackson County, Oregon",93.3,6.7
+"Josephine County, Oregon",93.3,6.7
+"Klamath County, Oregon",91.0,9.0
+"Lane County, Oregon",94.3,5.7
+"Linn County, Oregon",95.8,4.2
+"Marion County, Oregon",96.1,3.9
+"Multnomah County, Oregon",94.8,5.2
+"Polk County, Oregon",93.6,6.4
+"Umatilla County, Oregon",93.9,6.1
+"Washington County, Oregon",96.4,3.6
+"Yamhill County, Oregon",96.6,3.4
+"Adams County, Pennsylvania",94.9,5.1
+"Allegheny County, Pennsylvania",89.9,10.1
+"Armstrong County, Pennsylvania",87.3,12.7
+"Beaver County, Pennsylvania",92.1,7.9
+"Berks County, Pennsylvania",94.9,5.1
+"Blair County, Pennsylvania",90.5,9.5
+"Bucks County, Pennsylvania",96.6,3.4
+"Butler County, Pennsylvania",92.2,7.8
+"Cambria County, Pennsylvania",88.8,11.2
+"Carbon County, Pennsylvania",83.8,16.2
+"Centre County, Pennsylvania",92.7,7.3
+"Chester County, Pennsylvania",95.6,4.4
+"Clearfield County, Pennsylvania",87.7,12.3
+"Columbia County, Pennsylvania",86.6,13.4
+"Crawford County, Pennsylvania",82.5,17.5
+"Cumberland County, Pennsylvania",96.0,4.0
+"Dauphin County, Pennsylvania",94.7,5.3
+"Delaware County, Pennsylvania",93.7,6.3
+"Erie County, Pennsylvania",92.4,7.6
+"Fayette County, Pennsylvania",89.3,10.7
+"Franklin County, Pennsylvania",93.4,6.6
+"Indiana County, Pennsylvania",86.1,13.9
+"Lackawanna County, Pennsylvania",88.5,11.5
+"Lancaster County, Pennsylvania",96.1,3.9
+"Lawrence County, Pennsylvania",92.4,7.6
+"Lebanon County, Pennsylvania",96.1,3.9
+"Lehigh County, Pennsylvania",97.0,3.0
+"Luzerne County, Pennsylvania",89.8,10.2
+"Lycoming County, Pennsylvania",88.8,11.2
+"Mercer County, Pennsylvania",93.1,6.9
+"Monroe County, Pennsylvania",76.5,23.5
+"Montgomery County, Pennsylvania",96.1,3.9
+"Northampton County, Pennsylvania",94.7,5.3
+"Northumberland County, Pennsylvania",86.0,14.0
+"Philadelphia County, Pennsylvania",90.5,9.5
+"Schuylkill County, Pennsylvania",87.2,12.8
+"Somerset County, Pennsylvania",77.7,22.3
+"Washington County, Pennsylvania",90.4,9.6
+"Westmoreland County, Pennsylvania",91.8,8.2
+"York County, Pennsylvania",96.2,3.8
+"Kent County, Rhode Island",95.8,4.2
+"Newport County, Rhode Island",84.4,15.6
+"Providence County, Rhode Island",93.3,6.7
+"Washington County, Rhode Island",79.9,20.1
+"Aiken County, South Carolina",86.9,13.1
+"Anderson County, South Carolina",92.5,7.5
+"Beaufort County, South Carolina",82.6,17.4
+"Berkeley County, South Carolina",94.0,6.0
+"Charleston County, South Carolina",86.1,13.9
+"Dorchester County, South Carolina",94.2,5.8
+"Florence County, South Carolina",85.6,14.4
+"Georgetown County, South Carolina",76.0,24.0
+"Greenville County, South Carolina",92.9,7.1
+"Greenwood County, South Carolina",92.9,7.1
+"Horry County, South Carolina",75.0,25.0
+"Kershaw County, South Carolina",89.2,10.8
+"Lancaster County, South Carolina",94.0,6.0
+"Laurens County, South Carolina",89.0,11.0
+"Lexington County, South Carolina",93.5,6.5
+"Oconee County, South Carolina",80.3,19.7
+"Orangeburg County, South Carolina",81.9,18.1
+"Pickens County, South Carolina",90.6,9.4
+"Richland County, South Carolina",89.1,10.9
+"Spartanburg County, South Carolina",91.3,8.7
+"Sumter County, South Carolina",83.4,16.6
+"York County, South Carolina",91.5,8.5
+"Lincoln County, South Dakota",95.8,4.2
+"Minnehaha County, South Dakota",94.5,5.5
+"Pennington County, South Dakota",92.5,7.5
+"Anderson County, Tennessee",92.5,7.5
+"Blount County, Tennessee",89.7,10.3
+"Bradley County, Tennessee",91.8,8.2
+"Davidson County, Tennessee",91.8,8.2
+"Greene County, Tennessee",85.7,14.3
+"Hamblen County, Tennessee",95.9,4.1
+"Hamilton County, Tennessee",92.4,7.6
+"Knox County, Tennessee",90.9,9.1
+"Madison County, Tennessee",91.5,8.5
+"Maury County, Tennessee",95.5,4.5
+"Montgomery County, Tennessee",94.2,5.8
+"Putnam County, Tennessee",93.7,6.3
+"Robertson County, Tennessee",96.7,3.3
+"Rutherford County, Tennessee",94.8,5.2
+"Sevier County, Tennessee",70.9,29.1
+"Shelby County, Tennessee",89.5,10.5
+"Sullivan County, Tennessee",89.5,10.5
+"Sumner County, Tennessee",94.4,5.6
+"Washington County, Tennessee",91.9,8.1
+"Williamson County, Tennessee",95.7,4.3
+"Wilson County, Tennessee",93.1,6.9
+"Angelina County, Texas",85.8,14.2
+"Bastrop County, Texas",93.2,6.8
+"Bell County, Texas",91.9,8.1
+"Bexar County, Texas",90.7,9.3
+"Bowie County, Texas",89.9,10.1
+"Brazoria County, Texas",89.7,10.3
+"Brazos County, Texas",89.6,10.4
+"Cameron County, Texas",88.3,11.7
+"Collin County, Texas",95.1,4.9
+"Comal County, Texas",91.7,8.3
+"Coryell County, Texas",93.9,6.1
+"Dallas County, Texas",92.1,7.9
+"Denton County, Texas",94.8,5.2
+"Ector County, Texas",95.4,4.6
+"Ellis County, Texas",95.9,4.1
+"El Paso County, Texas",92.3,7.7
+"Fort Bend County, Texas",95.5,4.5
+"Galveston County, Texas",86.6,13.4
+"Grayson County, Texas",87.7,12.3
+"Gregg County, Texas",87.6,12.4
+"Guadalupe County, Texas",95.9,4.1
+"Harris County, Texas",91.7,8.3
+"Harrison County, Texas",89.1,10.9
+"Hays County, Texas",96.1,3.9
+"Henderson County, Texas",79.7,20.3
+"Hidalgo County, Texas",88.0,12.0
+"Hood County, Texas",87.1,12.9
+"Hunt County, Texas",90.5,9.5
+"Jefferson County, Texas",85.0,15.0
+"Johnson County, Texas",90.1,9.9
+"Kaufman County, Texas",94.9,5.1
+"Liberty County, Texas",87.8,12.2
+"Lubbock County, Texas",89.7,10.3
+"McLennan County, Texas",88.5,11.5
+"Midland County, Texas",96.3,3.7
+"Montgomery County, Texas",93.6,6.4
+"Nacogdoches County, Texas",85.8,14.2
+"Nueces County, Texas",85.2,14.8
+"Orange County, Texas",87.1,12.9
+"Parker County, Texas",94.8,5.2
+"Potter County, Texas",85.9,14.1
+"Randall County, Texas",90.5,9.5
+"Rockwall County, Texas",93.5,6.5
+"San Patricio County, Texas",83.4,16.6
+"Smith County, Texas",81.4,18.6
+"Starr County, Texas",81.9,18.1
+"Tarrant County, Texas",93.1,6.9
+"Taylor County, Texas",87.0,13.0
+"Tom Green County, Texas",90.4,9.6
+"Travis County, Texas",94.4,5.6
+"Victoria County, Texas",86.6,13.4
+"Walker County, Texas",84.5,15.5
+"Webb County, Texas",92.6,7.4
+"Wichita County, Texas",88.3,11.7
+"Williamson County, Texas",96.2,3.8
+"Wise County, Texas",94.0,6.0
+"Cache County, Utah",96.6,3.4
+"Davis County, Utah",95.7,4.3
+"Salt Lake County, Utah",95.1,4.9
+"Tooele County, Utah",96.2,3.8
+"Utah County, Utah",97.4,2.6
+"Washington County, Utah",84.4,15.6
+"Weber County, Utah",94.7,5.3
+"Chittenden County, Vermont",96.7,3.3
+"Albemarle County, Virginia",93.7,6.3
+"Arlington County, Virginia",92.0,8.0
+"Augusta County, Virginia",96.5,3.5
+"Bedford County, Virginia",88.3,11.7
+"Chesterfield County, Virginia",96.2,3.8
+"Fairfax County, Virginia",96.3,3.7
+"Fauquier County, Virginia",93.7,6.3
+"Frederick County, Virginia",93.3,6.7
+"Hanover County, Virginia",96.1,3.9
+"Henrico County, Virginia",93.7,6.3
+"James City County, Virginia",97.0,3.0
+"Loudoun County, Virginia",97.6,2.4
+"Montgomery County, Virginia",85.9,14.1
+"Prince William County, Virginia",97.0,3.0
+"Roanoke County, Virginia",94.8,5.2
+"Rockingham County, Virginia",88.5,11.5
+"Spotsylvania County, Virginia",97.3,2.7
+"Stafford County, Virginia",97.2,2.8
+"York County, Virginia",96.2,3.8
+"Alexandria city, Virginia",94.2,5.8
+"Chesapeake city, Virginia",96.0,4.0
+"Hampton city, Virginia",92.1,7.9
+"Lynchburg city, Virginia",84.3,15.7
+"Newport News city, Virginia",92.7,7.3
+"Norfolk city, Virginia",90.0,10.0
+"Portsmouth city, Virginia",93.8,6.2
+"Richmond city, Virginia",90.2,9.8
+"Roanoke city, Virginia",91.3,8.7
+"Suffolk city, Virginia",94.6,5.4
+"Virginia Beach city, Virginia",93.4,6.6
+"Benton County, Washington",93.2,6.8
+"Chelan County, Washington",83.6,16.4
+"Clallam County, Washington",89.5,10.5
+"Clark County, Washington",96.0,4.0
+"Cowlitz County, Washington",95.5,4.5
+"Franklin County, Washington",96.3,3.7
+"Grant County, Washington",85.4,14.6
+"Grays Harbor County, Washington",81.6,18.4
+"Island County, Washington",82.2,17.8
+"King County, Washington",93.0,7.0
+"Kitsap County, Washington",92.4,7.6
+"Lewis County, Washington",90.9,9.1
+"Mason County, Washington",73.1,26.9
+"Pierce County, Washington",94.8,5.2
+"Skagit County, Washington",92.0,8.0
+"Snohomish County, Washington",95.5,4.5
+"Spokane County, Washington",93.2,6.8
+"Thurston County, Washington",94.6,5.4
+"Whatcom County, Washington",88.8,11.2
+"Yakima County, Washington",95.7,4.3
+"Berkeley County, West Virginia",92.6,7.4
+"Cabell County, West Virginia",86.4,13.6
+"Harrison County, West Virginia",88.8,11.2
+"Kanawha County, West Virginia",85.2,14.8
+"Monongalia County, West Virginia",88.7,11.3
+"Raleigh County, West Virginia",81.7,18.3
+"Wood County, West Virginia",91.7,8.3
+"Brown County, Wisconsin",96.5,3.5
+"Chippewa County, Wisconsin",94.0,6.0
+"Dane County, Wisconsin",97.1,2.9
+"Dodge County, Wisconsin",93.0,7.0
+"Eau Claire County, Wisconsin",94.9,5.1
+"Fond du Lac County, Wisconsin",95.9,4.1
+"Jefferson County, Wisconsin",94.2,5.8
+"Kenosha County, Wisconsin",94.8,5.2
+"La Crosse County, Wisconsin",94.9,5.1
+"Manitowoc County, Wisconsin",93.5,6.5
+"Marathon County, Wisconsin",95.3,4.7
+"Milwaukee County, Wisconsin",91.6,8.4
+"Outagamie County, Wisconsin",96.4,3.6
+"Ozaukee County, Wisconsin",95.0,5.0
+"Portage County, Wisconsin",95.6,4.4
+"Racine County, Wisconsin",93.3,6.7
+"Rock County, Wisconsin",92.5,7.5
+"St. Croix County, Wisconsin",97.9,2.1
+"Sauk County, Wisconsin",89.3,10.7
+"Sheboygan County, Wisconsin",94.3,5.7
+"Walworth County, Wisconsin",79.5,20.5
+"Washington County, Wisconsin",95.0,5.0
+"Waukesha County, Wisconsin",95.5,4.5
+"Winnebago County, Wisconsin",92.1,7.9
+"Wood County, Wisconsin",92.2,7.8
+"Laramie County, Wyoming",95.2,4.8
+"Natrona County, Wyoming",91.5,8.5
+"Arecibo Municipio, Puerto Rico",78.4,21.6
+"Bayamón Municipio, Puerto Rico",86.5,13.5
+"Caguas Municipio, Puerto Rico",84.4,15.6
+"Carolina Municipio, Puerto Rico",79.7,20.3
+"Guaynabo Municipio, Puerto Rico",80.6,19.4
+"Mayagüez Municipio, Puerto Rico",74.3,25.7
+"Ponce Municipio, Puerto Rico",82.1,17.9
+"San Juan Municipio, Puerto Rico",75.6,24.4
+"Toa Alta Municipio, Puerto Rico",88.9,11.1
+"Toa Baja Municipio, Puerto Rico",84.2,15.8
+"Trujillo Alto Municipio, Puerto Rico",89.2,10.8

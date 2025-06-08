@@ -1,0 +1,408 @@
+operating_agreement_multi_member.txt
+
+template 1 
+OPERATING AGREEMENT
+This Operating Agreement (the “Agreement”) is made and entered into as of [EFFECTIVE DATE], by and between:
+(, LLC.), with an address at [GENERAL PARTNER ADDRESS] (hereinafter referred to as the “General Partner”), and
+[LIMITED PARTNER 1 FULL NAME], with an address at [LIMITED PARTNER 1 ADDRESS] (hereinafter referred to as “Limited Partner 1”), and
+[LIMITED PARTNER 2 FULL NAME], with an address at [LIMITED PARTNER 2 ADDRESS] (hereinafter referred to as “Limited Partner 2”).
+The General Partner and Limited Partners may be collectively referred to as the “Partners” or individually as a “Partner.”
+RECITALS
+WHEREAS, the Partners wish to enter into a partnership for the purpose of acquiring and managing large multifamily properties;
+WHEREAS, the Partners desire to define their respective rights and obligations with respect to the partnership;
+NOW, THEREFORE, in consideration of the mutual covenants and agreements hereinafter set forth and for other good and valuable consideration, the receipt and sufficiency of which are hereby acknowledged, the Partners agree as follows:
+ARTICLE I: FORMATION AND NAME
+1.1. Formation. The Partners hereby form a limited partnership (the “Partnership”) pursuant to the laws of the United States.
+1.2. Name. The name of the Partnership shall be [PARTNERSHIP NAME].
+ARTICLE II: PURPOSE AND OBJECTIVES
+2.1. Purpose. The purpose of the Partnership is to allow the General Partner to buy large multifamily properties without using their own money, with Limited Partners funding the deal.
+2.2. Objectives. The objectives of the Partnership include: a) To acquire and manage large multifamily properties b) To double the Limited Partners’ investment within 5 years c) To provide a 5-year buyout structure for Limited Partners
+ARTICLE III: TERM
+3.1. Commencement. The Partnership shall commence on the date of this Agreement and shall continue for a period of 5 years, unless earlier terminated in accordance with this Agreement.
+ARTICLE IV: CAPITAL CONTRIBUTIONS
+4.1. Initial Contributions. The Limited Partners shall collectively contribute 100% of the down payment for the property acquisition (the “Initial Contribution”).
+4.2. Additional Contributions. No additional contributions are required unless agreed upon by all Partners in writing.
+ARTICLE V: PROFIT AND LOSS ALLOCATION
+5.1. Profit Distribution. Profits shall be distributed as follows: a) 50% of monthly cash flow to Limited Partners, to be applied towards repaying their original investment b) 50% of monthly cash flow to General Partner
+5.2. Loss Allocation. Losses shall be allocated in proportion to the Partners’ ownership percentages: 51% to General Partner and 49% to Limited Partners.
+ARTICLE VI: MANAGEMENT AND CONTROL
+6.1. Management. The General Partner shall have exclusive management control of the Partnership’s business.
+6.2. Duties of General Partner. The General Partner shall: a) Manage the day-to-day operations of the Partnership b) Make all business decisions related to the property c) Provide regular updates to Limited Partners on the property’s performance
+6.3. Limited Partners’ Role. The Limited Partners shall: a) Provide the initial capital contribution b) Have no involvement in the management or decision-making of the Partnership
+6.4. Decision Making. All decisions regarding the Partnership shall be made solely by the General Partner.
+ARTICLE VII: BUYOUT AND REPAYMENT
+7.1. Repayment to Limited Partners. The Partnership shall repay the Limited Partners double their original contribution within 5 years from the date of this Agreement.
+7.2. Late Payment Penalties. In the event of late payment, an additional 3% charge of the monthly due amount will be applied per week if not paid on the original due date.
+7.3. Buyout Option. The buyout option may be exercised at any time through refinancing or having a new Limited Partner cover the original investors’ payment.
+ARTICLE VIII: DISPUTE RESOLUTION
+8.1. Process. Any disputes arising between the Partners shall be resolved by the General Partner, who has the authority to overrule due to 51% ownership.
+ARTICLE IX: CONFIDENTIALITY
+9.1. Confidential Information. The Partners agree to maintain the confidentiality of all Partnership-related information, including but not limited to financial data, business strategies, and property details.
+ARTICLE X: TERMINATION
+10.1. Termination Conditions. This Agreement may be terminated under standard conditions, favoring the General Partner, including but not limited to: a) Mutual agreement of all Partners b) Completion of the 5-year term and full repayment to Limited Partners c) Material breach of the Agreement by any Partner d) Bankruptcy or insolvency of the Partnership
+ARTICLE XI: MISCELLANEOUS
+11.1. Amendments. This Agreement may be amended only by a written instrument executed by all Partners.
+11.2. Governing Law. This Agreement shall be governed by and construed in accordance with the laws of the United States and shall be enforceable in all 50 states.
+11.3. Counterparts. This Agreement may be executed in counterparts, each of which shall be deemed an original, but all of which together shall constitute one and the same instrument.
+11.4. Entire Agreement. This Agreement constitutes the entire agreement between the Partners with respect to the subject matter hereof.
+ARTICLE XII: SIGNATURES
+IN WITNESS WHEREOF, the Partners have executed this Agreement as of the date first above written.
+General Partner: ________________________ Tyler Torres (TPI, LLC.)
+Limited Partner 1: ________________________ [LIMITED PARTNER 1 FULL NAME]
+Limited Partner 2: ________________________ [LIMITED PARTNER 2 FULL NAME]
+
+
+template 2 
+Multi-Member | Manager-Managed (1 Manager)
+Limited Liability Company (LLC) Operating Agreement
+
+[PRINT OR SAVE THIS 1ST PAGE THEN DELETE FROM OPERATING AGREEMENT]
+
+Instructions: Note that the Operating Agreement is generally an internal document meant to keep on file and follow.  Sometimes banks or courts (if applicable) may request it, but otherwise, it is internal. With that said, it’s important to complete it, sign it and follow the rules contained therein (as modified by you). Although it starts as a Multi-Member and Single-Manager LLC Operating Agreement, it accommodates changes to both.  Fill in the blanks as follows in the following order:
+
+LLC Name;
+State of Formation;
+Date of Formation;
+LLC Name;
+State of Formation;
+Name of Members and Types of Members (e.g., “an individual” or company – if company, for example, “a Wyoming limited liability company”);
+State of Formation;
+LLC Name;
+Anything you’d like to add as to the “purpose” of the LLC. Note that this is only required in a few states – check your state’s rules.  If not required, feel free to delete after “Act.”
+Business Address of LLC;
+State of Formation;
+Address of Agent for Service of Process in State of Formation (your address or third-party agent);
+Name of Agent for Service of Process in State of Formation (you or third-party agent);
+Date of Formation;
+Name of Initial Manager;
+Name of Initial Manager;
+Amount of Unsecured Debt over which Requires Members Approval;
+State of Formation;
+County and State where you’d want Arbitration (e.g., close to where you live).
+Names and Signatures of Managers and Members (notarization is NOT required).
+Exhibit A – Name of Members, Capital Contributions and Percentage Interest of each Member.
+
+Copyright/Refund Notice: The legal templates you download from www.attorneydrafted.com or otherwise receive from Success Advisors LLC are original works of Success Advisors LLC and are copyright protected.  They are for SINGLE-USE only, and should not be shared, reproduced or sold. As a digital document, once it is downloaded it cannot verifiably be returned/deleted. As such, unfortunately, we do not allow refunds. Sorry!
+
+Disclaimer: This legal template, the instructions, the information on www.attorneydrafted.com, and/or any answers to your questions do not constitute legal or tax advice and should not be construed as such. If you need legal or tax advice, please seek out an attorney or CPA in your state.  There is no guarantee that any template you purchase from Success Advisors LLC will be suitable for your situation, location, transaction, preferences or objectives.  These templates are priced lower than what you'd pay an attorney because they do not include legal advice specific to your situation.  These templates are sold AS-IS and are not a substitute for legal or tax advice suitable for your specific situation and location.
+
+Manager-Favorable Template:  This template assumes that you (founder/owner/member) will also serve as the Manager and should thus have broad discretion as Manager. If that does not apply, you may want to amend accordingly (with help of attorney) (e.g., Section 5.4.1) and consider removing Sections 5.15 & 5.16.
+
+LIMITED LIABILITY COMPANY
+OPERATING AGREEMENT
+____________ LLC
+A ____________ Multi-Member Manager-Managed
+Limited Liability Company
+
+THIS OPERATING AGREEMENT (“Agreement”) is made and entered into effective as of ________________, 202__ (“Effective Date”), by and among ____________ LLC, a ___________ limited liability company (the “Company”) and ________________, a/an _______________ and ________________, a/an ________________ executing this Agreement as the members of the Company (each, a “Member” and together, the “Members”) and the Managers (as defined below).
+
+ARTICLE 1
+THE LIMITED LIABILITY COMPANY
+
+1.1 	Formation and Name.  The Members have formed this manager-managed limited liability company under the laws governing limited liability companies in the state of _______________ (as amended, the “Act”).  The name of the Company is “____________ LLC.”  The business of the Company may be conducted under that name or, upon compliance with applicable laws, any other name or names that the Manager(s) deems appropriate or advisable.  The rights and obligations of the parties are as provided in the Act except as otherwise expressly provided in this Agreement.
+
+1.2 	Purpose. The purpose of the Company is to engage in any lawful act or activity for which a limited liability company may be organized and operated under the Act including, without limitation, the following: _________________________________________.
+
+1.3 	Principal Place of Business	.  The Company’s principal business address shall be ___________________________, or such other place as the Manager(s) may designate.
+
+1.4 	Registered Agent	.  The Company shall maintain a registered agent for service of process, to be determined by the Manager(s), in the state of ______________ in compliance with the Act, and any other state in which the Company is qualified to do business.  The Company’s initial address of its registered agent in the state of ___________ is __________________.  The name of its initial registered agent at such address is ________________________.
+
+1.5 	Term. The term of the Company commenced on _______________ and shall continue in perpetuity unless terminated earlier pursuant to this Agreement or the Act.
+
+1.6 	Definitions.  The following terms, as used in this Agreement, shall have the following respective meanings:
+
+1.6.1	“Capital Account” means, with respect to any Member, the account reflecting the capital interests of the Member in the Company adjusted in accordance with this Agreement.
+
+	1.6.2	“Capital Contribution” means, with respect to any Member, the total applicable value of (i) cash, (ii) the fair market value of property/assets other than cash, and (iii) services that are contributed and/or agreed to be contributed to the Company by such Member, as listed on Exhibit A, as may be updated from time to time according to the terms of this Agreement. A Capital Contribution will not be deemed a loan. 
+
+1.6.3	“Family Member” with respect to any Manager or Member means any natural person who has any of the following relationships to such Manager or Member: (a) a parent (by birth or by adoption), (b) a lineal descendant (by birth or by adoption), (c) a spouse or registered domestic partner, or (d) a sibling or lineal descendant of a sibling.
+
+1.6.4	“IRC” means the Internal Revenue Code of 1986, as amended from time to time.  References to the IRC include references to state tax provisions, as applicable.
+
+	1.6.5	“Majority of Members” means, with respect to any matter, a Member or Members whose Percentage Interests represent more than fifty percent (50%) of the Percentage Interests of all the Members entitled to vote or approve such matter.
+
+1.6.6	“Manager” shall mean ________________ or such other person or entity as may be elected as Manager or Managers by a Majority of Members from time to time as provided in Article 5.
+
+	1.6.7	“Member” shall mean the party who executes this Agreement as a Member either at the Effective Date of this Agreement or thereafter.
+
+	1.6.8	“Percentage Interest(s)” shall mean each Member’s relative share of net profits, net losses and distributions (other than distribution in liquidation of a Member’s Capital Account) as shown on Exhibit A. Exhibit A shall be revised from time to time to reflect any change of Percentage Interests resulting from (i) additional Capital Contributions made by Members other than pro rata in accordance with their initial Capital Contributions pursuant to Section 2.2, (ii) any transfer of membership interests by Members; and (iii) the admission of new Members other than upon transfer of membership interests by Members.
+
+	1.6.9	“Permitted Transferee” means (a) any Family Member of a Member, (b) any trust the primary beneficiaries of which are one or more Family Members of a Member or which is a revocable trust established by a Member as the settlor, grantor, or trustor, or which is a sub-trust or trust created by a division or allocation of assets of a trust that is a Member, (c) any corporation, partnership, limited liability company, or other entity of which all of the equity and voting interests are owned by a Member and/or one or more Persons described in clauses (a) and (b) of this Section; (d) any settlor, trustor, or grantor of any trust that is a Member, or any beneficiary of such a trust who is a Family Member of the settlor, trustor, or grantor; or (e) any Person that is the sole owner, member, or shareholder of a Member.  Notwithstanding anything to the contrary herein, no transfer to an entity shall be permitted if it would result in the termination or revocation of the Company’s tax election (if applicable), unless such termination or revocation is unanimously agreed to by the Members.
+
+	1.6.10	“Person” means any natural person, trust, corporation, partnership, limited liability company, or other entity.
+
+	1.6.11	“Regulations” means the Treasury Regulations, including Temporary Treasury Regulations, promulgated under the IRC, as from time to time in effect. References to the Regulations include references to the corresponding state tax provisions, as applicable.
+
+1.7 	Admission of Additional Members. Except as otherwise expressly provided in this Agreement, no additional Members may be admitted to the Company through issuance by the Company of a new interest in the Company without the prior written consent of a Majority of Members.
+
+ARTICLE 2
+CAPITAL CONTRIBUTIONS
+
+2.1 	Initial Contributions.  Each Member has made or agrees to make the initial Capital Contribution set forth next to such Member’s name on Exhibit A to become a Member of the Company.
+
+2.2 	No Additional Mandatory Contributions; Voluntary Contributions. After making their initial Capital Contribution, Members are not obligated to make additional Capital Contributions unless unanimously agreed by all the Members. If subsequent Capital Contributions are unanimously agreed by all the Members in a consent in writing, the Members may make such additional Capital Contributions on a pro-rata basis in accordance with each Member’s respective Percentage Interest or as otherwise unanimously agreed by the Members.  If the Manager or a Majority of Members determine that additional capital contributions are needed, but the Members cannot unanimously agree on making such additional capital contributions pursuant to the preceding sentence, then one or more Members may elect at their discretion to either (a) make additional capital contributions to add to their Capital Account but without affecting such Member’s Percentage Interest, or (b) provide the requested funds by a nonrecourse loan to the Company, which loan is conditioned upon the Company entering into a promissory note with such Member(s) on terms and conditions agreed to by the Member(s) and a majority of the non-lending Members.  Member loans to the Company shall not be considered as additional Capital Contributions.
+
+2.3 	No Interest on Capital Contributions. Members are not entitled to interest or other compensation for or on account of their Capital Contribution to the Company except to the extent, if any, expressly provided in this Agreement.
+
+2.4	Capital Accounts. A Capital Account shall be established and maintained for each Member and holder of Economic Rights (as defined below). The Capital Accounts shall be maintained in a reasonable manner intended to satisfy the requirements of the Regulations and accounting for the capital interests of the individual Members and holders of Economic Rights. A Member’s Capital Account shall reflect the Member’s (i) capital contributions, (ii) increases for any net income or gain of the Company, (iii) decreases for the Member’s share of any losses and deductions of the Company, (iv) any decreases for distributions made to the Member, and (v) any other adjustments required by the Regulations. The Managers may make or not make elections at their discretion that may be made in maintaining the Capital Accounts under the Regulations.
+
+2.5	Limited Liability; No Authority. A Member will not be bound by, or be personally liable for, a judgment, decree or order of a court or in any other manner, for the expenses, liabilities, debts, contracts, or obligations of the Company, and the liability of each Member shall be limited solely to the amount of such Member’s Capital Contribution, except as otherwise provided in this Agreement or as required under the Act. Unless expressly provided in this Agreement, no Member, acting alone or with other Members, has any authority to undertake or assume any obligation, debt, or responsibility on behalf of the Company or otherwise act on behalf of the Company or any other Member.
+
+2.6	No Priority.  No Member shall have priority or preference over any other Member, either as to the return of Capital Contributions or as to profits, losses or distributions. This Section shall not apply to loans (as distinguished from Capital Contributions) which a Member has made to the Company.
+
+ARTICLE 3
+ALLOCATION OF PROFITS AND LOSSES; DISTRIBUTIONS
+
+3.1 	Allocations of Profit and Loss.  Unless otherwise agreed to by the unanimous consent of the Members, any income, gain, loss, deduction, or credit of the Company will be allocated for accounting and tax purposes on a pro rata basis in proportion to the respective Percentage Interest held by each Member and in compliance with the Regulations.
+
+3.2 	Distributions. The Company will have the right to make distributions of cash and property to the Members on a pro rata basis in proportion to the respective Percentage Interest held by each Member. The timing and amount of distributions will be determined by the Managers in accordance with the Act.  
+
+3.3	Limitations on Distributions. The Company must not make a distribution to a Member if, after giving effect to the distribution, the:
+
+(a)	Company would be unable to pay its debts as they become due in the usual course of business; or
+
+(b)	Fair value of the Company’s total assets would be less than the sum of its total liabilities plus the amount that would be needed, if the Company were to be dissolved at the time of the distribution, to satisfy the preferential rights upon dissolution of Members, if any, whose preferential rights are superior to those of the Members receiving the distribution.
+
+3.4 	No Right to Demand Return of Capital. No Member has any right to any return of capital or contribution except as expressly provided in this Agreement or as required by the Act. 
+
+ARTICLE 4
+INDEMNIFICATION
+
+4.1	General.  Any Person made, or threatened to be made, a party to any action or proceeding, whether civil, criminal, administrative or investigative, by reason of the fact that he, she or it is or was (i) a Manager, (ii) an employee of the Company, (iii) a Member, or (iv) an officer, director, member, partner, attorney or agent of a Member or Manager, (collectively, the “Indemnified Person(s)”), shall be indemnified by the Company for any losses or damages sustained with respect to the action or proceeding, and the Company may, but is not required to, advance the Indemnified Person’s related expenses to the full extent permitted by the Act as if the Indemnified Person were a Member. The duty of the Company to indemnify the Indemnified Persons shall not extend to actions or omissions of any Indemnified Person that involve fraud, deceit, gross negligence, reckless or intentional misconduct, or a knowing violation of law. No Indemnified Person shall be liable to the Company or the Members for actions taken in good faith.
+
+4.2	Procedure. The determination of whether an Indemnified Person is entitled to indemnification with respect to any action or proceeding shall be made by the Managers; provided, however, that if one of the Managers is an interested party to the same or a related proceeding with respect to which indemnification is being sought, such Manager shall not be entitled to make such determination, in which event the determination shall be made by the remaining other Manager(s), or if all Managers are interested parties, by a majority of the disinterested Members. Any Person who does not agree with a determination that he, she or it is not entitled to indemnification may request mediation and arbitration in accordance with Section 11.6.
+
+ARTICLE 5
+MANAGEMENT OF COMPANY
+
+5.1	Management.  The business and affairs of the Company shall be managed by a Manager or, subject to this Article 5, its Managers. Subject to Section 5.4 and other applicable provisions of this Agreement and the Act, the Manager(s) shall have full and complete authority, power and discretion to manage and control the business, affairs and properties of the Company, to make all decisions regarding those matters and to perform any and all other acts or activities customary or incident to the management of the Company’s business. Members, as such, who are not also a Manager, shall not have any right or authority to bind the Company, delegate any control over the Company, or otherwise to act on behalf of or for the Company.
+
+5.2	Number of Managers; Term of Managers.   
+
+	5.2.1	Number of Managers; Initial Managers.  The number of Managers of the Company shall be fixed from time to time by the Majority of Members without requiring an amendment to this Agreement, but in no instance shall there be less than one (1) Manager. The Company shall initially have one (1) Manager.  The initial Manager, as named in Section 1.6.6, is ________________________ (the “Initial Manager”).  The Initial Manager will serve as a Manager until such time as the position is vacated in accordance with this Section 5.2.  
+
+5.2.2	Term of Manager(s).  A Manager shall serve until the earlier of: (a) the Manager’s resignation, retirement, death, or incapacity; (b) the Manager’s removal by the Majority of Members; or (c) the expiration of the Manager’s term as Manager if a term has been designated by a Majority of Members.   
+
+5.3	Appointment of New Managers.  Manager vacancies shall be filled at the earliest time practicable.  Each new Manager will be appointed by a Majority of Members for: (a) a term expiring with the appointment of a successor; and/or (b) a term expiring at a definite time specified by a Majority of Members in connection with the appointment.
+
+5.4	Certain Actions Requiring Member Consent.  The Manager(s), who will also be the officers of the Company (e.g., President and/or Chief Executive Officer, and also in Manager(s)’ discretion the Chief Financial Officer and/or Secretary), will have the powers and duties described in Section 5.7 of this Agreement, along with all other power and authority to make all decisions for, and to act on behalf of, the Company, unless specifically excluded in this Section 5.4.  
+
+5.4.1	Majority Consent. A Manager will not take any of the following actions on behalf of the Company unless a Majority of Members has consented to the taking of that action: 
+
+Pledging any of any Company assets to secure any debt of the Company; 
+
+Incurring of any unsecured debt exceeding $________;
+
+Taking of any action outside the ordinary course of the Company’s activities.
+
+Sell, lease, exchange, or otherwise dispose of all, or substantially all, of the Company’s property, with or without the goodwill, outside the ordinary course of the Company’s activities;
+
+Approve any merger of the Company with any corporation, limited liability company, limited partnership, or other business entity;
+
+Filing of a petition in bankruptcy;
+
+With the exception of Section 11.2, amend this Agreement.
+
+5.4.2	Unanimous Consent Not Required.  The Members acknowledge and agree that this Agreement is intended to override any and all default rules and laws contained in the Act which conflict with this Agreement to the fullest extent an operating agreement is permitted to do so under the Act. The Members further acknowledge and agree that they wish to avoid a situation where a Member holding a minority Percentage Interest can veto or block the will of the Majority of Members.  Therefore, approval by a Majority of Members shall be sufficient for any acts or actions requiring Member approval under this Agreement or the Act unless: (i) this Agreement specifically requires a higher Member Percentage Interest approval; or (ii) both of the following apply: (A) the Act specifically requires a higher Member Percentage Interest approval, and (B) the law disallows that requirement from being overridden by this Agreement.  If a higher Membership Percentage Interest is required pursuant to subsection (ii) of the preceding sentence, then the conflicting provision of this Agreement shall be replaced by operation of law with the applicable requirement under the Act.
+
+5.5	Manager’s Other Interests.  It is acknowledged that a Manager has or may have other business interests to which such Manager devotes part of such Manager’s time.  The Manager will devote as much time to the conduct of the business of the Company as such Manager, in such Manager’s own good faith and discretion, deems necessary.
+
+5.6	Compensation and Reimbursement.  Manager(s) shall not be entitled to compensation unless approved by the Majority of Members.  A Manager shall be entitled to reimbursement for all expenses reasonably incurred by a Manager in the performance of such Manager’s services; provided that such Manager provides the Company with appropriate documentation of the amount and purpose of such expenses.
+
+5.7	Manager’s Authority.  Subject to Section 5.4 above and the Act, the Manager(s) will have the exclusive rights and complete power to manage the assets, liabilities, business, appointment rights, operations, and all other rights, powers, duties, and obligations of the Company, and to make all decisions for the Company and enter into all contracts, instruments and commitments on behalf of the Company, and do all other things for and on behalf of the Company which do not require the approval of the Members per Section 5.4 or the Act, including but not limited to (a) the management of all or any part of the Company’s business, operations, assets and/or liabilities, (b) the employment of persons, firms or entities for the operation and management of the Company’s business and/or assets, (c) to open bank accounts on behalf of the Company, and (d) the qualification to do business in states.  In the exercise of the management powers, a Manager is authorized to execute and deliver (i) all contracts, agreements, documents, instruments, certificates, conveyances, assignments, leases, subleases, quitclaims, grant deeds, warranty deeds, and other contracts and documents covering or affecting the Company’s assets or business; (ii) all checks, drafts and other orders for the payment of the Company’s funds; (iii) all promissory notes, loans, security agreements and other similar documents; and (iv) all other documents or instruments of any other kind relating to the Company’s affairs, business, operations or assets, whether like or unlike the foregoing. 
+
+5.8	Management Decisions.  
+
+5.8.1	One Manager.  So long as there is one (1) Manager, then that Manager is empowered with all the rights and obligations of a Manager and all Managers in this Agreement until such time as another Manager is added by a Majority of Members.
+
+5.8.2	Two Managers.  If at a subsequent date, an additional Manager is added in accordance with the provisions of this Agreement and there are then two (2) Managers, management decisions shall be approved by the unanimous decision of all Managers.  All power and authority of, or actions taken by, a Manager or Managers referenced in this Agreement or on behalf of the Company shall require the approval of both Managers.  If there is a disagreement between the Managers as to any action on behalf of the Company, the Managers shall seek a tie-breaking vote from the Majority of Members.  Notwithstanding the foregoing, one Manager has the authority to sign documents and sign contracts on behalf of the Company so long as the transaction and terms of the document or contract is approved by both Managers (and by the Majority of Members or higher Percentage Interest if required by this Agreement or the Act).  
+
+5.8.3	More Than Two Managers.  If at a subsequent date, additional Managers are added in accordance with the provisions of this Agreement, management decisions shall thereafter be approved by a majority decision of the Managers, with each Manager entitled to cast one vote for or against any matter submitted to the Managers for a decision. Notwithstanding the foregoing, one Manager has the authority to sign documents and sign contracts on behalf of the Company so long as the transaction and terms of the document or contract is approved by both Managers (and by the Majority of Members or higher Percentage Interest if required by this Agreement or the Act).
+
+5.9	Performance of Duties; Manager’s Liability.  A Manager shall not be liable to the Company or any Member for any loss or damage sustained by the Company or any Member, unless it shall have been the result of fraud, deceit, gross negligence, reckless or intentional misconduct, or a knowing violation of law by such Manager. A Manager shall perform its managerial duties in good faith, in a manner that Manager reasonably believes to be in the Company’s and Members’ best interests, and with such care, including reasonable inquiry, as an ordinarily prudent person in a like position would use under similar circumstances. The Manager, in so performing its duties as Manager per the preceding sentence, shall not have any liability by reason of being or having been the Company’s Manager.
+
+5.10	Reliance by Third Parties.  Third parties dealing with the Company shall be entitled to rely conclusively upon the power and authority of a Manager or the Managers to manage and operate the business and affairs of the Company.
+
+5.11	Reliance on Third Parties.  In performing management duties, a Manager shall be entitled to rely on information, opinions, reports, or statements, including financial statements and other financial data, and opinions, reports and statements as to the amount or value of Company assets, liabilities, profits, and losses, and the value of any property that may be acquired by the Company or that may secure a loan made by the Company, or any other facts pertinent to the existence and amount of assets from which distributions to Members might properly be paid, if such information, opinion, report or statement is given by any of the following Persons or groups, unless a Manager in performing such duty has actual knowledge concerning the matter in question that would cause such reliance to be unwarranted, and provided that such Manager acts in good faith and after reasonable inquiry when the need therefor is indicated by the circumstances:  (a) one or more officers, employees or other agents of a Manager or the Company whom such Manager reasonably believes to be reliable and competent in the matters presented; or (b) any attorney, accountant, appraiser, engineer, architect, or other person as to matters which such Manager reasonably believes to be within such person’s professional or expert competence.
+ 
+
+5.12	Meetings of Managers.  If there is more than one Manager, regular meetings of the Managers are not required but may be held at such time and place as the Managers deem necessary or desirable for the reasonable management of the Company. Meetings may take place in person, by conference call, or by any other means permitted under the Act.
+
+5.13	Meetings of Members.  If there is more than one Member, annual, regular, or special meetings of the Members are not required but may be held at such time and place as the Members deem necessary or desirable. A written notice setting forth the date, time, and location of a meeting must be sent at least ten (10) days but no more than sixty (60) days before the date of the meeting to each Member entitled to vote at the meeting. A Member may waive notice of a meeting by sending a signed waiver to the Company’s principal executive office or as otherwise provided in the Act. In any instance in which the approval of the Members is required under this Agreement, such approval may be obtained in any manner permitted by the Act, including by conference call or similar communications equipment. Any action that could be taken at a meeting may be approved by a consent in writing that describes the action to be taken and is signed by Members holding the minimum Percentage Interest required to approve the action. If any action is taken without a meeting and without unanimous written consent of the Members, notice of such action must be sent to each Member that did not consent to the action. A consent transmitted by electronic transmission will be deemed to be written and signed for purposes of this Section.
+
+5.14	Majority of Members.  Whenever in this Agreement reference is made to the decision, consent, approval, judgment, or action of the Members, unless otherwise expressly provided in this Agreement or required by the Act, such decision, consent, approval, judgment, or action shall mean a Majority of Members.
+
+5.15	Competing Activities.  A Manager and its officers, directors, shareholders, partners, members, managers, agents, employees and affiliates may engage or invest in, independently or with others, any business activity of any type or description, including those that might be the same as or similar to the Company’s business and that might be in direct or indirect competition with it. Neither the Company nor any Member shall have any right in or to such other ventures or activities or to the income or proceeds derived therefrom. A Manager shall not be obligated to present any investment opportunity or prospective economic advantage to the Company, even if the opportunity is such that, if presented to the Company, could be taken by it. A Manager shall have the right to hold any investment opportunity or prospective economic advantage for its own account or to recommend such opportunity to Persons other than the Company. The Members acknowledge that a Manager and its affiliates own and/or manage (or may own and/or manage) other businesses, including businesses that may compete with the Company and for a Manager’s time. The Members waive all rights and claims which they may otherwise have against a Manager and its officers, directors, shareholders, partners, members, managers, agents, employees and affiliates as a result of any of such activities.
+
+5.16	Transactions Between Company and Manager.  Notwithstanding any possible conflict of interest, a Manager may, and may cause its affiliates to, engage in any transaction (including the purchase, sale, lease or exchange of any property or the rendering of any service, or the establishment of any salary, compensation or other terms of employment) with the Company so long as such transaction is not expressly prohibited by this Agreement and so long as such transaction, on an overall basis, is fair and reasonable to the Company and at least as favorable to the Company as those generally available from Persons capable of similarly performing them and in similar transactions between parties operating at arm’s length, and provided that a Majority of Members having no interest in such transaction (other than their interests as Members) affirmatively vote or consent in writing to approve the transaction. A transaction between the Manager and/or its affiliates on the one hand, and the Company on the other hand, shall be conclusively determined to constitute a transaction on terms and conditions, on an overall basis, fair and reasonable to the Company and at least as favorable to the Company as those generally available in a similar transaction between parties operating at arm’s length if a Majority of Members having no interest in such transaction (other than their interests as Members) affirmatively vote or consent in writing to approve the transaction.
+
+ARTICLE 6
+REIMBURSEMENT AND PAYMENT OF EXPENSES
+
+6.1 	Organization Expenses. The Member(s) shall be reimbursed by the Company for organizational expenses paid by the Member(s). The Company shall be authorized to elect to deduct organizational expenses and start-up expenditures ratably over a period of time as permitted by the IRC and as may be advised by the Company’s tax advisor. 
+
+6.2 	Legal, Accounting & Other Services. The Company may obtain legal, accounting and other services to the extent reasonably necessary for the conduct of the Company’s business. 
+
+ARTICLE 7
+BOOKS OF ACCOUNT, ACCOUNTING REPORTS,
+TAX RETURNS, FISCAL YEAR, BANKING
+
+7.1	Fiscal Year; Accounting Methods.  The fiscal year of the Company shall be the calendar year.  The Manager(s) shall establish the Company’s accounting methods for financial accounting and tax accounting purposes, which may be different except as required by law.
+
+7.2	Books and Records.  The Company shall maintain correct and proper books and records, entering fully and properly all Company transactions, as reasonably determined by the Manager(s).  As soon as reasonably convenient at the end of each fiscal year, the Company shall deliver to all Members such information as is necessary for them to properly prepare their federal and state income tax returns with respect to the allocations of net profits, net losses and distributions from the Company.
+
+7.3	Bank Accounts.  The Company shall open and maintain one or more Company bank accounts, into which all Company funds shall be deposited.  No other funds may be deposited into or commingled in any Company bank account(s).
+
+7.4 	Capital Accounts & Percentage Interests. The Company will maintain a Capital Account for each Member on a cumulative basis in accordance with federal income tax accounting principles.  The names and addresses of the Members and as shown in the Company books and records shall conclusively be deemed to be the proper persons to whom such distributions and allocations are to be made, unless a person claiming otherwise establishes that a notice of transfer was duly delivered to and received by the Company prior to the record date and that the transfer fully complies with all of the requirements of this Agreement.  The Company may establish reasonable Percentage Interest ownership record dates, which shall not be greater than fourteen (14) days prior to an applicable Company distribution, allocation, vote, or other purpose, for purposes of determining the persons entitled to such distribution, allocation, vote, or other matter.
+
+7.5	Member Tax Information.  To the extent that the Company reasonably needs information from a Member to properly compute any tax adjustment or any other matter for federal or state tax purposes, the Member shall deliver that information to the Company as soon as practical upon receiving the request by the Company.
+
+7.6	Tax Election.  The Company may, with the consent of a Majority of Members, elect whether or not to be treated for income tax purposes as a Sole Proprietorship (if applicable), a Partnership (if applicable), an S Corporation or a C Corporation.
+
+ARTICLE 8
+TRANSFER OF MEMBERSHIP INTEREST
+
+8.1 	Sale or Encumbrance Prohibited. Except for Transfers to Permitted Transferees, no Member may voluntarily or involuntarily transfer, sell, convey, encumber, pledge, assign, or otherwise dispose of (jointly and severally referred to as “Transfer”) an interest in the Company without the prior written consent of a Majority of Members, if applicable. The provisions of this Section 8.1 and Sections 8.2, 8.3, and 8.4 shall not apply to a Transfer to a Permitted Transferee.  Notwithstanding anything to the contrary herein, Sections 8.1, 8.2, 8.3, 8.4, 8.5 and 8.6 shall not apply when this Company is a single-member limited liability company. 
+
+8.2 	Right of First Refusal. If such consent is received pursuant to Section 8.1, a Member may transfer all or any part of the Member’s membership interest in the Company (the “Interest”) as follows:
+
+	8.2.1 	The Member desiring to transfer its Interest first must provide written notice (the “Notice”) to the other Member(s) of such Member’s intent to Transfer its Interest.  The purchase price of the Interest will be the “Fair Option Price” of the Interest as determined and agreed to by all Members.   If the Members are unable to so agree within 30 days of the Notice date, the Members shall agree on an appraiser to determine the Fair Option Price of the Interest.  If the Members cannot agree on an appraiser within 45 days of the Notice date, then the transferring Member will appoint, within 60 days of the Notice date, one appraiser, and the Company shall appoint within 60 days of the Notice, one appraiser.  The two appraisers will within a period of 30 additional days, agree on and appoint an additional appraiser.  The one (1) appraiser or three (3) appraisers (as applicable) will, within 60 days after all applicable appraisers are hired, determine the Fair Option Price of the Interest in writing and submit their reports to all Members (“Fair Option Price Notification”).  The Fair Option Price will be determined by disregarding the appraiser’s valuation that diverges the most from each of the other two appraisers’ valuations, and the arithmetic mean of the remaining two appraisers’ valuations will be the Fair Option Price.  If only one (1) appraiser is used, the transferring Member and Company shall share equally in the fee charged by the appraiser.  If three (3) appraisers are used, then the transferring Member will pay for the services of the appraiser selected by it, and the Company will pay for the services of the appraiser selected by it, and the transferring Member and Company shall share equally in the fee charged by the third appraiser and of all other costs relating to the determination of Fair Option Price. 
+
+	8.2.2 	The Member(s) may acquire all, but not less than all, of the Interest at the Fair Option Price. If the other Member(s) desiring to acquire the Interest cannot agree among themselves on the allocation of the Interest among them, the allocation will be proportional to the Percentage Interest in the Company of those Members desiring to acquire the Interest.  The Member(s) who have decided to purchase the Interest for the Fair Option Price shall notify the transferring Member within 30 days from the date of the Fair Option Price Notification of the Member(s) intent to purchase the Interest.   
+
+	8.2.3 	The closing of the Transfer of the Interest to other Member(s) will occur not less than 45 days after the Fair Option Price Notification unless the Member(s) participating in the Transfer unanimously agree to a shorter period of time.
+
+	8.2.4 	If all of the other Member(s) fail or refuse to notify the transferring Member of their desire to acquire all of the Interest proposed to be transferred within the 30-day period following receipt of the Fair Option Price Notification, then the Member(s) will be deemed to have waived the right to acquire the Interest, and the transferring Member may sell and convey the Interest for the Fair Option Price to any other person or entity; provided, however, that notwithstanding anything in Section 8.2 to the contrary, should the potential sale to a third person be at a price or on terms that are more favorable to the purchaser than the Fair Option Price, then the transferring Member must reoffer the sale of the Interest to the remaining Member(s) at such other price and/or other terms, and the Member(s) have thirty (30) days to accept the revised terms in the re-offer.
+
+8.3 	Substituted Members. If a Transfer was authorized and completed to a third party pursuant to this Agreement, but the new transferee is not a Permitted Transferee and the transferee has not become a fully substituted Member in accordance with Section 8.3, then such transferee will have only rights to receive distributions whenever made by the Company and the allocable share of taxable income, gain, loss, deduction, and credit (“Economic Rights”) with respect to the Interest transferred. Any Transfer of Economic Rights will not include any right to participate in management of the Company, including any right to vote, or consent to any action, and except to the extent required by the Act will not include any right to Company information or access to Company books and records  unless and until the transferee is admitted as a substitute Member; provided, that a holder of Economic Rights shall be entitled to receive annually form K-1 for federal income tax purposes and a comparable state income tax form reporting the transferee’s allocated income and other information as required to be reported on form K-1 under the IRC or Regulations. Following any Transfer of only the Economic Rights of a Member’s Interest in the Company, the transferring Member’s power and right to vote or consent to any matter submitted to the Members will be eliminated, and the Percentage Interest of the remaining Members, for purposes only of such votes, consents, and participation in management, will be proportionately increased until such time, if any, as the transferee of the Economic Rights becomes a substituted Member. A transferee of a Member’s Interest shall not become a substituted Member unless and until:
+
+	(a)	A Majority of Members, determined without taking into account the Percentage Interest of the Member making the Transfer, consent in writing to the Transfer; provided, however, that in the case of a Transfer to a Permitted Transferee, such approval by the Members shall not be required for the transferee to become a substituted Member;
+
+	(b)	The transferor and transferee (including a Permitted Transferee) execute and deliver to the Company the documents and instruments of conveyance necessary or appropriate in the opinion of counsel to the Company to effect the Transfer and to confirm the agreement of the transferee to be bound by the provisions of this Agreement; 
+
+	(c)	Unless waived in writing by the Manager(s) or a Majority of Members, the transferor furnishes to the Company an opinion of counsel, satisfactory to the Company, that the Transfer does not require registration under the Securities Act of 1933, as amended, as then in effect, or registration or qualification, or any similar action (including but not limited to obtaining the consent or approval of the state commissioner or any similar officer of any other state) under any state securities or blue sky law, due to exemptions to such registration or qualification requirements; and
+
+	(d)	Unless waived in writing by the Manager(s) or a Majority of Members, the transferor furnishes to the Company an opinion of counsel, satisfactory to the Company, that the Transfer will not cause the Company to terminate for federal income tax purposes and will not cause the Company’s tax election to be modified for federal income tax purposes.
+
+8.4 	Bankruptcy of Member. On the bankruptcy of a Member, the successor in interest to the Member (whether an estate, bankruptcy trustee, or otherwise) will receive only Economic Rights with respect to the Interest of the bankrupt Member unless and until a Majority of Members, determined without taking into account the Percentage Interest of the bankrupt Member, determine to admit the transferee as a substituted Member in accordance with the provisions of Section 8.3.
+	
+8.5 	Death or Dissolution of a Member. If during the Company’s term a Member dies or is adjudicated incompetent or an entity Member is dissolved or a Member that is a trust is terminated, the Member’s legal representative or successor shall have the rights of an assignee of the Member’s Economic Rights, but not the other rights of a Member, unless and until the legal representative or successor(s) is a Permitted Transferee or has been admitted as a Member under Section 8.3.
+
+8.6 	Withdrawal by a Member.  A Member has no right or power to withdraw from the Company, to withdraw its Capital Contribution or to demand and receive property of the Company or any distributions on its Capital Account, except distributions approved by the Managers or required by this Agreement or the Act or as permitted by the Managers and with the unanimous consent of the Members.
+
+8.7	Charging Order Protection.  The following shall apply to the maximum extent allowed by the Act or other applicable law: (i) any Member whose membership interest is subject to a charging order shall remain a Member and retain all rights and powers of a Member except the right to receive distributions to the extent charged; and (ii) the judgment creditor’s rights shall be limited to Economic Rights of such Member and nothing more during the duration of the charging order.  
+
+ARTICLE 9
+DISSOLUTION AND WINDING UP OF THE COMPANY
+
+9.1 	Dissolution. The Company will be dissolved on the happening of any of the following events:
+9.1.1 	Sale, transfer, or other disposition of all or substantially all of the property and assets of the Company;
+
+	9.1.2 	The agreement of a Majority of Members (unless a higher percentage is required by the Act); or
+
+	9.1.3 	By operation of law.
+
+9.2 	Winding Up. On the dissolution of the Company, the Members must take full account of the Company’s assets and liabilities, and the assets will be liquidated as promptly as is consistent with obtaining their fair value, and the proceeds, to the extent sufficient to pay the Company’s obligations with respect to the liquidation, will be applied and distributed, after any gain or loss realized in connection with the liquidation has been allocated in accordance with Article 3 of this Agreement, and the Members’ Capital Accounts have been adjusted to reflect the allocation and all other transactions through the date of the distribution, in the following order:
+
+	9.2.1 	To payment and discharge of the expenses of liquidation and of all the Company’s debts and liabilities to Persons or organizations other than Members;
+
+	9.2.2 	To the payment and discharge of any Company debts and liabilities owed to Members; and
+
+	9.2.3 	To Members in the amount of their respective adjusted Capital Account balances on the date of distribution.
+
+9.3	Members Look Solely to Company Assets.  Each Member and each holder of Economic Rights shall look solely to the Company for all distributions with respect to the Company and their Capital Account, and no Member or Economic Rights holder shall have any recourse in connection with any distribution (upon dissolution or otherwise) against the Managers, any liquidating trustee, or any other Member or holder of Economic Rights.
+
+ARTICLE 10
+POWER OF ATTORNEY
+
+Each Member irrevocably appoints each Manager as the Member’s attorney-in-fact, with power and authority to act in the name and on behalf of each such Member to execute, acknowledge, and swear to in the execution, acknowledgment and filing of documents which are not inconsistent with the provisions of this Agreement, and record in the appropriate public offices the following: 
+
+10.1.1	The formation documents, amendments, and restatements of any formation documents, and certificates of dissolution, and similar documents, and all certificates (including, without limitation, counterparts of this Agreement and fictitious business name certificates) as necessary for organizing, qualifying, continuing, operating, ceasing to do business, and dissolving and terminating of the Company in any jurisdiction;
+
+10.1.2	All consents to transfers of Interests, to the admission of substitute or additional Members, all amendments of this Agreement, to the extent that such actions are authorized by the terms of this Agreement; and
+
+	10.1.3	All conveyances, documents, and other instruments that the Managers deem appropriate to exercise the Managers’ powers as set forth under this Agreement or the receipt by the Company of any capital contribution of a Member or related to the purchase and/or closing of escrow related to a property.
+
+This power of attorney is deemed to be coupled with an interest, is irrevocable, shall survive the death, incapacity, termination or dissolution of the granting Member, and is limited to those matters herein set forth.
+
+ARTICLE 11
+GENERAL PROVISIONS
+11.1 	Amendments. Amendments to this Agreement may be proposed by any Member or Manager. Other than the amendments referenced in Sections 11.2 and 11.3 below, a proposed amendment will be adopted and become effective as an amendment only on the written approval of the Majority of Members.
+
+11.2	Amendments by Managers.  The Managers may, without the consent of any Member, amend any provision of this Agreement and execute whatever documents may be required in connection with such amendment, to reflect: 
+
+	11.2.1	a change in the Company’s name or the principal place of business;
+
+	11.2.2	the admission of a Permitted Transferee as a Member; 
+
+	11.2.3	a change necessary to qualify the Company as a limited liability company under any state’s laws or that is necessary and advisable, in the opinion of the Managers; and
+
+	11.2.4	any change to reflect changes in the Percentage Interests of Members or changes related to the admission of any new Members or any transfer or assignment of any Member’s Interest or Economic Rights or as required by Article 2.
+
+11.3	Amendments Not Allowable.  Unless approved by the affected Member, no amendment to this Agreement shall be permitted if the effect of the amendment would be to: 
+
+	11.3.1	change any Member’s interest in the Company’s assets, profits, distribution losses, credits, voting rights, management rights, liabilities, or duties to the extent that such change affects the Member in a manner different than other Members, without the consent of the affected Member (provided, however, the amendment may be effective with respect to all approving Members notwithstanding that one or more Members may not approve); or
+
+	11.3.2	adversely affect the Company’s federal or state income tax status.
+
+11.4 	Governing Law. This Agreement and the rights and obligations of the parties under it are governed by and interpreted in accordance with the laws of the state of ______________ (without regard to principles of conflicts of law). 
+
+11.5 	Notices.  All notices under this Agreement shall be in writing and shall be sent by facsimile, email or other electronic transmission, or by first class mail, postage paid, or by next business day delivery service, or personally delivered to the Member or the Company to whom the notice is addressed at the last known address or any other address designated for a Member by the Member giving notice under this Section.  A notice sent by mail shall be deemed delivered two (2) business days after being deposited in the United States mail, postage paid and addressed as provided in this Agreement.
+
+11.6 	Arbitration.  Any controversy or dispute arising out of this Agreement, the interpretation of any of the provisions hereof, or the action or inaction of any Member or Manager hereunder shall be submitted to binding arbitration in ____________ County, ____________, or another location mutually agreed to by the parties, administered by the American Arbitration Association in accordance with its Commercial Arbitration Rules.  Any award or decision obtained from any such arbitration proceeding shall be final and binding on the parties, and judgment on any award thus obtained may be entered in any court having jurisdiction thereof. No action at law or in equity based on any claim arising out of or related to this Agreement shall be instituted in any court by any party except an action to compel arbitration pursuant to, or an action to enforce an award obtained in an arbitration proceeding in accordance with, this Section.  All parties in the dispute shall initially share the cost of arbitration, but the prevailing party or parties may be awarded attorney fees, costs and other expenses of arbitration. All arbitration decisions shall be final, binding and conclusive on all the parties to arbitration, and legal judgment may be entered based upon such decision in accordance with applicable law in any court having jurisdiction to do so.
+
+11.7	Variance of Statutory Provisions.  This Agreement is the operating agreement of the Company within the meaning of the Act.  To the extent that any provision of this Agreement varies from, modifies, or conflicts with comparable provisions of the Act, the provisions of this Agreement shall control, and the conflicting or inconsistent provision of the Act shall be deemed waived or modified by the Members with their informed consent, except with respect to any provision of the Act, or rights or obligations of the Members or Manager under the Act, that may not be changed, modified, limited, eliminated, or waived by an operating agreement.
+
+11.8	Reading and Understanding Agreement.  Each Member and each person executing this Agreement on behalf of a Member states that: (a) he or she has carefully read this Agreement and knows its contents; (b) his or her duly authorized counsel has explained this Agreement to him or her to the extent that the party so required; (c) he or she fully understands and appreciates the terms of this Agreement, including those provisions that vary or modify any other provisions of the Act; and (d) that he or she has executed this Agreement voluntarily as his or her own free act and of his or her own free will and accord.
+
+11.9 	Further Effect. The parties agree to execute other documents reasonably necessary to further effect and evidence the terms of this Agreement, as long as the terms and provisions of the other documents are fully consistent with the terms of this Agreement.
+
+11.10 	Severability. If any term or provision of this Agreement, or any part thereof, is held to be void or unenforceable, that term or provision or part thereof (as applicable) will be severed from this Agreement, the balance of such term or provision (if applicable) and this Agreement will survive, and the balance of the term or provision (if applicable) and this Agreement will be reasonably construed to carry out the intent of the parties as evidenced by the terms of this Agreement.
+
+[SIGNATURE PAGE FOLLOWS]
+
+
+	IN WITNESS WHEREOF, the authorized representatives of the parties to this Agreement hereby execute this Agreement as of the Effective Date.
+
+
+MANAGER:
+
+________________ (Initial Manager/Manager)
+
+
+_______________________
+By: ________________
+
+
+	MEMBERS:
+
+________________ (Member)
+
+
+
+_______________________
+By: ________________
+
+
+________________ (Member)
+
+
+
+_______________________
+By: ________________
+
+
+EXHIBIT A
+CAPITAL CONTRIBUTIONS &
+PERCENTAGE INTERESTS
+
+Member Name	Capital Contribution(s)
+(value of cash, property and/or services provided/to be provided)	Percentage Interest
+		
+		
+		
+		
+		
+		
+		
+		
