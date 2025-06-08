@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { ArrowLeft, DollarSign, TrendingUp, BarChart3, Calculator, Edit3, Home, Users, Download, Copy, Zap } from 'lucide-react';
 
 const ResultsPage = ({ setCurrentPage, propertyData }) => {
@@ -77,6 +77,52 @@ const ResultsPage = ({ setCurrentPage, propertyData }) => {
     twoBedRent: 641,
     threeBedRent: 735
   });
+
+  // Populate state from passed propertyData when available
+  useEffect(() => {
+    if (!propertyData) return;
+
+    // Update property name and address if provided
+    if (propertyData.propertyName && !propertyName) {
+      setPropertyName(propertyData.propertyName);
+    }
+    if (propertyData.address && !propertyAddress) {
+      setPropertyAddress(propertyData.address);
+    }
+
+    const updated = {};
+    if (propertyData.price || propertyData.purchasePrice) {
+      updated.purchasePrice = parseFloat(propertyData.price || propertyData.purchasePrice);
+    }
+    if (propertyData.units) {
+      updated.units = parseInt(propertyData.units);
+    }
+    if (propertyData.grossPotentialRent) {
+      updated.grossPotentialRent = parseFloat(propertyData.grossPotentialRent);
+    } else if (propertyData.grossRent) {
+      updated.grossPotentialRent = parseFloat(propertyData.grossRent) * 12;
+    }
+    if (propertyData.monthlyRent) {
+      updated.currentRent = parseFloat(propertyData.monthlyRent) * 12;
+    }
+    if (propertyData.downPayment) updated.downPayment = parseFloat(propertyData.downPayment);
+    if (propertyData.loanAmount) updated.loanAmount = parseFloat(propertyData.loanAmount);
+    if (propertyData.interestRate) updated.interestRate = parseFloat(propertyData.interestRate);
+
+    if (propertyData.expenses) {
+      updated.realEstateTaxes = propertyData.expenses.realEstateTaxes || updated.realEstateTaxes;
+      updated.insurance = propertyData.expenses.insurance || updated.insurance;
+      updated.contractServices = propertyData.expenses.contractServices || updated.contractServices;
+      updated.turnover = propertyData.expenses.turnover || updated.turnover;
+      updated.generalAdmin = propertyData.expenses.generalAdmin || updated.generalAdmin;
+      updated.operatingReserves = propertyData.expenses.operatingReserves || updated.operatingReserves;
+    }
+
+    if (Object.keys(updated).length > 0) {
+      setFinancialData(prev => ({ ...prev, ...updated }));
+      setProFormaData(prev => ({ ...prev, ...updated }));
+    }
+  }, [propertyData]);
 
   // Exit cap rate for valuation analysis
   const [exitCapRate, setExitCapRate] = useState(6.5);
@@ -352,12 +398,16 @@ const ResultsPage = ({ setCurrentPage, propertyData }) => {
         console.warn('No address provided for geocoding');
         return { lat: 39.8283, lng: -98.5795 };
       }
-      
+
       // Clean and normalize the address for better accuracy
       const cleanAddress = address.trim()
         .replace(/\s+/g, ' ')
         .replace(/[^\w\s,.-]/g, '')
         .replace(/\b(apt|apartment|unit|suite|ste|#)\s*\w*\d*\w*$/i, '');
+
+      // Extract state abbreviation if present
+      const stateMatch = cleanAddress.match(/,\s*([A-Za-z]{2})\s*\d{0,5}$/);
+      const stateAbbr = stateMatch ? stateMatch[1].toUpperCase() : null;
       
       console.log('Geocoding cleaned address:', cleanAddress);
       
@@ -390,11 +440,12 @@ const ResultsPage = ({ setCurrentPage, propertyData }) => {
           
           if (data && data.length > 0) {
             // Find the best result (prefer house numbers over general areas)
-            const bestResult = data.find(result => 
-              result.type === 'house' || 
-              result.type === 'building' || 
-              result.class === 'building'
-            ) || data[0];
+            const bestResult = data.find(result => {
+              const matchesState = !stateAbbr || (result.address &&
+                ((result.address.state_code && result.address.state_code.toUpperCase() === stateAbbr) ||
+                 (result.address.state && result.address.state.toUpperCase().startsWith(stateAbbr))));
+              return matchesState && (result.type === 'house' || result.type === 'building' || result.class === 'building');
+            }) || data[0];
             
             const coordinates = {
               lat: parseFloat(bestResult.lat),
