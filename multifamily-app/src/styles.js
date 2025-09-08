@@ -1,8 +1,8 @@
 export const styles = {
   pageContainer: {
     minHeight: '100vh',
-    background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)',
-    color: '#ffffff',
+    background: '#ffffff',
+    color: '#1e293b',
     fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
   },
   container: {
@@ -23,7 +23,7 @@ export const styles = {
   heroTitle: {
     fontSize: '4rem',
     fontWeight: '800',
-    background: 'linear-gradient(to right, #ffffff, #cbd5e1, #94a3b8)',
+    background: 'linear-gradient(to right, #1e293b, #475569, #64748b)',
     backgroundClip: 'text',
     WebkitBackgroundClip: 'text',
     WebkitTextFillColor: 'transparent',
@@ -32,7 +32,7 @@ export const styles = {
   },
   heroSubtitle: {
     fontSize: '1.25rem',
-    color: '#94a3b8',
+    color: '#64748b',
     maxWidth: '768px',
     margin: '0 auto',
     lineHeight: '1.6'
@@ -44,18 +44,18 @@ export const styles = {
     marginBottom: '64px'
   },
   card: {
-    background: 'rgba(30, 41, 59, 0.5)',
-    backdropFilter: 'blur(10px)',
+    background: '#ffffff',
     borderRadius: '16px',
     padding: '32px',
-    border: '1px solid rgba(51, 65, 85, 0.5)',
+    border: '1px solid #e2e8f0',
     transition: 'all 0.3s ease',
-    cursor: 'pointer'
+    cursor: 'pointer',
+    boxShadow: '0 4px 6px rgba(0, 0, 0, 0.05)'
   },
   cardHover: {
-    transform: 'scale(1.05)',
-    borderColor: 'rgba(6, 182, 212, 0.5)',
-    boxShadow: '0 20px 50px rgba(0, 0, 0, 0.3)'
+    transform: 'translateY(-4px)',
+    borderColor: '#06b6d4',
+    boxShadow: '0 20px 40px rgba(6, 182, 212, 0.15)'
   },
   iconBox: {
     width: '64px',
@@ -76,16 +76,16 @@ export const styles = {
     background: 'linear-gradient(to right, #10b981, #22c55e)'
   },
   iconBoxPurple: {
-    background: 'linear-gradient(to right, #8b5cf6, #ec4899)'
+    background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)'
   },
   cardTitle: {
     fontSize: '1.25rem',
     fontWeight: '600',
     marginBottom: '12px',
-    color: '#ffffff'
+    color: '#1e293b'
   },
   cardText: {
-    color: '#94a3b8',
+    color: '#64748b',
     lineHeight: '1.6'
   },
   button: {
@@ -101,15 +101,15 @@ export const styles = {
     display: 'inline-flex',
     alignItems: 'center',
     gap: '12px',
-    boxShadow: '0 10px 30px rgba(6, 182, 212, 0.3)'
+    boxShadow: '0 4px 14px rgba(6, 182, 212, 0.3)'
   },
   buttonHover: {
-    transform: 'scale(1.05)',
+    transform: 'translateY(-2px)',
     background: 'linear-gradient(to right, #0891b2, #2563eb)',
-    boxShadow: '0 15px 40px rgba(6, 182, 212, 0.4)'
+    boxShadow: '0 8px 25px rgba(6, 182, 212, 0.4)'
   },
   backButton: {
-    color: '#94a3b8',
+    color: '#64748b',
     background: 'none',
     border: 'none',
     cursor: 'pointer',
@@ -129,10 +129,10 @@ export const styles = {
     fontSize: '2.5rem',
     fontWeight: '700',
     marginBottom: '8px',
-    color: '#ffffff'
+    color: '#1e293b'
   },
   subtitle: {
-    color: '#94a3b8',
+    color: '#64748b',
     fontSize: '1.125rem',
     marginBottom: '48px'
   },
@@ -140,19 +140,19 @@ export const styles = {
     fontSize: '2.5rem',
     fontWeight: '700',
     marginBottom: '8px',
-    color: '#ffffff'
+    color: '#1e293b'
   },
   pageSubtitle: {
-    color: '#94a3b8',
+    color: '#64748b',
     fontSize: '1.125rem',
     marginBottom: '48px'
   },
   formContainer: {
-    background: 'rgba(30, 41, 59, 0.5)',
-    backdropFilter: 'blur(10px)',
+    background: '#ffffff',
     borderRadius: '16px',
     padding: '32px',
-    border: '1px solid rgba(51, 65, 85, 0.5)'
+    border: '1px solid #e2e8f0',
+    boxShadow: '0 4px 6px rgba(0, 0, 0, 0.05)'
   },
   formGrid: {
     display: 'grid',
@@ -170,11 +170,11 @@ export const styles = {
     gap: '24px'
   },
   section: {
-    background: 'rgba(30, 41, 59, 0.5)',
-    backdropFilter: 'blur(10px)',
+    background: '#ffffff',
     borderRadius: '16px',
     padding: '32px',
-    border: '1px solid rgba(51, 65, 85, 0.5)'
+    border: '1px solid #e2e8f0',
+    boxShadow: '0 4px 6px rgba(0, 0, 0, 0.05)'
   },
   sectionHeader: {
     display: 'flex',
@@ -185,7 +185,7 @@ export const styles = {
   sectionTitle: {
     fontSize: '1.25rem',
     fontWeight: '600',
-    color: '#ffffff',
+    color: '#1e293b',
     margin: 0
   },
   inputGroup: {
@@ -196,21 +196,21 @@ export const styles = {
   label: {
     fontSize: '0.875rem',
     fontWeight: '500',
-    color: '#cbd5e1'
+    color: '#374151'
   },
   input: {
-    background: 'rgba(51, 65, 85, 0.5)',
-    border: '1px solid rgba(71, 85, 105, 0.5)',
+    background: '#ffffff',
+    border: '1px solid #d1d5db',
     borderRadius: '12px',
     padding: '12px 16px',
-    color: '#ffffff',
+    color: '#1e293b',
     fontSize: '1rem',
     transition: 'all 0.2s ease'
   },
   inputFocus: {
     outline: 'none',
-    borderColor: 'rgba(6, 182, 212, 0.5)',
-    boxShadow: '0 0 0 2px rgba(6, 182, 212, 0.1)'
+    borderColor: '#06b6d4',
+    boxShadow: '0 0 0 3px rgba(6, 182, 212, 0.1)'
   },
   tabButton: {
     padding: '12px 24px',
@@ -224,26 +224,31 @@ export const styles = {
     transition: 'all 0.3s ease',
   },
   tabButtonActive: {
-    color: '#667eea',
-    borderBottomColor: '#667eea',
+    color: '#06b6d4',
+    borderBottomColor: '#06b6d4',
   },
   checkboxLabel: {
     display: 'flex',
     alignItems: 'center',
     gap: '8px',
     fontSize: '14px',
-    color: '#cbd5e1',
+    color: '#374151',
     cursor: 'pointer',
   },
   uploadArea: {
-    border: '2px dashed #475569',
+    border: '2px dashed #cbd5e1',
     borderRadius: '16px',
-    padding: '64px',
+    padding: '64px 24px',
     textAlign: 'center',
-    transition: 'border-color 0.3s ease'
+    backgroundColor: '#f8fafc',
+    transition: 'all 0.3s ease',
+    cursor: 'pointer'
   },
   uploadAreaHover: {
-    borderColor: 'rgba(6, 182, 212, 0.5)'
+    borderColor: '#06b6d4',
+    backgroundColor: '#f0f9ff',
+    transform: 'translateY(-2px)',
+    boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)'
   },
   metricsGrid: {
     display: 'grid',
@@ -252,14 +257,14 @@ export const styles = {
     marginBottom: '40px'
   },
   metricCard: {
-    background: 'rgba(30, 41, 59, 0.5)',
-    backdropFilter: 'blur(10px)',
+    background: '#ffffff',
     borderRadius: '16px',
     padding: '24px',
-    border: '1px solid rgba(51, 65, 85, 0.5)'
+    border: '1px solid #e2e8f0',
+    boxShadow: '0 4px 6px rgba(0, 0, 0, 0.05)'
   },
   metricTitle: {
-    color: '#94a3b8',
+    color: '#64748b',
     fontSize: '0.875rem',
     fontWeight: '500',
     marginBottom: '8px'
@@ -267,19 +272,20 @@ export const styles = {
   metricValue: {
     fontSize: '2rem',
     fontWeight: '700',
-    marginBottom: '4px'
+    marginBottom: '4px',
+    color: '#1e293b'
   },
   metricSubtitle: {
-    color: '#94a3b8',
+    color: '#64748b',
     fontSize: '0.75rem'
   },
   recommendationCard: {
-    backdropFilter: 'blur(10px)',
     borderRadius: '16px',
     padding: '32px',
     marginBottom: '40px',
-    border: '1px solid',
-    boxShadow: '0 10px 30px rgba(0, 0, 0, 0.2)'
+    border: '1px solid #e2e8f0',
+    boxShadow: '0 10px 30px rgba(0, 0, 0, 0.08)',
+    backgroundColor: '#ffffff'
   },
   recommendationHeader: {
     display: 'flex',
@@ -291,14 +297,17 @@ export const styles = {
   },
   recommendationTitle: {
     fontSize: '1.875rem',
-    fontWeight: '700'
+    fontWeight: '700',
+    color: '#1e293b'
   },
   recommendationScore: {
     fontSize: '1.125rem',
     fontWeight: '600',
-    background: 'rgba(30, 41, 59, 0.5)',
+    background: '#f8fafc',
+    color: '#1e293b',
     padding: '8px 16px',
-    borderRadius: '12px'
+    borderRadius: '12px',
+    border: '1px solid #e2e8f0'
   },
   reasonsList: {
     display: 'flex',
@@ -306,7 +315,7 @@ export const styles = {
     gap: '12px'
   },
   reasonItem: {
-    color: '#cbd5e1',
+    color: '#374151',
     lineHeight: '1.6'
   },
   detailsGrid: {
@@ -315,11 +324,11 @@ export const styles = {
     gap: '32px'
   },
   detailCard: {
-    background: 'rgba(30, 41, 59, 0.5)',
-    backdropFilter: 'blur(10px)',
+    background: '#ffffff',
     borderRadius: '16px',
     padding: '32px',
-    border: '1px solid rgba(51, 65, 85, 0.5)'
+    border: '1px solid #e2e8f0',
+    boxShadow: '0 4px 6px rgba(0, 0, 0, 0.05)'
   },
   detailsList: {
     display: 'flex',
@@ -333,16 +342,17 @@ export const styles = {
     padding: '8px 0'
   },
   detailItemHighlight: {
-    background: 'rgba(51, 65, 85, 0.3)',
+    background: '#f8fafc',
     padding: '12px 16px',
-    borderRadius: '12px'
+    borderRadius: '12px',
+    border: '1px solid #e2e8f0'
   },
   detailLabel: {
-    color: '#94a3b8'
+    color: '#64748b'
   },
   detailValue: {
     fontWeight: '600',
-    color: '#ffffff'
+    color: '#1e293b'
   },
   detailValueHighlight: {
     color: '#10b981'

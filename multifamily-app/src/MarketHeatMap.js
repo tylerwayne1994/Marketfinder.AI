@@ -1,1744 +1,1127 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { MapPin, TrendingUp, DollarSign, Home, Users, Filter, Calendar, Info, AlertTriangle, ArrowLeft } from 'lucide-react';
+// src/MarketHeatMap.js
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { Users, Filter, Info, ArrowLeft, Home, MessageSquare, Send, ArrowUpDown } from 'lucide-react';
 import Papa from 'papaparse';
+import L from 'leaflet';
 
 const MarketHeatMap = ({ setCurrentPage }) => {
-  const [selectedMetric, setSelectedMetric] = useState('populationGrowth');
+  // -------------------- utils --------------------
+  const absUrl = (p) => {
+    if (!p) return '';
+    if (/^https?:\/\//i.test(p)) return p;
+    const base = (typeof window !== 'undefined' && window.location) ? window.location.origin : '';
+    return `${base}${p.startsWith('/') ? p : '/' + p}`;
+  };
+
+  const cleanValue = (v) => {
+    if (v === null || v === undefined || v === '' || v === '-' || v === 'N' || v === '(X)') return null;
+    const s = typeof v === 'string' ? v.replace(/[^0-9.\-]/g, '') : v;
+    const n = parseFloat(s);
+    return Number.isFinite(n) ? n : null;
+  };
+
+  const zeroZip = (z) => {
+    if (z === null || z === undefined) return null;
+    const s = String(Math.trunc(Number(z) || Number(String(z).replace(/\D/g, '')) || 0));
+    return s.padStart(5, '0');
+  };
+
+  const fmt = (n) => (n === null || n === undefined) ? 'N/A' : Number(n).toLocaleString();
+
+  const removeLayer = (map, ref) => {
+    if (ref?.current && map?.hasLayer(ref.current)) map.removeLayer(ref.current);
+  };
+
+  const distance = (a, b) => {
+    const dLat = (b.lat - a.lat) * Math.PI / 180;
+    const dLon = (b.lon - a.lon) * Math.PI / 180;
+    const lat1 = a.lat * Math.PI / 180;
+    const lat2 = b.lat * Math.PI / 180;
+    const hav = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.sin(dLon / 2) * Math.sin(dLon / 2) * Math.cos(lat1) * Math.cos(lat2);
+    const ang = 2 * Math.atan2(Math.sqrt(hav), Math.sqrt(1 - hav));
+    return ang * 3959; // miles
+  };
+
+  // -------------------- state --------------------
+  const [selectedMetric, setSelectedMetric] = useState('zipDensity');
+  const [densityEnabled, setDensityEnabled] = useState(localStorage.getItem('layer.populationDensity.enabled') === 'true' || false);
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [countyData, setCountyData] = useState({});
-  const [geoData, setGeoData] = useState(null);
-  const [hoveredCounty, setHoveredCounty] = useState(null);
-  const [fmrLoadStatus, setFmrLoadStatus] = useState({ loaded: false, error: null, attempted: false });
+
+  const [zipData, setZipData] = useState({});
+  const [zipCentroids, setZipCentroids] = useState([]);
+  const [zillowCentroids, setZillowCentroids] = useState([]); // { zip, lat, lon } with Zillow data
+
+  // Chatbot state
+  const [chatMessages, setChatMessages] = useState([
+    { 
+      text: 'Hey! Ask me about ZIP code data including migration. Try "highest income", "population density over 5000", "migration inflow above 5", or "show zips near Atlanta with rent above 1500"', 
+      sender: 'bot',
+      timestamp: new Date()
+    }
+  ]);
+  const [chatInput, setChatInput] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
+  const chatEndRef = useRef(null);
+  const highlightedZipsRef = useRef(new Set());
+
+  // map refs
   const mapRef = useRef(null);
   const mapInstanceRef = useRef(null);
+  const zipPointLayerRef = useRef(null);
+  const densityLayerRef = useRef(null);
 
-  // State name to abbreviation mapping
-  const stateNameToAbbrev = {
-    'Alabama': 'AL', 'Alaska': 'AK', 'Arizona': 'AZ', 'Arkansas': 'AR', 'California': 'CA',
-    'Colorado': 'CO', 'Connecticut': 'CT', 'Delaware': 'DE', 'Florida': 'FL', 'Georgia': 'GA',
-    'Hawaii': 'HI', 'Idaho': 'ID', 'Illinois': 'IL', 'Indiana': 'IN', 'Iowa': 'IA',
-    'Kansas': 'KS', 'Kentucky': 'KY', 'Louisiana': 'LA', 'Maine': 'ME', 'Maryland': 'MD',
-    'Massachusetts': 'MA', 'Michigan': 'MI', 'Minnesota': 'MN', 'Mississippi': 'MS', 'Missouri': 'MO',
-    'Montana': 'MT', 'Nebraska': 'NE', 'Nevada': 'NV', 'New Hampshire': 'NH', 'New Jersey': 'NJ',
-    'New Mexico': 'NM', 'New York': 'NY', 'North Carolina': 'NC', 'North Dakota': 'ND', 'Ohio': 'OH',
-    'Oklahoma': 'OK', 'Oregon': 'OR', 'Pennsylvania': 'PA', 'Rhode Island': 'RI', 'South Carolina': 'SC',
-    'South Dakota': 'SD', 'Tennessee': 'TN', 'Texas': 'TX', 'Utah': 'UT', 'Vermont': 'VT',
-    'Virginia': 'VA', 'Washington': 'WA', 'West Virginia': 'WV', 'Wisconsin': 'WI', 'Wyoming': 'WY',
-    'District of Columbia': 'DC'
-  };
+  const ZCTA_POINT_ZOOM = 6;
 
-  const colors = useMemo(() => ({
-    background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
-    primary: '#06b6d4',
-    secondary: '#3b82f6',
-    accent: '#8b5cf6',
-    success: '#10b981',
-    warning: '#f59e0b',
-    error: '#ef4444',
-    gray: {
-      dark: '#374151',
-      medium: '#4b5563',
-      light: '#6b7280',
-      lighter: '#94a3b8',
-      lightest: '#cbd5e1'
-    }
+  // -------------------- metrics --------------------
+  const zipMetrics = useMemo(() => ({
+    zipDensity: { name: 'Population Density (ZCTA)', icon: Users, description: 'Population per square mile', dataSource: 'ACS + Census', calculation: 'population / land_sqmi', colorScale: [
+      { min: -Infinity, max: 500, color: '#fff7bc', label: '<500/sq mi' },
+      { min: 500, max: 1000, color: '#fec44f', label: '500-1k' },
+      { min: 1000, max: 2000, color: '#fe9929', label: '1k-2k' },
+      { min: 2000, max: 5000, color: '#ec7014', label: '2k-5k' },
+      { min: 5000, max: 10000, color: '#cc4c02', label: '5k-10k' },
+      { min: 10000, max: Infinity, color: '#993404', label: '>10k/sq mi' }
+    ]},
+    zipIncome: { name: 'Household Income', icon: Users, description: 'Median household income', dataSource: 'ACS DP03', calculation: 'DP03_0062E', colorScale: [
+      { min: -Infinity, max: 25000, color: '#ef4444', label: '<$25k' },
+      { min: 25000, max: 50000, color: '#f87171', label: '$25k–50k' },
+      { min: 50000, max: 75000, color: '#fca5a5', label: '$50k–75k' },
+      { min: 75000, max: Infinity, color: '#10b981', label: '>$75k' }
+    ]},
+    zipEmployment: { name: 'Employment Rate', icon: Users, description: 'Percentage of population employed', dataSource: 'ACS DP03', calculation: 'Derived from DP03_0002PE', colorScale: [
+      { min: -Infinity, max: 45, color: '#ef4444', label: '<45%' },
+      { min: 45, max: 47.5, color: '#f87171', label: '45–47.5%' },
+      { min: 47.5, max: 50, color: '#fca5a5', label: '47.5–50%' },
+      { min: 50, max: Infinity, color: '#10b981', label: '>50%' }
+    ]},
+    medianGrossRent: { name: 'Median Gross Rent', icon: Home, description: 'Monthly rent (ACS)', dataSource: 'ACS DP04', calculation: 'DP04_0134E', colorScale: [
+      { min: -Infinity, max: 1000, color: '#ef4444', label: '<$1,000' },
+      { min: 1000, max: 1500, color: '#f87171', label: '$1,000–1,500' },
+      { min: 1500, max: 2000, color: '#fca5a5', label: '$1,500–2,000' },
+      { min: 2000, max: Infinity, color: '#10b981', label: '>$2,000' }
+    ]},
+    zipMigration: { name: 'Net Migration Rate', icon: ArrowUpDown, description: 'Net migration per 1,000 residents (green=inflow, red=outflow)', dataSource: 'IRS Migration Data 2021', calculation: 'Net migration per 1,000 population from IRS flows', colorScale: [
+      { min: -Infinity, max: -20, color: '#7f1d1d', label: 'Heavy Outflow' },
+      { min: -20, max: -10, color: '#dc2626', label: 'High Outflow' },
+      { min: -10, max: -5, color: '#f59e0b', label: 'Moderate Outflow' },
+      { min: -5, max: 0, color: '#fbbf24', label: 'Slight Outflow' },
+      { min: 0, max: 5, color: '#84cc16', label: 'Slight Inflow' },
+      { min: 5, max: 10, color: '#22c55e', label: 'Moderate Inflow' },
+      { min: 10, max: 20, color: '#16a34a', label: 'High Inflow' },
+      { min: 20, max: Infinity, color: '#166534', label: 'Heavy Inflow' }
+    ]}
   }), []);
 
-  const metrics = useMemo(() => ({
-    populationGrowth: {
-      name: 'Population Growth',
-      icon: Users,
-      color: colors.success,
-      unit: 'percent',
-      description: 'Population total and growth rate',
-      range: [-2, 4]
-    },
-    jobGrowth: {
-      name: 'Employment & Economy',
-      icon: TrendingUp,
-      color: colors.primary,
-      unit: 'percent',
-      description: 'Employment strength and economic opportunity',
-      range: [0, 100]
-    },
-    housingMetrics: {
-      name: 'Housing Market',
-      icon: Home,
-      color: colors.accent,
-      unit: 'percent',
-      description: 'Renter percentage and vacancy rates',
-      range: [-20, 60]
-    },
-    rentAnalysis: {
-      name: 'Live Market Rents',
-      icon: DollarSign,
-      color: colors.warning,
-      unit: 'dollar',
-      description: 'AI-powered current market rent estimates',
-      range: [500, 2500]
-    }
-  }), [colors]);
-
-  // Clean Census data values
-  const cleanValue = (value) => {
-    if (value === null || value === undefined || value === '' || 
-        value === '-' || value === 'N' || value === '(X)' || 
-        String(value).includes('-666') || String(value).includes('-888') || 
-        String(value).includes('-999')) {
-      return null;
-    }
-    return typeof value === 'string' ? parseFloat(value) || null : value;
-  };
-
-  // Extract FIPS code from GEO_ID
-  const extractFips = (geoId) => {
-    if (typeof geoId === 'string' && geoId.includes('US')) {
-      return geoId.split('US')[1];
-    }
-    return null;
-  };
-
-  // Parse county name and state
-  const parseLocation = (name) => {
-    if (typeof name === 'string' && name.includes(',')) {
-      const parts = name.split(',').map(part => part.trim());
-      return {
-        county: parts[0],
-        state: parts[1]
-      };
-    }
-    return { county: name, state: null };
-  };
-
-  // 🏢 ADVANCED MARKET CLASSIFICATION ALGORITHM
-  const classifyMarket = (county) => {
-    let indicators = 0;
-    let marketFactors = {
-      growth: 0,
-      employment: 0,
-      income: 0,
-      housing: 0,
-      demographics: 0
+  // -------------------- Chatbot handlers --------------------
+  const handleChatSend = async () => {
+    if (!chatInput.trim()) return;
+    
+    const userMessage = { 
+      text: chatInput, 
+      sender: 'user',
+      timestamp: new Date()
     };
     
-    // 📈 POPULATION GROWTH FACTOR (Weight: 25%)
-    if (county.populationGrowth !== null && county.populationGrowth !== undefined) {
-      if (county.populationGrowth > 3) marketFactors.growth = 30;      // Explosive growth
-      else if (county.populationGrowth > 1.5) marketFactors.growth = 25; // Strong growth
-      else if (county.populationGrowth > 0.5) marketFactors.growth = 20; // Moderate growth
-      else if (county.populationGrowth > 0) marketFactors.growth = 15;   // Slow growth
-      else if (county.populationGrowth > -1) marketFactors.growth = 10;  // Mild decline
-      else marketFactors.growth = 5; // Significant decline
-      indicators++;
-    }
-    
-    // 💼 EMPLOYMENT STRENGTH FACTOR (Weight: 25%)
-    if (county.employmentRate && county.unemploymentRate) {
-      const employmentStrength = county.employmentRate - (county.unemploymentRate * 1.5);
-      if (employmentStrength > 85) marketFactors.employment = 30;
-      else if (employmentStrength > 75) marketFactors.employment = 25;
-      else if (employmentStrength > 65) marketFactors.employment = 20;
-      else if (employmentStrength > 55) marketFactors.employment = 15;
-      else marketFactors.employment = 10;
-      indicators++;
-    }
-    
-    // 💰 INCOME FACTOR (Weight: 20%)
-    if (county.medianHouseholdIncome) {
-      if (county.medianHouseholdIncome > 100000) marketFactors.income = 25;
-      else if (county.medianHouseholdIncome > 80000) marketFactors.income = 22;
-      else if (county.medianHouseholdIncome > 65000) marketFactors.income = 18;
-      else if (county.medianHouseholdIncome > 50000) marketFactors.income = 15;
-      else if (county.medianHouseholdIncome > 40000) marketFactors.income = 12;
-      else marketFactors.income = 8;
-      indicators++;
-    }
-    
-    // 🏠 HOUSING MARKET FACTOR (Weight: 20%)
-    if (county.vacancyRate !== null && county.renterPercentage !== null) {
-      let housingScore = 0;
-      
-      // Vacancy rate impact (lower = better market)
-      if (county.vacancyRate < 3) housingScore += 15;      // Very tight
-      else if (county.vacancyRate < 5) housingScore += 12; // Tight
-      else if (county.vacancyRate < 8) housingScore += 10; // Balanced
-      else if (county.vacancyRate < 12) housingScore += 7; // Soft
-      else housingScore += 4; // Oversupplied
-      
-      // Renter percentage (higher = more rental demand)
-      if (county.renterPercentage > 50) housingScore += 10;
-      else if (county.renterPercentage > 40) housingScore += 8;
-      else if (county.renterPercentage > 30) housingScore += 6;
-      else housingScore += 4;
-      
-      marketFactors.housing = housingScore;
-      indicators++;
-    }
-    
-    // 👥 DEMOGRAPHIC FACTOR (Weight: 10%)
-    if (county.totalPopulation) {
-      if (county.totalPopulation > 500000) marketFactors.demographics = 15; // Major metro
-      else if (county.totalPopulation > 200000) marketFactors.demographics = 12; // Large county
-      else if (county.totalPopulation > 100000) marketFactors.demographics = 10; // Medium county
-      else if (county.totalPopulation > 50000) marketFactors.demographics = 8;  // Small county
-      else marketFactors.demographics = 6; // Rural
-      indicators++;
-    }
-    
-    if (indicators === 0) return { type: 'unknown', score: 0, factors: marketFactors };
-    
-    // Calculate weighted average
-    const totalScore = (
-      marketFactors.growth * 0.25 +
-      marketFactors.employment * 0.25 +
-      marketFactors.income * 0.20 +
-      marketFactors.housing * 0.20 +
-      marketFactors.demographics * 0.10
-    );
-    
-    let marketType;
-    if (totalScore >= 23) marketType = 'superHot';      // 23-30: Explosive markets
-    else if (totalScore >= 18) marketType = 'hot';      // 18-22: Strong markets
-    else if (totalScore >= 14) marketType = 'warm';     // 14-17: Growing markets
-    else if (totalScore >= 10) marketType = 'average';  // 10-13: Stable markets
-    else if (totalScore >= 7) marketType = 'cool';      // 7-9: Slow markets
-    else marketType = 'cold';                           // 0-6: Declining markets
-    
-    return { 
-      type: marketType, 
-      score: Math.round(totalScore * 10) / 10, 
-      factors: marketFactors,
-      confidence: Math.min(100, Math.round((indicators / 5) * 100))
-    };
-  };
+    setChatMessages(msgs => [...msgs, userMessage]);
+    setChatInput('');
+    setIsTyping(true);
 
-  // 🎯 ADVANCED FMR-TO-MARKET RENT CALCULATOR
-  const estimateMarketRent = (fmr, marketAnalysis, county) => {
-    if (!fmr || fmr <= 0) return null;
-    
-    // Base multipliers (FMR = 40th percentile, so we estimate other percentiles)
-    const baseMultipliers = {
-      superHot: { 
-        market: 1.45,    // 50th percentile (market median)
-        competitive: 1.75, // 70th percentile
-        premium: 1.95,   // 80th percentile
-        luxury: 2.25     // 90th percentile
-      },
-      hot: { 
-        market: 1.35, 
-        competitive: 1.65, 
-        premium: 1.85, 
-        luxury: 2.05 
-      },
-      warm: { 
-        market: 1.28, 
-        competitive: 1.55, 
-        premium: 1.75, 
-        luxury: 1.90 
-      },
-      average: { 
-        market: 1.25, 
-        competitive: 1.50, 
-        premium: 1.70, 
-        luxury: 1.85 
-      },
-      cool: { 
-        market: 1.18, 
-        competitive: 1.40, 
-        premium: 1.55, 
-        luxury: 1.70 
-      },
-      cold: { 
-        market: 1.12, 
-        competitive: 1.30, 
-        premium: 1.45, 
-        luxury: 1.60 
-      },
-      unknown: { 
-        market: 1.25, 
-        competitive: 1.50, 
-        premium: 1.70, 
-        luxury: 1.85 
-      }
-    };
-    
-    // Get base multipliers for market type
-    const multipliers = baseMultipliers[marketAnalysis.type] || baseMultipliers.unknown;
-    
-    // 🔧 DYNAMIC ADJUSTMENTS based on specific factors
-    let adjustmentFactor = 1.0;
-    
-    // Income adjustment (high income areas = higher rent premiums)
-    if (county.medianHouseholdIncome) {
-      if (county.medianHouseholdIncome > 120000) adjustmentFactor += 0.08;
-      else if (county.medianHouseholdIncome > 90000) adjustmentFactor += 0.05;
-      else if (county.medianHouseholdIncome > 70000) adjustmentFactor += 0.02;
-      else if (county.medianHouseholdIncome < 35000) adjustmentFactor -= 0.05;
-    }
-    
-    // Population growth momentum adjustment
-    if (county.populationGrowth > 4) adjustmentFactor += 0.06;
-    else if (county.populationGrowth > 2) adjustmentFactor += 0.03;
-    else if (county.populationGrowth < -1) adjustmentFactor -= 0.04;
-    
-    // Housing supply constraint adjustment
-    if (county.vacancyRate < 2) adjustmentFactor += 0.08;  // Very constrained supply
-    else if (county.vacancyRate < 4) adjustmentFactor += 0.04; // Tight supply
-    else if (county.vacancyRate > 15) adjustmentFactor -= 0.06; // Oversupplied
-    
-    // Apply adjustments to multipliers
-    const adjustedMultipliers = {
-      market: multipliers.market * adjustmentFactor,
-      competitive: multipliers.competitive * adjustmentFactor,
-      premium: multipliers.premium * adjustmentFactor,
-      luxury: multipliers.luxury * adjustmentFactor
-    };
-    
-    // Calculate estimated rents
-    const estimates = {
-      fmr: Math.round(fmr),
-      marketMedian: Math.round(fmr * adjustedMultipliers.market),
-      competitiveRent: Math.round(fmr * adjustedMultipliers.competitive),
-      premiumRent: Math.round(fmr * adjustedMultipliers.premium),
-      luxuryRent: Math.round(fmr * adjustedMultipliers.luxury),
+    setTimeout(async () => {
+      const lower = chatInput.toLowerCase();
+      let response = '';
+      let matchingZips = [];
       
-      // Market analysis data
-      marketType: marketAnalysis.type,
-      marketScore: marketAnalysis.score,
-      confidence: marketAnalysis.confidence,
-      adjustmentFactor: Math.round(adjustmentFactor * 1000) / 1000,
+      // Parse different query types
+      const incomeMatch = lower.match(/income\s*(above|over|greater than|more than|below|under|less than)?\s*\$?(\d+)/i);
+      const densityMatch = lower.match(/density\s*(above|over|greater than|more than|below|under|less than)?\s*(\d+)/i);
+      const rentMatch = lower.match(/rent\s*(above|over|greater than|more than|below|under|less than)?\s*\$?(\d+)/i);
+      const migrationMatch = lower.match(/migration\s*(above|over|greater than|more than|below|under|less than|inflow|outflow)?\s*([-\d]+)?/i);
+      const populationMatch = lower.match(/population\s*(around|about|near|of|over|above|below|under)?\s*(\d+)/i);
       
-      // Rent spreads and insights
-      marketPremiumVsFMR: Math.round(((adjustedMultipliers.market - 1) * 100)),
-      rentSpread: Math.round(fmr * adjustedMultipliers.luxury) - Math.round(fmr * adjustedMultipliers.market),
-      
-      // Investment insights
-      sectionVsMarket: Math.round(((adjustedMultipliers.market - 1) * 100)), // Premium over Section 8
-      cashFlowPotential: marketAnalysis.type === 'hot' || marketAnalysis.type === 'superHot' ? 'High' : 
-                        marketAnalysis.type === 'warm' ? 'Medium' : 'Conservative'
-    };
-    
-    // Add rent affordability analysis
-    if (county.medianHouseholdIncome) {
-      const monthlyIncome = county.medianHouseholdIncome / 12;
-      estimates.affordabilityIndex = Math.round((estimates.marketMedian / monthlyIncome) * 100);
-      estimates.affordableToMedianIncome = estimates.affordabilityIndex <= 30; // 30% rule
-    }
-    
-    return estimates;
-  };
-
-  // Get metric value for coloring
-  const getMetricValue = (county, metric) => {
-    switch (metric) {
-      case 'populationGrowth':
-        return county.populationGrowth;
-      case 'jobGrowth':
-        return county.employmentStrength || 0;
-      case 'housingMetrics':
-        return county.housingMarketScore || 0;
-      case 'rentAnalysis':
-        return county.estimatedMarketRent || county.privateMarketRent || 0;
-      default:
-        return 0;
-    }
-  };
-
-  // Helper to load CSV with better error handling
-  const loadCSV = async (url, type) => {
-    try {
-      console.log(`📥 Loading ${type} from: ${url}`);
-      const response = await fetch(url);
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-      const text = await response.text();
-      
-      if (!text || text.trim().length === 0) {
-        throw new Error('File is empty');
+      // Location keywords
+      const locationKeywords = ['atlanta', 'georgia', 'texas', 'florida', 'california', 'new york', 'chicago', 'los angeles', 'miami'];
+      let targetLocation = null;
+      for (const loc of locationKeywords) {
+        if (lower.includes(loc)) {
+          targetLocation = loc;
+          break;
+        }
       }
       
-      const result = Papa.parse(text, { 
-        header: true, 
-        dynamicTyping: true,
-        skipEmptyLines: true 
-      });
+      // HANDLE QUERIES
       
-      if (result.errors && result.errors.length > 0) {
-        console.warn(`⚠️ Parse warnings in ${type}:`, result.errors.slice(0, 3));
-      }
-      
-      console.log(`✅ ${type} loaded: ${result.data.length} rows, fields: ${result.meta.fields?.slice(0, 5).join(', ')}...`);
-      return { type, data: result.data.slice(1), fields: result.meta.fields };
-    } catch (error) {
-      console.error(`❌ Error loading ${type} from ${url}:`, error.message);
-      return { type, data: [], fields: [], error: error.message };
-    }
-  };
-
-
-
-  // Load and process Census data
-  useEffect(() => {
-    // Process and combine Census data
-    const processCensusData = (datasets) => {
-      const combined = {};
-      
-      const { economic = [], housing = [], population2023 = [], population2018 = [], employment = [], fmr = [] } = datasets;
-      
-      // Start with economic data (DP03) as base
-      economic.forEach(row => {
-        const geoId = row.GEO_ID;
-        const fips = extractFips(geoId);
-        const location = parseLocation(row.NAME);
+      // Highest income
+      if ((lower.includes('highest') || lower.includes('top')) && lower.includes('income')) {
+        const zipsWithIncome = Object.entries(zipData)
+          .filter(([_, z]) => z.medianHouseholdIncome != null)
+          .sort(([_, a], [__, b]) => b.medianHouseholdIncome - a.medianHouseholdIncome)
+          .slice(0, 10);
         
-        if (!fips || !location.county) return;
+        matchingZips = zipsWithIncome.map(([zip, _]) => zip);
         
-        const key = `${location.county}, ${location.state}`;
-        
-        combined[key] = {
-          fips: fips,
-          name: location.county,
-          state: location.state,
-          geoId: geoId,
-          medianHouseholdIncome: cleanValue(row.DP03_0051E),
-          meanHouseholdIncome: cleanValue(row.DP03_0052E),
-          povertyRate: cleanValue(row.DP03_0119PE),
-          medianEarnings: cleanValue(row.DP03_0062E),
-          laborForceParticipation: cleanValue(row.DP03_0002PE),
-          employmentRateDP03: cleanValue(row.DP03_0003PE),
-          unemploymentRateDP03: cleanValue(row.DP03_0005PE)
-        };
-      });
-      
-      console.log(`✅ Economic data processed: ${Object.keys(combined).length} counties`);
-      
-      // Add housing data (DP04)
-      const housingMap = new Map();
-      housing.forEach(row => {
-        const geoId = row.GEO_ID;
-        const fips = extractFips(geoId);
-        if (fips) housingMap.set(fips, row);
-      });
-      
-      Object.values(combined).forEach(county => {
-        const housingRow = housingMap.get(county.fips);
-        if (housingRow) {
-          county.totalHousingUnits = cleanValue(housingRow.DP04_0001E);
-          county.occupiedUnits = cleanValue(housingRow.DP04_0002E);
-          county.vacantUnits = cleanValue(housingRow.DP04_0003E);
-          county.vacancyRate = cleanValue(housingRow.DP04_0003PE);
-          county.ownerOccupiedUnits = cleanValue(housingRow.DP04_0046E);
-          county.renterOccupiedUnits = cleanValue(housingRow.DP04_0047E);
-          county.medianHomeValue = cleanValue(housingRow.DP04_0080E);
-          county.medianGrossRent = cleanValue(housingRow.DP04_0134E);
-          county.medianOwnerCosts = cleanValue(housingRow.DP04_0101E);
-          
-          if (county.ownerOccupiedUnits && county.occupiedUnits && county.occupiedUnits > 0) {
-            county.homeownershipRate = (county.ownerOccupiedUnits / county.occupiedUnits) * 100;
-            county.renterPercentage = 100 - county.homeownershipRate;
-          }
-          
-          county.privateMarketRent = county.medianGrossRent;
-          
-          if (county.privateMarketRent && county.medianHouseholdIncome) {
-            county.rentAffordabilityRatio = (county.privateMarketRent * 12) / county.medianHouseholdIncome;
-          }
-        }
-      });
-      
-      console.log(`✅ Housing data added`);
-      
-      // Add population data (B01003) - both current and historical
-      const population2023Map = new Map();
-      const population2018Map = new Map();
-      
-      population2023.forEach(row => {
-        const geoId = row.GEO_ID;
-        const fips = extractFips(geoId);
-        if (fips) population2023Map.set(fips, row);
-      });
-      
-      population2018.forEach(row => {
-        const geoId = row.GEO_ID;
-        const fips = extractFips(geoId);
-        if (fips) population2018Map.set(fips, row);
-      });
-      
-      let populationGrowthCalculated = 0;
-      
-      Object.values(combined).forEach(county => {
-        const pop2023Row = population2023Map.get(county.fips);
-        const pop2018Row = population2018Map.get(county.fips);
-        
-        if (pop2023Row) {
-          county.totalPopulation = cleanValue(pop2023Row.B01003_001E);
-        }
-        
-        if (pop2023Row && pop2018Row) {
-          const currentPop = cleanValue(pop2023Row.B01003_001E);
-          const historicalPop = cleanValue(pop2018Row.B01003_001E);
-          
-          if (currentPop && historicalPop && historicalPop > 0) {
-            county.populationGrowth = ((currentPop - historicalPop) / historicalPop) * 100;
-            populationGrowthCalculated++;
-          }
-        }
-      });
-      
-      console.log(`✅ Population data added: ${populationGrowthCalculated} counties with growth calculations`);
-      
-      // Add employment data (S2301)
-      const employmentMap = new Map();
-      employment.forEach(row => {
-        const geoId = row.GEO_ID;
-        const fips = extractFips(geoId);
-        if (fips) employmentMap.set(fips, row);
-      });
-      
-      Object.values(combined).forEach(county => {
-        const empRow = employmentMap.get(county.fips);
-        if (empRow) {
-          county.population16Plus = cleanValue(empRow.S2301_C01_001E);
-          county.laborForceParticipationRate = cleanValue(empRow.S2301_C02_001E);
-          county.employmentRate = cleanValue(empRow.S2301_C03_001E);
-          county.unemploymentRate = cleanValue(empRow.S2301_C04_001E);
-          
-          if (county.population16Plus && county.employmentRate && county.unemploymentRate) {
-            const laborForce = (county.population16Plus * county.laborForceParticipationRate) / 100;
-            county.totalEmployed = Math.round((laborForce * county.employmentRate) / 100);
-            county.totalUnemployed = Math.round((laborForce * county.unemploymentRate) / 100);
-          }
-        }
-      });
-      
-      console.log(`✅ Employment data added`);
-      
-      // Add FMR data and calculate market rents by matching county names
-      console.log(`🏠 Processing FMR data: ${fmr.length} rows`);
-      
-      if (fmr.length > 0) {
-        console.log(`🔍 FMR Data Structure:`);
-        console.log(`- Total rows: ${fmr.length}`);
-        console.log(`- Sample row:`, fmr[0]);
-        
-        // Build FMR lookup by county name + state (since FIPS codes are wrong in FMR file)
-        const fmrByCountyName = new Map();
-        let validFMRRows = 0;
-        
-        fmr.forEach((row, index) => {
-          const countyName = row['countyname'];
-          const stateName = row['stusps'];
-          
-          const fmr2br = cleanValue(row['fmr_2']);
-          const fmr1br = cleanValue(row['fmr_1']);
-          const fmr3br = cleanValue(row['fmr_3']);
-          
-          if (countyName && stateName && fmr2br && fmr2br > 0) {
-            const key = `${countyName}, ${stateName}`;
-            
-            const fmrData = {
-              fmr1br,
-              fmr2br, 
-              fmr3br,
-              countyName,
-              stateName
-            };
-            
-            fmrByCountyName.set(key, fmrData);
-            validFMRRows++;
-            
-            if (validFMRRows <= 5) {
-              console.log(`✅ FMR: ${key} = ${fmr2br}`);
-            }
-          }
+        response = `💰 TOP ZIP CODES BY MEDIAN INCOME:\n\n`;
+        zipsWithIncome.forEach(([zip, z], i) => {
+          response += `${i + 1}. ZIP ${zip}\n`;
+          response += `   Income: $${z.medianHouseholdIncome.toLocaleString()}/year\n`;
+          if (z.population) response += `   Population: ${z.population.toLocaleString()}\n`;
+          response += `\n`;
         });
         
-        console.log(`🏠 Created FMR lookup with ${validFMRRows} counties by name`);
-        
-        let fmrMatches = 0;
-        
-        // Match FMR data to counties by name instead of FIPS (with state abbreviation conversion)
-        Object.values(combined).forEach((county, index) => {
-          if (county.name && county.state) {
-            // Convert full state name to abbreviation for matching
-            const stateAbbrev = stateNameToAbbrev[county.state] || county.state;
-            const lookupKey = `${county.name}, ${stateAbbrev}`;
-            const fmrData = fmrByCountyName.get(lookupKey);
-            
-            if (fmrData && fmrData.fmr2br) {
-              county.fmrRent = fmrData.fmr2br;
-              county.fmr1br = fmrData.fmr1br;
-              county.fmr3br = fmrData.fmr3br;
-              
-              // Advanced market analysis
-              county.marketAnalysis = classifyMarket(county);
-              county.rentEstimates = estimateMarketRent(county.fmrRent, county.marketAnalysis, county);
-              
-              // Extract key metrics for backward compatibility and display
-              if (county.rentEstimates) {
-                county.marketType = county.rentEstimates.marketType;
-                county.estimatedMarketRent = county.rentEstimates.marketMedian;
-                county.rentPremiumVsFMR = county.rentEstimates.marketPremiumVsFMR;
-                county.marketScore = county.rentEstimates.marketScore;
-                county.marketConfidence = county.rentEstimates.confidence;
-                
-                // Investment metrics
-                county.competitiveRent = county.rentEstimates.competitiveRent;
-                county.premiumRent = county.rentEstimates.premiumRent;
-                county.luxuryRent = county.rentEstimates.luxuryRent;
-                county.cashFlowPotential = county.rentEstimates.cashFlowPotential;
-                county.affordabilityIndex = county.rentEstimates.affordabilityIndex;
-                
-                // Market vs Census comparison
-                if (county.privateMarketRent && county.estimatedMarketRent) {
-                  county.marketAccuracy = ((county.privateMarketRent - county.estimatedMarketRent) / county.estimatedMarketRent) * 100;
-                }
-              }
-              
-              fmrMatches++;
-              
-              if (fmrMatches <= 3) {
-                console.log(`🎯 FMR match: ${lookupKey} - FIPS ${county.fips} - ${county.fmrRent}`);
-              }
-            } else if (index < 10) {
-              console.log(`❌ No FMR match for: ${lookupKey}`);
-            }
-          }
-        });
-        console.log(`✅ FMR matches: ${fmrMatches} out of ${Object.keys(combined).length} counties (matched by name)`);
-      } else {
-        console.log(`❌ No FMR data to process`);
+        response += `🗺️ These ${matchingZips.length} ZIP codes are now highlighted on the map in BLUE.`;
       }
       
-      // Calculate derived metrics
-      Object.values(combined).forEach(county => {
-        if (county.employmentRate && county.unemploymentRate) {
-          county.employmentStrength = county.employmentRate - (county.unemploymentRate * 2);
-        }
+      // Migration queries
+      else if (lower.includes('migration') && (lower.includes('highest') || lower.includes('top') || lower.includes('inflow'))) {
+        const zipsWithMigration = Object.entries(zipData)
+          .filter(([_, z]) => z.migrationRate != null && z.migrationRate > 0)
+          .sort(([_, a], [__, b]) => b.migrationRate - a.migrationRate)
+          .slice(0, 10);
         
-        if (county.medianHouseholdIncome && county.povertyRate) {
-          county.economicOpportunity = (county.medianHouseholdIncome / 1000) - (county.povertyRate * 5);
-        }
+        matchingZips = zipsWithMigration.map(([zip, _]) => zip);
         
-        if (county.renterPercentage && county.vacancyRate) {
-          county.housingMarketScore = county.renterPercentage - (county.vacancyRate * 2);
-        }
-      });
+        response = `📈 TOP ZIP CODES BY MIGRATION INFLOW:\n\n`;
+        zipsWithMigration.forEach(([zip, z], i) => {
+          response += `${i + 1}. ZIP ${zip}\n`;
+          response += `   Migration Rate: +${z.migrationRate.toFixed(1)}‰\n`;
+          if (z.netMigration) response += `   Net Migration: ${z.netMigration.toLocaleString()}\n`;
+          if (z.population2021) response += `   Population: ${z.population2021.toLocaleString()}\n`;
+          response += `\n`;
+        });
+        
+        response += `🗺️ These ${matchingZips.length} ZIP codes are now highlighted on the map in BLUE.`;
+      }
       
-      console.log(`✅ Derived metrics calculated`);
-      
-      return combined;
-    };
-
-    const loadCensusData = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-
-        console.log('🌍 Loading GeoJSON...');
-        const geoResponse = await fetch('https://raw.githubusercontent.com/plotly/datasets/master/geojson-counties-fips.json');
-        const geoJson = await geoResponse.json();
-        console.log(`✅ GeoJSON loaded: ${geoJson.features.length} counties`);
-        setGeoData(geoJson);
-
-        console.log('📊 Loading Census data files...');
-        const censusFiles = [
-          { url: '/ACSDP5Y2023.DP03-Data.csv', type: 'economic' },
-          { url: '/ACSDP5Y2023.DP04-Data.csv', type: 'housing' },
-          { url: '/ACSDT5Y2023.B01003-Data.csv', type: 'population2023' },
-          { url: '/ACSDT5Y2018.B01003-Data.csv', type: 'population2018' },
-          { url: '/ACSST5Y2023.S2301-Data.csv', type: 'employment' },
-          { url: '/FY25_FMRs_corrected_final_static.csv', type: 'fmr' }
-        ];
-
-        const dataPromises = censusFiles.map(file => loadCSV(file.url, file.type));
-        const results = await Promise.allSettled(dataPromises);
+      // Migration threshold
+      else if (migrationMatch) {
+        const operator = migrationMatch[1] || 'above';
+        const threshold = migrationMatch[2] ? parseFloat(migrationMatch[2]) : 5;
         
-        const loadedData = {};
-        results.forEach((result, index) => {
-          const file = censusFiles[index];
-          if (result.status === 'fulfilled') {
-            console.log(`✅ ${result.value.type}: ${result.value.data.length} rows`);
-            loadedData[result.value.type] = result.value.data;
-            
-            if (result.value.type === 'fmr') {
-              setFmrLoadStatus({ loaded: true, error: null, attempted: true, filePath: file.url });
-            }
+        const filtered = Object.entries(zipData).filter(([_, z]) => {
+          if (z.migrationRate == null) return false;
+          if (operator.includes('inflow') || operator.includes('above') || operator.includes('over') || operator.includes('greater') || operator.includes('more')) {
+            return z.migrationRate > threshold;
+          } else if (operator.includes('outflow')) {
+            return z.migrationRate < -Math.abs(threshold);
           } else {
-            console.error(`❌ Failed to load ${file.url}:`, result.reason);
-            loadedData[file.type] = [];
-            
-            if (file.type === 'fmr') {
-              setFmrLoadStatus({ loaded: false, error: result.reason.message, attempted: true });
-            }
+            return z.migrationRate < threshold;
           }
         });
         
-        console.log('🔄 Processing Census data...');
-        const processedData = processCensusData(loadedData);
-        console.log(`✅ Processed data: ${Object.keys(processedData).length} counties`);
+        matchingZips = filtered.slice(0, 20).map(([zip, _]) => zip);
         
-        setCountyData(processedData);
+        response = `🏃‍♂️ ZIP CODES WITH MIGRATION ${operator.toUpperCase()} ${threshold}‰:\n\n`;
+        filtered.slice(0, 20).forEach(([zip, z], i) => {
+          response += `${i + 1}. ZIP ${zip}\n`;
+          response += `   Migration: ${z.migrationRate > 0 ? '+' : ''}${z.migrationRate.toFixed(1)}‰\n`;
+          if (z.netMigration) response += `   Net: ${z.netMigration.toLocaleString()}\n`;
+          response += `\n`;
+        });
         
-      } catch (error) {
-        console.error('❌ Error loading Census data:', error);
-        setError(error.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadCensusData();
-  }, []);
-
-  // Process and combine Census data
-  const processCensusData = (datasets) => {
-    const combined = {};
-    
-    const { economic = [], housing = [], population2023 = [], population2018 = [], employment = [], fmr = [] } = datasets;
-    
-    // Start with economic data (DP03) as base
-    economic.forEach(row => {
-      const geoId = row.GEO_ID;
-      const fips = extractFips(geoId);
-      const location = parseLocation(row.NAME);
-      
-      if (!fips || !location.county) return;
-      
-      const key = `${location.county}, ${location.state}`;
-      
-      combined[key] = {
-        fips: fips,
-        name: location.county,
-        state: location.state,
-        geoId: geoId,
-        medianHouseholdIncome: cleanValue(row.DP03_0051E),
-        meanHouseholdIncome: cleanValue(row.DP03_0052E),
-        povertyRate: cleanValue(row.DP03_0119PE),
-        medianEarnings: cleanValue(row.DP03_0062E),
-        laborForceParticipation: cleanValue(row.DP03_0002PE),
-        employmentRateDP03: cleanValue(row.DP03_0003PE),
-        unemploymentRateDP03: cleanValue(row.DP03_0005PE)
-      };
-    });
-    
-    console.log(`✅ Economic data processed: ${Object.keys(combined).length} counties`);
-    
-    // Add housing data (DP04)
-    const housingMap = new Map();
-    housing.forEach(row => {
-      const geoId = row.GEO_ID;
-      const fips = extractFips(geoId);
-      if (fips) housingMap.set(fips, row);
-    });
-    
-    Object.values(combined).forEach(county => {
-      const housingRow = housingMap.get(county.fips);
-      if (housingRow) {
-        county.totalHousingUnits = cleanValue(housingRow.DP04_0001E);
-        county.occupiedUnits = cleanValue(housingRow.DP04_0002E);
-        county.vacantUnits = cleanValue(housingRow.DP04_0003E);
-        county.vacancyRate = cleanValue(housingRow.DP04_0003PE);
-        county.ownerOccupiedUnits = cleanValue(housingRow.DP04_0046E);
-        county.renterOccupiedUnits = cleanValue(housingRow.DP04_0047E);
-        county.medianHomeValue = cleanValue(housingRow.DP04_0080E);
-        county.medianGrossRent = cleanValue(housingRow.DP04_0134E);
-        county.medianOwnerCosts = cleanValue(housingRow.DP04_0101E);
-        
-        if (county.ownerOccupiedUnits && county.occupiedUnits && county.occupiedUnits > 0) {
-          county.homeownershipRate = (county.ownerOccupiedUnits / county.occupiedUnits) * 100;
-          county.renterPercentage = 100 - county.homeownershipRate;
-        }
-        
-        county.privateMarketRent = county.medianGrossRent;
-        
-        if (county.privateMarketRent && county.medianHouseholdIncome) {
-          county.rentAffordabilityRatio = (county.privateMarketRent * 12) / county.medianHouseholdIncome;
-        }
-      }
-    });
-    
-    console.log(`✅ Housing data added`);
-    
-    // Add population data (B01003) - both current and historical
-    const population2023Map = new Map();
-    const population2018Map = new Map();
-    
-    population2023.forEach(row => {
-      const geoId = row.GEO_ID;
-      const fips = extractFips(geoId);
-      if (fips) population2023Map.set(fips, row);
-    });
-    
-    population2018.forEach(row => {
-      const geoId = row.GEO_ID;
-      const fips = extractFips(geoId);
-      if (fips) population2018Map.set(fips, row);
-    });
-    
-    let populationGrowthCalculated = 0;
-    
-    Object.values(combined).forEach(county => {
-      const pop2023Row = population2023Map.get(county.fips);
-      const pop2018Row = population2018Map.get(county.fips);
-      
-      if (pop2023Row) {
-        county.totalPopulation = cleanValue(pop2023Row.B01003_001E);
+        response += `\n🗺️ Found ${filtered.length} ZIPs. Showing first ${matchingZips.length} highlighted on map.`;
       }
       
-      if (pop2023Row && pop2018Row) {
-        const currentPop = cleanValue(pop2023Row.B01003_001E);
-        const historicalPop = cleanValue(pop2018Row.B01003_001E);
+      // Income threshold
+      else if (incomeMatch) {
+        const operator = incomeMatch[1] || 'above';
+        const threshold = parseInt(incomeMatch[2]);
         
-        if (currentPop && historicalPop && historicalPop > 0) {
-          county.populationGrowth = ((currentPop - historicalPop) / historicalPop) * 100;
-          populationGrowthCalculated++;
-        }
+        const filtered = Object.entries(zipData).filter(([_, z]) => {
+          if (!z.medianHouseholdIncome) return false;
+          if (operator.includes('above') || operator.includes('over') || operator.includes('greater') || operator.includes('more')) {
+            return z.medianHouseholdIncome > threshold;
+          } else {
+            return z.medianHouseholdIncome < threshold;
+          }
+        });
+        
+        matchingZips = filtered.slice(0, 20).map(([zip, _]) => zip);
+        
+        response = `📍 ZIP CODES WITH INCOME ${operator.toUpperCase()} $${threshold.toLocaleString()}:\n\n`;
+        filtered.slice(0, 20).forEach(([zip, z], i) => {
+          response += `${i + 1}. ZIP ${zip}\n`;
+          response += `   Income: $${z.medianHouseholdIncome.toLocaleString()}\n`;
+          response += `\n`;
+        });
+        
+        response += `\n🗺️ Found ${filtered.length} total ZIPs. Showing first ${matchingZips.length} highlighted on map.`;
       }
-    });
-    
-    console.log(`✅ Population data added: ${populationGrowthCalculated} counties with growth calculations`);
-    
-    // Add employment data (S2301)
-    const employmentMap = new Map();
-    employment.forEach(row => {
-      const geoId = row.GEO_ID;
-      const fips = extractFips(geoId);
-      if (fips) employmentMap.set(fips, row);
-    });
-    
-    Object.values(combined).forEach(county => {
-      const empRow = employmentMap.get(county.fips);
-      if (empRow) {
-        county.population16Plus = cleanValue(empRow.S2301_C01_001E);
-        county.laborForceParticipationRate = cleanValue(empRow.S2301_C02_001E);
-        county.employmentRate = cleanValue(empRow.S2301_C03_001E);
-        county.unemploymentRate = cleanValue(empRow.S2301_C04_001E);
+      
+      // Density threshold
+      else if (densityMatch) {
+        const operator = densityMatch[1] || 'over';
+        const threshold = parseInt(densityMatch[2]);
         
-        if (county.population16Plus && county.employmentRate && county.unemploymentRate) {
-          const laborForce = (county.population16Plus * county.laborForceParticipationRate) / 100;
-          county.totalEmployed = Math.round((laborForce * county.employmentRate) / 100);
-          county.totalUnemployed = Math.round((laborForce * county.unemploymentRate) / 100);
-        }
+        const filtered = Object.entries(zipData).filter(([_, z]) => {
+          if (z.density_sqmi == null) return false;
+          if (operator.includes('above') || operator.includes('over') || operator.includes('greater') || operator.includes('more')) {
+            return z.density_sqmi > threshold;
+          } else {
+            return z.density_sqmi < threshold;
+          }
+        });
+        
+        matchingZips = filtered.slice(0, 20).map(([zip, _]) => zip);
+        
+        response = `🏙️ ZIP CODES WITH DENSITY ${operator.toUpperCase()} ${threshold.toLocaleString()}/sq mi:\n\n`;
+        filtered.slice(0, 20).forEach(([zip, z], i) => {
+          response += `${i + 1}. ZIP ${zip}\n`;
+          response += `   Density: ${z.density_sqmi.toFixed(1)} people/sq mi\n`;
+          if (z.population) response += `   Population: ${z.population.toLocaleString()}\n`;
+          response += `\n`;
+        });
+        
+        response += `\n🗺️ Found ${filtered.length} ZIPs. Showing first ${matchingZips.length} on map.`;
       }
-    });
-    
-    console.log(`✅ Employment data added`);
-    
-    // Add FMR data and calculate market rents by matching county names
-    console.log(`🏠 Processing FMR data: ${fmr.length} rows`);
-    
-    if (fmr.length > 0) {
-      console.log(`🔍 FMR Data Structure:`);
-      console.log(`- Total rows: ${fmr.length}`);
-      console.log(`- Sample row:`, fmr[0]);
       
-      // Build FMR lookup by county name + state (since FIPS codes are wrong in FMR file)
-      const fmrByCountyName = new Map();
-      let validFMRRows = 0;
+      // Rent threshold
+      else if (rentMatch) {
+        const operator = rentMatch[1] || 'above';
+        const threshold = parseInt(rentMatch[2]);
+        
+        const filtered = Object.entries(zipData).filter(([_, z]) => {
+          if (!z.medianGrossRent) return false;
+          if (operator.includes('above') || operator.includes('over') || operator.includes('greater') || operator.includes('more')) {
+            return z.medianGrossRent > threshold;
+          } else {
+            return z.medianGrossRent < threshold;
+          }
+        });
+        
+        matchingZips = filtered.slice(0, 20).map(([zip, _]) => zip);
+        
+        response = `🏠 ZIP CODES WITH RENT ${operator.toUpperCase()} $${threshold.toLocaleString()}:\n\n`;
+        filtered.slice(0, 20).forEach(([zip, z], i) => {
+          response += `${i + 1}. ZIP ${zip}\n`;
+          response += `   Rent: $${z.medianGrossRent.toLocaleString()}/month\n`;
+          if (z.medianHouseholdIncome) response += `   Income: $${z.medianHouseholdIncome.toLocaleString()}\n`;
+          response += `\n`;
+        });
+        
+        response += `\n🗺️ Found ${filtered.length} ZIPs. Showing first ${matchingZips.length} on map.`;
+      }
       
-      fmr.forEach((row, index) => {
-        const countyName = row['countyname'];
-        const stateName = row['stusps'];
+      // Default help
+      else {
+        response = `Try these example queries:\n\n`;
+        response += `• "Highest income zip codes"\n`;
+        response += `• "Highest migration inflow"\n`;
+        response += `• "Migration above 10"\n`;
+        response += `• "Migration outflow below -5"\n`;
+        response += `• "Density over 5000"\n`;
+        response += `• "Income above 75000"\n`;
+        response += `• "Rent below 1500"`;
+      }
+      
+      // HIGHLIGHT ON MAP
+      if (matchingZips.length > 0 && mapInstanceRef.current) {
+        // Clear previous highlights
+        highlightedZipsRef.current.clear();
+        matchingZips.forEach(zip => highlightedZipsRef.current.add(zip));
         
-        const fmr2br = cleanValue(row['fmr_2']);
-        const fmr1br = cleanValue(row['fmr_1']);
-        const fmr3br = cleanValue(row['fmr_3']);
+        // Force redraw of zip points
+        await updateZipPointLayer(L, mapInstanceRef.current, selectedMetric);
         
-        if (countyName && stateName && fmr2br && fmr2br > 0) {
-          const key = `${countyName}, ${stateName}`;
-          
-          const fmrData = {
-            fmr1br,
-            fmr2br, 
-            fmr3br,
-            countyName,
-            stateName
-          };
-          
-          fmrByCountyName.set(key, fmrData);
-          validFMRRows++;
-          
-          if (validFMRRows <= 5) {
-            console.log(`✅ FMR: ${key} = ${fmr2br}`);
+        // Zoom to show highlighted zips if less than 10
+        if (matchingZips.length < 10 && zipCentroids.length > 0) {
+          const matchingCentroids = zipCentroids.filter(c => matchingZips.includes(c.zip));
+          if (matchingCentroids.length > 0) {
+            const bounds = L.latLngBounds(matchingCentroids.map(c => [c.lat, c.lon]));
+            mapInstanceRef.current.fitBounds(bounds, { padding: [50, 50] });
           }
         }
-      });
-      
-      console.log(`🏠 Created FMR lookup with ${validFMRRows} counties by name`);
-      
-      let fmrMatches = 0;
-      
-      // Match FMR data to counties by name instead of FIPS (with state abbreviation conversion)
-      Object.values(combined).forEach((county, index) => {
-        if (county.name && county.state) {
-          // Convert full state name to abbreviation for matching
-          const stateAbbrev = stateNameToAbbrev[county.state] || county.state;
-          const lookupKey = `${county.name}, ${stateAbbrev}`;
-          const fmrData = fmrByCountyName.get(lookupKey);
-          
-          if (fmrData && fmrData.fmr2br) {
-            county.fmrRent = fmrData.fmr2br;
-            county.fmr1br = fmrData.fmr1br;
-            county.fmr3br = fmrData.fmr3br;
-            
-            // Advanced market analysis
-            county.marketAnalysis = classifyMarket(county);
-            county.rentEstimates = estimateMarketRent(county.fmrRent, county.marketAnalysis, county);
-            
-            // Extract key metrics for backward compatibility and display
-            if (county.rentEstimates) {
-              county.marketType = county.rentEstimates.marketType;
-              county.estimatedMarketRent = county.rentEstimates.marketMedian;
-              county.rentPremiumVsFMR = county.rentEstimates.marketPremiumVsFMR;
-              county.marketScore = county.rentEstimates.marketScore;
-              county.marketConfidence = county.rentEstimates.confidence;
-              
-              // Investment metrics
-              county.competitiveRent = county.rentEstimates.competitiveRent;
-              county.premiumRent = county.rentEstimates.premiumRent;
-              county.luxuryRent = county.rentEstimates.luxuryRent;
-              county.cashFlowPotential = county.rentEstimates.cashFlowPotential;
-              county.affordabilityIndex = county.rentEstimates.affordabilityIndex;
-              
-              // Market vs Census comparison
-              if (county.privateMarketRent && county.estimatedMarketRent) {
-                county.marketAccuracy = ((county.privateMarketRent - county.estimatedMarketRent) / county.estimatedMarketRent) * 100;
-              }
-            }
-            
-            fmrMatches++;
-            
-            if (fmrMatches <= 3) {
-              console.log(`🎯 FMR match: ${lookupKey} - FIPS ${county.fips} - ${county.fmrRent}`);
-            }
-          } else if (index < 10) {
-            console.log(`❌ No FMR match for: ${lookupKey}`);
-          }
-        }
-      });
-      console.log(`✅ FMR matches: ${fmrMatches} out of ${Object.keys(combined).length} counties (matched by name)`);
-    } else {
-      console.log(`❌ No FMR data to process`);
-    }
-    
-    // Calculate derived metrics
-    Object.values(combined).forEach(county => {
-      if (county.employmentRate && county.unemploymentRate) {
-        county.employmentStrength = county.employmentRate - (county.unemploymentRate * 2);
       }
-      
-      if (county.medianHouseholdIncome && county.povertyRate) {
-        county.economicOpportunity = (county.medianHouseholdIncome / 1000) - (county.povertyRate * 5);
-      }
-      
-      if (county.renterPercentage && county.vacancyRate) {
-        county.housingMarketScore = county.renterPercentage - (county.vacancyRate * 2);
-      }
-    });
-    
-    console.log(`✅ Derived metrics calculated`);
-    
-    return combined;
+
+      setIsTyping(false);
+      setChatMessages(msgs => [...msgs, { 
+        text: response, 
+        sender: 'bot',
+        timestamp: new Date()
+      }]);
+    }, 1000);
   };
 
-  // Pre-calculate tooltip content to improve performance
-  const preCalculateTooltips = useMemo(() => {
-    const tooltips = {};
-    Object.values(countyData).forEach(county => {
-      if (!county.fips) return;
-      
-      const baseContent = {
-        populationGrowth: `
-          <div>Total Population: ${county.totalPopulation?.toLocaleString() || 'N/A'}</div>
-          <div>Population Growth: ${county.populationGrowth ? county.populationGrowth.toFixed(1) + '%' : 'N/A'}</div>
-        `,
-        jobGrowth: `
-          <div>Median Income: $${county.medianHouseholdIncome?.toLocaleString() || 'N/A'}</div>
-          <div>Employed: ${county.totalEmployed?.toLocaleString() || 'N/A'}</div>
-          <div>Unemployed: ${county.totalUnemployed?.toLocaleString() || 'N/A'}</div>
-          <div>Employment Rate: ${county.employmentRate ? county.employmentRate.toFixed(1) + '%' : 'N/A'}</div>
-          <div>Unemployment Rate: ${county.unemploymentRate ? county.unemploymentRate.toFixed(1) + '%' : 'N/A'}</div>
-        `,
-        housingMetrics: `
-          <div>Total Housing Units: ${county.totalHousingUnits?.toLocaleString() || 'N/A'}</div>
-          <div>Occupied: ${county.occupiedUnits?.toLocaleString() || 'N/A'}</div>
-          <div>Vacant: ${county.vacantUnits?.toLocaleString() || 'N/A'}</div>
-          <div>Vacancy Rate: ${county.vacancyRate ? county.vacancyRate.toFixed(1) + '%' : 'N/A'}</div>
-          <div>Renter Percentage: ${county.renterPercentage ? county.renterPercentage.toFixed(1) + '%' : 'N/A'}</div>
-        `,
-        rentAnalysis: `
-          <div>FMR (Section 8): ${county.fmrRent?.toLocaleString() || 'N/A'}</div>
-          <div>Market Median: ${county.estimatedMarketRent?.toLocaleString() || 'N/A'}</div>
-          <div>Competitive: ${county.competitiveRent?.toLocaleString() || 'N/A'}</div>
-          <div>Premium: ${county.premiumRent?.toLocaleString() || 'N/A'}</div>
-          <div>Luxury: ${county.luxuryRent?.toLocaleString() || 'N/A'}</div>
-          <div>Market Type: <span style="color: ${county.marketType === 'superHot' ? '#ef4444' : county.marketType === 'hot' ? '#f59e0b' : county.marketType === 'warm' ? '#10b981' : '#6b7280'}">${county.marketType || 'Unknown'}</span></div>
-          <div>Score: ${county.marketScore || 'N/A'}/30 (${county.marketConfidence || 0}% confidence)</div>
-          <div>Premium vs FMR: ${county.rentPremiumVsFMR ? '+' + county.rentPremiumVsFMR.toFixed(0) + '%' : 'N/A'}</div>
-          <div>Cash Flow: ${county.cashFlowPotential || 'N/A'}</div>
-        `
-      };
-      
-      tooltips[county.fips] = baseContent;
-    });
-    return tooltips;
-  }, [countyData]);
+  const scrollChatToBottom = () => {
+    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
 
-  // Initialize Leaflet map
   useEffect(() => {
-    if (!geoData || loading || mapInstanceRef.current) return;
+    scrollChatToBottom();
+  }, [chatMessages]);
 
-    const loadLeaflet = async () => {
-      // Wait for the DOM to be ready and ensure container has dimensions
-      let retries = 0;
-      const maxRetries = 10;
-      
-      const initMap = () => {
-        if (!mapRef.current) {
-          console.log('Map ref not available, retrying...');
-          if (retries < maxRetries) {
-            retries++;
-            setTimeout(initMap, 200);
-          }
-          return;
-        }
+  // -------------------- CSV loaders --------------------
+  const loadCSV = async (url) => {
+    const u = absUrl(url);
+    const res = await fetch(u);
+    if (!res.ok) throw new Error(`${u}: ${res.status}`);
+    const text = await res.text();
+    const parsed = Papa.parse(text, { header: true, dynamicTyping: false, skipEmptyLines: true });
+    console.log(`Loaded CSV from ${url}: ${parsed.data.length} rows`);
+    return parsed?.data || [];
+  };
 
-        // Force a reflow to ensure dimensions are calculated
-        mapRef.current.style.height = '100vh';
-        mapRef.current.style.width = '100%';
+  // -------------------- Migration data loader --------------------
+  const loadMigrationData = async () => {
+    try {
+      const rows = await loadCSV('/migration_with_clean_zipcodes.csv');
+      const migrationByZip = {};
+      let processed = 0, skipped = 0;
+
+      rows.forEach((row) => {
+        const zip = zeroZip(row.ZIP);
+        const netMigrationRate = cleanValue(row.n2_0_net_pc);
         
-        // Check if container has dimensions after setting them
-        const rect = mapRef.current.getBoundingClientRect();
-        if (rect.width === 0 || rect.height === 0) {
-          console.log(`Map container has no dimensions: ${rect.width}x${rect.height}, retrying...`);
-          if (retries < maxRetries) {
-            retries++;
-            setTimeout(initMap, 200);
-          }
+        if (!zip || !netMigrationRate) {
+          skipped++;
           return;
         }
 
-        // Import Leaflet and create map
-        import('leaflet').then(L => {
-          try {
-            console.log('Creating Leaflet map...');
-            
-            const map = L.default.map(mapRef.current, {
-              center: [39.8283, -98.5795],
-              zoom: 4,
-              zoomControl: true,
-              scrollWheelZoom: true
-            });
-
-            L.default.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-              attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
-              subdomains: 'abcd',
-              maxZoom: 19
-            }).addTo(map);
-
-            mapInstanceRef.current = map;
-            console.log('Map created successfully');
-            
-            // Update county layer after map is ready
-            setTimeout(() => {
-              updateCountyLayer(L.default, map);
-            }, 100);
-            
-          } catch (error) {
-            console.error('Error creating map:', error);
-            if (retries < maxRetries) {
-              retries++;
-              setTimeout(initMap, 500);
-            }
-          }
-        }).catch(error => {
-          console.error('Error importing Leaflet:', error);
-        });
-      };
-
-      // Start the initialization process
-      initMap();
-    };
-
-    // Use requestAnimationFrame to ensure DOM is ready
-    requestAnimationFrame(() => {
-      setTimeout(loadLeaflet, 100);
-    });
-
-    return () => {
-      if (mapInstanceRef.current) {
-        try {
-          mapInstanceRef.current.remove();
-        } catch (error) {
-          console.warn('Error removing map:', error);
-        }
-        mapInstanceRef.current = null;
-      }
-    };
-  }, [geoData, loading]);
-
-  // Update county layer when metric changes
-  useEffect(() => {
-    if (mapInstanceRef.current && geoData) {
-      import('leaflet').then(L => {
-        updateCountyLayer(L.default, mapInstanceRef.current);
+        migrationByZip[zip] = {
+          zip,
+          migrationRate: Math.round(netMigrationRate * 1000) / 10, // Convert to per 1000
+          netMigration: cleanValue(row.n2_0_net),
+          inMigration: cleanValue(row.n2_0_in),
+          outMigration: cleanValue(row.n2_0_out),
+          population2021: cleanValue(row.pop_2021),
+          countyName: row.countyname,
+          stateName: row.state_name
+        };
+        processed++;
       });
+
+      console.log(`Migration data: processed=${processed}, skipped=${skipped}, zips=${Object.keys(migrationByZip).length}`);
+      return migrationByZip;
+    } catch (e) {
+      console.error('Failed to load migration data', e);
+      return {};
     }
-  }, [selectedMetric, countyData, geoData]);
+  };
 
-  const updateCountyLayer = (L, map) => {
-    // Clear all existing layers and tooltips
-    map.eachLayer(layer => {
-      if (layer.feature) {
-        map.removeLayer(layer);
+  // -------------------- ZIP data --------------------
+  const buildZipData = async () => {
+    const [dp03, dp04, density, migration] = await Promise.all([
+      loadCSV('/ZIPACSDP5Y2023.DP03-Data.csv'),
+      loadCSV('/ZIPACSDP5Y2023.DP04-Data.csv'),
+      loadCSV('/zcta_density.csv'),
+      loadMigrationData()
+    ]);
+
+    const zips = {};
+    for (const r of dp03) {
+      const zip = zeroZip(r.NAME ? r.NAME.split(' ')[1] : r.RegionName);
+      if (!zip) continue;
+      zips[zip] = zips[zip] || { zip: zip };
+      zips[zip].medianHouseholdIncome = cleanValue(r.DP03_0062E);
+      zips[zip].employmentRate = cleanValue(r.DP03_0002PE); // Proxy for employment percentage
+    }
+    console.log('Processed DP03 for', Object.keys(zips).length, 'zips');
+
+    for (const r of dp04) {
+      const zip = zeroZip(r.NAME ? r.NAME.split(' ')[1] : r.RegionName);
+      if (!zip) continue;
+      const t = zips[zip] = zips[zip] || { zip: zip };
+      t.medianGrossRent = cleanValue(r.DP04_0134E);
+    }
+    console.log('Processed DP04 for', Object.keys(zips).length, 'zips');
+
+    // Density
+    for (const r of density) {
+      const zip = zeroZip(r.ZCTA);
+      if (!zip) continue;
+      const t = zips[zip] = zips[zip] || { zip: zip };
+      t.land_sqmi = cleanValue(r.land_sqmi);
+      t.population = cleanValue(r.population);
+      let density_sqmi = cleanValue(r.density_sqmi);
+      if (density_sqmi == null && t.land_sqmi > 0 && t.population > 0) {
+        density_sqmi = t.population / t.land_sqmi;
       }
-    });
+      t.density_sqmi = density_sqmi;
+      if (t.density_sqmi > 300000) t.density_sqmi = null;
+    }
+    console.log('Processed Density for', Object.keys(zips).filter(z => zips[z].density_sqmi != null).length, 'zips');
 
-    // Clear any existing timeouts
-    map.off();
-    
-    // Clear any lingering tooltips
-    const tooltips = document.querySelectorAll('.custom-tooltip');
-    tooltips.forEach(tooltip => tooltip.remove());
-
-    const getColor = (value, metric) => {
-      if (value == null || isNaN(value)) return '#4b5563';
-      
-      if (metric === 'populationGrowth') {
-        return value > 0 ? '#10b981' : '#ef4444';
-      } else if (metric === 'rentAnalysis') {
-        const range = metrics[metric].range;
-        const normalized = (value - range[0]) / (range[1] - range[0]);
-        const clamped = Math.max(0, Math.min(1, normalized));
-        
-        if (clamped < 0.33) return '#ef4444';
-        if (clamped < 0.66) return '#f59e0b';
-        return '#10b981';
+    // Merge migration data
+    let migrationMerged = 0;
+    Object.entries(migration).forEach(([zip, migData]) => {
+      if (zips[zip]) {
+        Object.assign(zips[zip], migData);
+        migrationMerged++;
       } else {
-        const range = metrics[metric].range;
-        const normalized = (value - range[0]) / (range[1] - range[0]);
-        const clamped = Math.max(0, Math.min(1, normalized));
-        
-        if (clamped < 0.33) return '#ef4444';
-        if (clamped < 0.66) return '#f59e0b';
-        return '#10b981';
-      }
-    };
-
-    const countyLookup = {};
-    Object.values(countyData).forEach(county => {
-      if (county.fips) {
-        countyLookup[county.fips] = county;
+        zips[zip] = { zip, ...migData };
+        migrationMerged++;
       }
     });
+    console.log(`Migration data merged for ${migrationMerged} ZIPs`);
 
-    const style = (feature) => {
-      const fips = feature.properties.STATE + feature.properties.COUNTY;
-      const county = countyLookup[fips];
-      const value = county ? getMetricValue(county, selectedMetric) : null;
-      
-      return {
-        fillColor: getColor(value, selectedMetric),
-        weight: 1,
-        opacity: 1,
-        color: 'white',
-        dashArray: '',
-        fillOpacity: 0.7
-      };
-    };
-
-    // Single timeout reference to prevent multiple tooltips
-    let activeTimeout = null;
-    
-    const onEachFeature = (feature, layer) => {
-      const fips = feature.properties.STATE + feature.properties.COUNTY;
-      const county = countyLookup[fips];
-      
-      if (county && preCalculateTooltips[fips]) {
-        const tooltipContent = `
-          <div style="font-weight: bold; margin-bottom: 4px;">${feature.properties.NAME}</div>
-          ${preCalculateTooltips[fips][selectedMetric]}
-        `;
-        
-        // Bind tooltip but don't make it permanent
-        layer.bindTooltip(tooltipContent, {
-          permanent: false,
-          sticky: true,
-          className: 'custom-tooltip',
-          opacity: 0.95
-        });
-
-        layer.on({
-          mouseover: (e) => {
-            // Clear any existing timeout
-            if (activeTimeout) {
-              clearTimeout(activeTimeout);
-            }
-            
-            // Clear sidebar hover state
-            setHoveredCounty(null);
-            
-            // Set new hover state with delay
-            activeTimeout = setTimeout(() => {
-              setHoveredCounty({
-                ...county,
-                displayName: feature.properties.NAME
-              });
-            }, 150);
-            
-            // Open tooltip immediately
-            layer.openTooltip();
-          },
-          mouseout: (e) => {
-            // Clear any existing timeout
-            if (activeTimeout) {
-              clearTimeout(activeTimeout);
-            }
-            
-            // Close tooltip immediately
-            layer.closeTooltip();
-            
-            // Clear sidebar hover state with delay
-            activeTimeout = setTimeout(() => {
-              setHoveredCounty(null);
-            }, 100);
-          }
-        });
-      }
-    };
-
-    // Create the GeoJSON layer
-    const geoJsonLayer = L.geoJSON(geoData, {
-      style: style,
-      onEachFeature: onEachFeature
-    });
-    
-    // Add to map
-    geoJsonLayer.addTo(map);
+    setZipData(zips);
   };
+
+  const loadZipCentroids = async () => {
+    try {
+      const rows = await loadCSV('/zcta_centroids.csv');
+      const pts = rows.map(r => ({
+        zip: zeroZip(r.geoid),
+        lon: parseFloat(r.x),
+        lat: parseFloat(r.y)
+      })).filter(p => p.zip && Number.isFinite(p.lon) && Number.isFinite(p.lat));
+      console.log('Loaded centroids for', pts.length, 'zips');
+      // Debug: print zipData keys and a sample
+      console.log('zipData keys (first 20):', Object.keys(zipData).slice(0, 20), 'total:', Object.keys(zipData).length);
+      // Debug: print a sample CA ZIP in centroids and in zipData
+      const caCentroidSample = pts.find(p => p.zip.startsWith('90'));
+      const caZipDataSample = Object.keys(zipData).find(z => z.startsWith('90'));
+      console.log('Sample CA ZIP in centroids:', caCentroidSample);
+      console.log('Sample CA ZIP in zipData:', caZipDataSample);
+      setZipCentroids(pts);
+      const withData = pts.filter(p => zipData[p.zip]?.medianHouseholdIncome != null || zipData[p.zip]?.density_sqmi != null || zipData[p.zip]?.medianGrossRent != null || zipData[p.zip]?.employmentRate != null || zipData[p.zip]?.migrationRate != null);
+      setZillowCentroids(withData);
+      console.log('Data available for', withData.length, 'centroids');
+
+      // --- Debug: log missing centroids for CA, AZ, AL, CO ---
+      const stateZipPrefixes = {
+        CA: ['90', '91', '92', '93', '94', '95', '96'],
+        AZ: ['85', '86'],
+        AL: ['35'],
+        CO: ['80', '81']
+      };
+      Object.entries(stateZipPrefixes).forEach(([state, prefixes]) => {
+        const stateCentroids = pts.filter(r => prefixes.some(pfx => r.zip.startsWith(pfx)));
+        const missing = stateCentroids.filter(r => !zipData[r.zip]);
+        if (missing.length > 0) {
+          console.warn(`Centroids missing data for ${state}:`, missing.map(r => r.zip));
+        } else {
+          console.log(`All centroids have data for ${state}`);
+        }
+      });
+      // --- End debug ---
+    } catch (e) {
+      console.error('Failed to load ZIP centroids', e);
+      setError('Failed to load ZIP centroids');
+    }
+  };
+
+  // -------------------- helper functions --------------------
+  const getZipMetric = (z, key) => {
+    if (!z) return null;
+    switch (key) {
+      case 'zipDensity': return z.density_sqmi;
+      case 'zipIncome': return z.medianHouseholdIncome;
+      case 'zipEmployment': return z.employmentRate;
+      case 'medianGrossRent': return z.medianGrossRent;
+      case 'zipMigration': return z.migrationRate;
+      default: return null;
+    }
+  };
+
+  const getColor = (val, metricDef) => {
+    if (!metricDef) return '#e5e7eb';
+    if (val === null || val === undefined || Number.isNaN(val)) return '#e5e7eb';
+    for (const r of (metricDef.colorScale || [])) {
+      if (val >= r.min && val < r.max) {
+        return r.color;
+      }
+    }
+    const last = (metricDef.colorScale || [])[(metricDef.colorScale || []).length - 1];
+    return last ? last.color : '#e5e7eb';
+  };
+
+  const buildZipPopupHTML = (zip, z, metricKey, def, color, coords) => {
+    let useZ = z;
+    let note = '';
+    if (useZ.medianHouseholdIncome == null && useZ.density_sqmi == null && useZ.medianGrossRent == null && useZ.employmentRate == null && useZ.migrationRate == null) {
+      const nearest = findNearestZillow(coords.lat, coords.lon);
+      if (nearest) {
+        useZ = nearest;
+        note = nearest.note;
+        zip = nearest.zip;
+      } else {
+        note = ' (No nearby data)';
+      }
+    }
+
+    const vNow = getZipMetric(useZ, metricKey);
+    const display = vNow == null ? 'No data' : 
+      (metricKey === 'zipDensity' ? `${vNow.toFixed(1)} people/sq mi` : 
+       metricKey === 'zipEmployment' ? `${vNow.toFixed(1)}%` : 
+       metricKey === 'zipMigration' ? `${vNow > 0 ? '+' : ''}${vNow.toFixed(1)}‰` :
+       `$${fmt(vNow)}`);
+
+    // Migration-specific popup content
+    const migrationTable = metricKey === 'zipMigration' && useZ.migrationRate != null ? `
+      <div style="margin-top:8px;font-size:.8rem;border-top:1px solid #f3f4f6;padding-top:8px">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div><span style="color:#6b7280">Net Migration:</span><br><strong>${useZ.netMigration?.toLocaleString() || 'N/A'}</strong></div>
+          <div><span style="color:#6b7280">Population 2021:</span><br><strong>${useZ.population2021?.toLocaleString() || 'N/A'}</strong></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px">
+          <div><span style="color:#6b7280">In-Migration:</span><br><strong>${useZ.inMigration?.toLocaleString() || 'N/A'}</strong></div>
+          <div><span style="color:#6b7280">Out-Migration:</span><br><strong>${useZ.outMigration?.toLocaleString() || 'N/A'}</strong></div>
+        </div>
+        ${useZ.countyName && useZ.stateName ? `<div style="margin-top:6px"><span style="color:#6b7280">County:</span> <strong>${useZ.countyName}, ${useZ.stateName}</strong></div>` : ''}
+      </div>` : '';
+
+    return `
+      <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:white;border-radius:12px;box-shadow:0 20px 25px -5px rgba(0,0,0,.1),0 10px 10px -5px rgba(0,0,0,.04);border:1px solid #e5e7eb;min-width:200px;max-width:300px;">
+        <div style="background:linear-gradient(135deg,#059669 0%,#10b981 100%);color:white;padding:12px 16px;border-radius:12px 12px 0 0;border-bottom:1px solid #e5e7eb;">
+          <h3 style="margin:0;font-size:1rem;font-weight:600;line-height:1.2;">ZIP Code ${zip}${note}</h3>
+        </div>
+        <div style="padding:12px 16px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <div>
+              <p style="margin:0;font-size:0.75rem;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;font-weight:500;">${def.name}</p>
+              <p style="margin:4px 0 0 0;font-size:1.5rem;font-weight:700;color:#1f2937;">${display}</p>
+            </div>
+            <div style="width:12px;height:12px;border-radius:50%;background-color:${color};border:2px solid white;box-shadow:0 2px 4px rgba(0,0,0,0.1);"></div>
+          </div>
+          ${migrationTable}
+        </div>
+      </div>
+    `;
+  };
+
+  const findNearestZillow = (lat, lon) => {
+    if (zillowCentroids.length === 0) return null;
+    let minDist = Infinity;
+    let nearest = null;
+    const point = { lat, lon };
+    for (const c of zillowCentroids) {
+      const d = distance(point, c);
+      if (d < minDist) {
+        minDist = d;
+        nearest = c;
+      }
+    }
+    return nearest ? { ...zipData[nearest.zip], zip: nearest.zip, note: ` (Nearest: ${nearest.zip}, ~${Math.round(minDist)} mi)` } : null;
+  };
+
+  // -------------------- ZIP points layer --------------------
+  const buildVisibleGeoJSON = (map) => {
+    const bounds = map.getBounds();
+    const features = zipCentroids
+      .filter(p => bounds.contains([p.lat, p.lon]))
+      .map(p => {
+        const z = zipData[p.zip];
+        if (!z) return null;
+        return {
+          type: 'Feature',
+          geometry: { type: 'Point', coordinates: [p.lon, p.lat] },
+          properties: { zip: p.zip, z }
+        };
+      }).filter(f => f !== null);
+    return { type: 'FeatureCollection', features };
+  };
+
+  const updateZipPointLayer = (L, map, metricKey) => {
+    const def = zipMetrics[metricKey] || zipMetrics.zipDensity;
+    removeLayer(map, zipPointLayerRef);
+
+    const visibleGeoJSON = buildVisibleGeoJSON(map);
+    const layer = L.geoJSON(visibleGeoJSON, {
+      pointToLayer: (feature, latlng) => {
+        const z = feature.properties.z;
+        const v = getZipMetric(z, metricKey);
+        const isHighlighted = highlightedZipsRef.current.has(feature.properties.zip);
+        const color = isHighlighted ? '#3b82f6' : getColor(v, def);
+        return L.circleMarker(latlng, {
+          radius: isHighlighted ? 8 : 4,
+          weight: isHighlighted ? 2 : 0,
+          color: isHighlighted ? '#1e40af' : '#ffffff',
+          fillColor: color,
+          fillOpacity: isHighlighted ? 1 : 0.9,
+          interactive: true
+        });
+      },
+      onEachFeature: (feature, lyr) => {
+        const z = feature.properties.z;
+        const v = getZipMetric(z, metricKey);
+        const color = getColor(v, def);
+        const html = buildZipPopupHTML(feature.properties.zip, z, metricKey, def, color, { lat: lyr.getLatLng().lat, lon: lyr.getLatLng().lon });
+        lyr.bindPopup(html, { className: 'modern-popup', maxWidth: 360 });
+        lyr.on('mouseover', () => lyr.setStyle({ radius: 6 }));
+        lyr.on('mouseout', () => {
+          const isHighlighted = highlightedZipsRef.current.has(feature.properties.zip);
+          lyr.setStyle({ radius: isHighlighted ? 8 : 4 });
+        });
+      }
+    }).addTo(map);
+
+    zipPointLayerRef.current = layer;
+
+    const sync = () => {
+      const z = map.getZoom();
+      const visible = z >= ZCTA_POINT_ZOOM;
+      layer.setStyle({ opacity: visible ? 1 : 0, fillOpacity: visible ? 0.9 : 0 });
+      layer.clearLayers();
+      const newGeoJSON = buildVisibleGeoJSON(map);
+      L.geoJSON(newGeoJSON, {
+        pointToLayer: (feature, latlng) => {
+          const z = feature.properties.z;
+          const v = getZipMetric(z, metricKey);
+          const isHighlighted = highlightedZipsRef.current.has(feature.properties.zip);
+          const color = isHighlighted ? '#3b82f6' : getColor(v, def);
+          return L.circleMarker(latlng, {
+            radius: isHighlighted ? 8 : 4,
+            weight: isHighlighted ? 2 : 0,
+            color: isHighlighted ? '#1e40af' : '#ffffff',
+            fillColor: color,
+            fillOpacity: isHighlighted ? 1 : 0.9,
+            interactive: true
+          });
+        },
+        onEachFeature: (feature, lyr) => {
+          const z = feature.properties.z;
+          const v = getZipMetric(z, metricKey);
+          const color = getColor(v, def);
+          const html = buildZipPopupHTML(feature.properties.zip, z, metricKey, def, color, { lat: lyr.getLatLng().lat, lon: lyr.getLatLng().lon });
+          lyr.bindPopup(html, { className: 'modern-popup', maxWidth: 360 });
+          lyr.on('mouseover', () => lyr.setStyle({ radius: 6 }));
+          lyr.on('mouseout', () => {
+            const isHighlighted = highlightedZipsRef.current.has(feature.properties.zip);
+            lyr.setStyle({ radius: isHighlighted ? 8 : 4 });
+          });
+        }
+      }).addTo(layer);
+    };
+
+    map.on('moveend', sync);
+    sync();
+  };
+
+  const ensureDensityLayer = (L, map) => {
+    removeLayer(map, densityLayerRef);
+    if (!densityEnabled) return;
+
+    const bounds = map.getBounds();
+    const features = zipCentroids
+      .filter(p => bounds.contains([p.lat, p.lon]))
+      .map(p => {
+        const z = zipData[p.zip];
+        if (!z || z.density_sqmi == null) return null;
+        return {
+          type: 'Feature',
+          geometry: { type: 'Point', coordinates: [p.lon, p.lat] },
+          properties: { zip: p.zip, density_sqmi: z.density_sqmi, population: z.population }
+        };
+      }).filter(f => f !== null);
+
+    const densityLayer = L.geoJSON({ type: 'FeatureCollection', features }, {
+      pointToLayer: (feature, latlng) => {
+        const v = feature.properties.density_sqmi;
+        let color = '#fff7bc';
+        if (v > 10000) color = '#993404';
+        else if (v > 5000) color = '#cc4c02';
+        else if (v > 2000) color = '#ec7014';
+        else if (v > 1000) color = '#fe9929';
+        else if (v > 500) color = '#fec44f';
+        return L.circleMarker(latlng, {
+          radius: Math.min(10, Math.sqrt(v || 1) / 2),
+          fillColor: color,
+          fillOpacity: 0.7,
+          weight: 0.5,
+          color: '#fff',
+          interactive: true
+        });
+      },
+      onEachFeature: (feature, lyr) => {
+        const p = feature.properties;
+        const html = `
+          <div style="font-size:0.8rem">
+            <strong>ZIP: ${p.zip}</strong><br>
+            Population: ${fmt(p.population)}<br>
+            Density: ${p.density_sqmi.toFixed(1)} people/sq mi
+          </div>
+        `;
+        lyr.bindPopup(html, { className: 'modern-popup', maxWidth: 360 });
+      }
+    }).addTo(map);
+
+    densityLayerRef.current = densityLayer;
+
+    const sync = () => {
+      densityLayer.clearLayers();
+      const newFeatures = zipCentroids
+        .filter(p => bounds.contains([p.lat, p.lon]))
+        .map(p => {
+          const z = zipData[p.zip];
+          if (!z || z.density_sqmi == null) return null;
+          return {
+            type: 'Feature',
+            geometry: { type: 'Point', coordinates: [p.lon, p.lat] },
+            properties: { zip: p.zip, density_sqmi: z.density_sqmi, population: z.population }
+          };
+        }).filter(f => f !== null);
+      L.geoJSON({ type: 'FeatureCollection', features: newFeatures }, {
+        pointToLayer: (feature, latlng) => {
+          const v = feature.properties.density_sqmi;
+          let color = '#fff7bc';
+          if (v > 10000) color = '#993404';
+          else if (v > 5000) color = '#cc4c02';
+          else if (v > 2000) color = '#ec7014';
+          else if (v > 1000) color = '#fe9929';
+          else if (v > 500) color = '#fec44f';
+          return L.circleMarker(latlng, {
+            radius: Math.min(10, Math.sqrt(v || 1) / 2),
+            fillColor: color,
+            fillOpacity: 0.7,
+            weight: 0.5,
+            color: '#fff',
+            interactive: true
+          });
+        },
+        onEachFeature: (feature, lyr) => {
+          const p = feature.properties;
+          const html = `
+            <div style="font-size:0.8rem">
+              <strong>ZIP: ${p.zip}</strong><br>
+              Population: ${fmt(p.population)}<br>
+              Density: ${p.density_sqmi.toFixed(1)} people/sq mi
+            </div>
+          `;
+          lyr.bindPopup(html, { className: 'modern-popup', maxWidth: 360 });
+        }
+      }).addTo(densityLayer);
+    };
+
+    map.on('moveend', sync);
+    sync();
+  };
+
+  // -------------------- boot & map init --------------------
+  const boot = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      await Promise.all([buildZipData(), loadZipCentroids()]);
+      console.log('Data loading complete');
+    } catch (e) {
+      setError(e.message || 'Load failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const initMap = async () => {
+    if (!mapRef.current) return;
+    const L = (await import('leaflet')).default;
+    delete L.Icon.Default.prototype._getIconUrl;
+    L.Icon.Default.mergeOptions({
+      iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
+      iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
+      shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png'
+    });
+    if (mapInstanceRef.current) { mapInstanceRef.current.remove(); mapInstanceRef.current = null; }
+    const map = L.map(mapRef.current, { center: [39.8283, -98.5795], zoom: ZCTA_POINT_ZOOM, minZoom: 3, maxZoom: 12, attributionControl: false, preferCanvas: true });
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { maxZoom: 12 }).addTo(map);
+    mapInstanceRef.current = map;
+    await updateZipPointLayer(L, map, selectedMetric);
+    ensureDensityLayer(L, map);
+  };
+
+  // -------------------- effects --------------------
+  useEffect(() => { boot(); }, []);
+  useEffect(() => { if (!loading && Object.keys(zipData).length > 0 && zipCentroids.length > 0) initMap(); }, [loading, zipData, zipCentroids]);
+  useEffect(() => {
+    localStorage.setItem('layer.populationDensity.enabled', densityEnabled);
+    if (mapInstanceRef.current) {
+      (async () => {
+        const L = await import('leaflet');
+        ensureDensityLayer(L.default, mapInstanceRef.current);
+      })();
+    }
+  }, [densityEnabled]);
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    if (!map) return;
+    (async () => {
+      const L = await import('leaflet');
+      await updateZipPointLayer(L.default, map, selectedMetric);
+      ensureDensityLayer(L.default, map);
+    })();
+  }, [selectedMetric]);
+
+  // Precompute zillow centroids
+  useEffect(() => {
+    if (zipCentroids.length > 0 && Object.keys(zipData).length > 0) {
+      const withData = zipCentroids.filter(p => zipData[p.zip]?.medianHouseholdIncome != null || zipData[p.zip]?.density_sqmi != null || zipData[p.zip]?.medianGrossRent != null || zipData[p.zip]?.employmentRate != null || zipData[p.zip]?.migrationRate != null);
+      setZillowCentroids(withData);
+    }
+  }, [zipCentroids, zipData]);
+
+  // -------------------- UI --------------------
+  const metricDefs = zipMetrics;
+  const metricKey = (selectedMetric in metricDefs) ? selectedMetric : 'zipDensity';
+  const currentMetric = metricDefs[metricKey] || { name: 'Metric', colorScale: [], calculation: '' };
+  const hasDataCount = Object.values(zipData).filter(z => getZipMetric(z, metricKey) != null).length;
 
   if (loading) {
     return (
-      <div style={{
-        minHeight: '100vh',
-        background: colors.background,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        color: 'white'
-      }}>
+      <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg,#667eea 0%,#764ba2 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>
         <div style={{ textAlign: 'center' }}>
-          <div style={{
-            width: '50px',
-            height: '50px',
-            border: `3px solid ${colors.gray.dark}`,
-            borderTop: `3px solid ${colors.primary}`,
-            borderRadius: '50%',
-            animation: 'spin 1s linear infinite',
-            margin: '0 auto 16px'
-          }} />
-          <p>Loading Census data...</p>
-          <p style={{ fontSize: '0.875rem', color: colors.gray.lighter, marginTop: '8px' }}>
-            Processing county demographics and economics
-          </p>
+          <div style={{ width: 60, height: 60, border: '4px solid rgba(255,255,255,0.3)', borderTop: '4px solid white', borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto 24px' }} />
+          <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 700 }}>Loading datasets…</h2>
         </div>
-        <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
+        <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } } @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }`}</style>
       </div>
     );
   }
-
   if (error) {
     return (
-      <div style={{
-        minHeight: '100vh',
-        background: colors.background,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        color: 'white'
-      }}>
-        <div style={{ textAlign: 'center', maxWidth: '500px' }}>
-          <div style={{
-            color: colors.error,
-            fontSize: '3rem',
-            marginBottom: '16px'
-          }}>⚠️</div>
-          <h2 style={{ marginBottom: '8px' }}>Error Loading Census Data</h2>
-          <p style={{ color: colors.gray.lighter, marginBottom: '16px' }}>{error}</p>
-          <p style={{ color: colors.gray.lighter, fontSize: '0.875rem' }}>
-            Please check that all Census CSV files are in the public folder.
-          </p>
+      <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg,#ef4444 0%,#f97316 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>
+        <div style={{ textAlign: 'center', maxWidth: 520 }}>
+          <div style={{ fontSize: '3rem', marginBottom: 12 }}>⚠️</div>
+          <div style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: 8 }}>Data load failed</div>
+          <div style={{ opacity: .9 }}>{error}</div>
         </div>
       </div>
     );
   }
 
   return (
-    <div style={{ 
-      minHeight: '100vh', 
-      background: colors.background,
-      color: 'white',
-      display: 'flex'
-    }}>
-      <style>{`
-        @import url('https://unpkg.com/leaflet@1.9.4/dist/leaflet.css');
-        .custom-tooltip {
-          background: rgba(15, 23, 42, 0.95) !important;
-          border: 1px solid #334155 !important;
-          border-radius: 8px !important;
-          color: white !important;
-          font-size: 0.875rem !important;
-          padding: 8px !important;
-          max-width: 300px !important;
-        }
-        .leaflet-tooltip-top:before,
-        .leaflet-tooltip-bottom:before,
-        .leaflet-tooltip-left:before,
-        .leaflet-tooltip-right:before {
-          border-top-color: rgba(15, 23, 42, 0.95) !important;
-          border-bottom-color: rgba(15, 23, 42, 0.95) !important;
-          border-left-color: rgba(15, 23, 42, 0.95) !important;
-          border-right-color: rgba(15, 23, 42, 0.95) !important;
-        }
-      `}</style>
-      
-      <div style={{
-        width: '320px',
-        background: '#1e293b',
-        borderRight: `1px solid ${colors.gray.dark}`,
-        padding: '24px',
-        overflowY: 'auto',
-        zIndex: 1000
-      }}>
-        {/* Back to Home Button */}
-        <button
-          onClick={() => setCurrentPage('home')}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            color: '#94a3b8',
-            background: 'none',
-            border: 'none',
-            cursor: 'pointer',
-            fontSize: '1rem',
-            transition: 'all 0.3s ease',
-            padding: '8px 12px',
-            borderRadius: '6px',
-            marginBottom: '24px'
-          }}
-          onMouseEnter={(e) => {
-            e.target.style.color = '#06b6d4';
-            e.target.style.backgroundColor = 'rgba(6, 182, 212, 0.1)';
-          }}
-          onMouseLeave={(e) => {
-            e.target.style.color = '#94a3b8';
-            e.target.style.backgroundColor = 'transparent';
-          }}
-        >
-          <ArrowLeft size={16} /> Back to Home
-        </button>
+    <div style={{ minHeight: '100vh', background: 'white', display: 'flex' }}>
+      <style>{`@import url('https://unpkg.com/leaflet@1.9.4/dist/leaflet.css');
+        .leaflet-container { font-family: inherit; background: white !important; }
+        .modern-popup .leaflet-popup-content-wrapper { background: transparent !important; padding: 0 !important; border-radius: 12px !important; box-shadow: none !important; }
+        .modern-popup .leaflet-popup-content { margin: 0 !important; padding: 0 !important; border-radius: 12px !important; }
+        .modern-popup .leaflet-popup-tip { background: white !important; border: 1px solid #e5e7eb !important; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }`}</style>
 
-        <h1 style={{ 
-          fontSize: '1.5rem', 
-          fontWeight: 'bold', 
-          marginBottom: '8px',
-          background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.secondary} 50%, ${colors.accent} 100%)`,
-          WebkitBackgroundClip: 'text',
-          WebkitTextFillColor: 'transparent',
-          backgroundClip: 'text'
-        }}>
-          County Investment Map
-        </h1>
-        <p style={{ color: colors.gray.lighter, fontSize: '0.875rem', marginBottom: '32px' }}>
-          US Census-based investment analysis
-        </p>
-
-        <div>
-          <h3 style={{ 
-            fontSize: '1.125rem', 
-            fontWeight: '600', 
-            marginBottom: '16px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px'
-          }}>
-            <Filter size={20} style={{ color: colors.primary }} />
-            Select Metric
-          </h3>
-          
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            {Object.entries(metrics).map(([key, metric]) => {
-              const IconComponent = metric.icon;
-              const isSelected = selectedMetric === key;
-              
-              return (
-                <button
-                  key={key}
-                  onClick={() => setSelectedMetric(key)}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '12px',
-                    padding: '12px 16px',
-                    background: isSelected ? `${metric.color}20` : colors.gray.dark,
-                    border: isSelected ? `2px solid ${metric.color}` : `1px solid ${colors.gray.medium}`,
-                    borderRadius: '8px',
-                    color: 'white',
-                    cursor: 'pointer',
-                    textAlign: 'left',
-                    transition: 'all 0.3s ease',
-                    width: '100%'
-                  }}
-                >
-                  <IconComponent size={20} style={{ color: metric.color }} />
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: '600', fontSize: '0.875rem' }}>
-                      {metric.name}
-                    </div>
-                    <div style={{ 
-                      fontSize: '0.75rem', 
-                      color: colors.gray.lighter,
-                      marginTop: '2px'
-                    }}>
-                      {metric.description}
-                    </div>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* FMR Load Status Warning */}
-        {fmrLoadStatus.attempted && !fmrLoadStatus.loaded && (
-          <div style={{
-            background: colors.warning + '20',
-            border: `2px solid ${colors.warning}`,
-            borderRadius: '8px',
-            padding: '16px',
-            marginTop: '24px'
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-              <AlertTriangle size={16} style={{ color: colors.warning }} />
-              <span style={{ fontSize: '0.875rem', fontWeight: '600', color: colors.warning }}>FMR Data Missing</span>
-            </div>
-            <div style={{ fontSize: '0.75rem', color: colors.gray.lightest, marginBottom: '8px' }}>
-              {fmrLoadStatus.error}
-            </div>
-            <div style={{ fontSize: '0.7rem', color: colors.gray.lighter }}>
-              <strong>To fix this:</strong>
-              <br />1. Download FMR data from HUD.gov
-              <br />2. Save as: <code style={{ background: colors.gray.dark, padding: '2px 4px', borderRadius: '2px' }}>FY25_FMRs_revised.csv</code>
-              <br />3. Place in your <code style={{ background: colors.gray.dark, padding: '2px 4px', borderRadius: '2px' }}>/public</code> folder
-              <br />4. Refresh the page
-            </div>
-          </div>
-        )}
-
-        <div style={{
-          background: colors.gray.dark,
-          borderRadius: '8px',
-          padding: '16px',
-          marginTop: '24px',
-          border: `2px solid ${metrics[selectedMetric].color}`
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
-            <Info size={16} style={{ color: metrics[selectedMetric].color }} />
-            <span style={{ fontSize: '0.875rem', fontWeight: '600' }}>Data Summary</span>
-          </div>
-          <div style={{ fontSize: '0.75rem', color: colors.gray.lightest }}>
-            Showing {Object.keys(countyData).length} counties with Census data
-          </div>
-          
-          <div style={{ marginTop: '8px', fontSize: '0.7rem', color: colors.gray.lighter }}>
-            <div style={{ fontWeight: '600', marginBottom: '4px' }}>Data Coverage:</div>
-            {(() => {
-              const coverage = {
-                'Population Growth': Object.values(countyData).filter(d => d.populationGrowth !== undefined && d.populationGrowth !== null).length,
-                'Employment Data': Object.values(countyData).filter(d => d.employmentRate && d.unemploymentRate).length,
-                'Housing Metrics': Object.values(countyData).filter(d => d.vacancyRate && d.renterPercentage).length,
-                'FMR Data': Object.values(countyData).filter(d => d.fmrRent && d.fmrRent > 0).length,
-                'Market Rent Est': Object.values(countyData).filter(d => d.estimatedMarketRent && d.estimatedMarketRent > 0).length,
-                'Census Rent': Object.values(countyData).filter(d => d.privateMarketRent && d.privateMarketRent > 0).length,
-                'Total Counties': Object.keys(countyData).length
-              };
-              
-              return Object.entries(coverage).map(([metric, count]) => {
-                const total = coverage['Total Counties'];
-                const percentage = total > 0 ? Math.round((count / total) * 100) : 0;
-                const isTotal = metric === 'Total Counties';
-                
-                return (
-                  <div key={metric} style={{ 
-                    marginTop: '2px',
-                    color: isTotal ? colors.primary : percentage > 90 ? colors.success : percentage > 50 ? colors.warning : colors.error
-                  }}>
-                    {metric}: {count.toLocaleString()}{!isTotal && ` (${percentage}%)`}
-                  </div>
-                );
-              });
-            })()}
-          </div>
-          
-          {/* FMR Status */}
-          <div style={{ marginTop: '8px', paddingTop: '8px', borderTop: `1px solid ${colors.gray.medium}` }}>
-            <div style={{ fontSize: '0.7rem', fontWeight: '600', marginBottom: '4px' }}>FMR Status:</div>
-            <div style={{ 
-              fontSize: '0.7rem', 
-              color: fmrLoadStatus.loaded ? colors.success : colors.error 
-            }}>
-              {fmrLoadStatus.loaded ? 
-                `✅ Loaded (${fmrLoadStatus.filePath})` : 
-                fmrLoadStatus.attempted ? 
-                  '❌ Not Found' : 
-                  '⏳ Loading...'
-              }
-            </div>
-          </div>
-          
-          {hoveredCounty && (
-            <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: `1px solid ${colors.gray.medium}` }}>
-              <div style={{ fontWeight: '600', marginBottom: '4px' }}>{hoveredCounty.displayName}</div>
-              <div style={{ fontSize: '0.75rem', color: colors.gray.lighter, marginBottom: '8px' }}>
-                {hoveredCounty.state}
+      {/* Map */}
+      <div style={{ flex: 1, position: 'relative' }}>
+        <div ref={mapRef} style={{ width: '100%', height: '100vh', background: 'white' }} />
+        {/* Legend */}
+        <div style={{ position: 'absolute', bottom: 20, left: 20, right: 420, background: 'rgba(255,255,255,.95)', padding: '16px 18px', borderRadius: 12, border: '1px solid #e5e7eb', boxShadow: '0 10px 15px -3px rgba(0,0,0,.1)' }}>
+          <h4 style={{ margin: 0, fontSize: '.9rem', fontWeight: 700, color: '#111827' }}>{currentMetric?.name || 'Metric'} Scale</h4>
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 10 }}>
+            {(currentMetric?.colorScale || []).map((r, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#f9fafb', border: '1px solid #f3f4f6', padding: '4px 8px', borderRadius: 6 }}>
+                <div style={{ width: 16, height: 16, background: r.color, borderRadius: 3, border: '1px solid rgba(0,0,0,.1)' }} />
+                <span style={{ fontSize: '.8rem', color: '#374151' }}>{r.label}</span>
               </div>
-              
-              {selectedMetric === 'populationGrowth' && (
-                <div style={{ fontSize: '0.7rem' }}>
-                  <div style={{ marginBottom: '2px' }}>
-                    Population: <span style={{ color: colors.primary }}>{hoveredCounty.totalPopulation?.toLocaleString() || 'N/A'}</span>
-                  </div>
-                  <div style={{ marginBottom: '2px' }}>
-                    Growth Rate: <span style={{ color: hoveredCounty.populationGrowth > 0 ? colors.success : colors.error }}>
-                      {hoveredCounty.populationGrowth ? hoveredCounty.populationGrowth.toFixed(1) + '%' : 'N/A'}
-                    </span>
-                  </div>
-                </div>
-              )}
-              
-              {selectedMetric === 'jobGrowth' && (
-                <div style={{ fontSize: '0.7rem' }}>
-                  <div style={{ marginBottom: '2px' }}>
-                    Median Income: <span style={{ color: colors.success }}>${hoveredCounty.medianHouseholdIncome?.toLocaleString() || 'N/A'}</span>
-                  </div>
-                  <div style={{ marginBottom: '2px' }}>
-                    Employment Rate: <span style={{ color: colors.primary }}>{hoveredCounty.employmentRate ? hoveredCounty.employmentRate.toFixed(1) + '%' : 'N/A'}</span>
-                  </div>
-                  <div style={{ marginBottom: '2px' }}>
-                    Unemployment Rate: <span style={{ color: colors.error }}>{hoveredCounty.unemploymentRate ? hoveredCounty.unemploymentRate.toFixed(1) + '%' : 'N/A'}</span>
-                  </div>
-                  <div style={{ marginBottom: '2px' }}>
-                    Employed: <span style={{ color: colors.success }}>{hoveredCounty.totalEmployed?.toLocaleString() || 'N/A'}</span>
-                  </div>
-                </div>
-              )}
-              
-              {selectedMetric === 'housingMetrics' && (
-                <div style={{ fontSize: '0.7rem' }}>
-                  <div style={{ marginBottom: '2px' }}>
-                    Vacancy Rate: <span style={{ color: colors.error }}>{hoveredCounty.vacancyRate ? hoveredCounty.vacancyRate.toFixed(1) + '%' : 'N/A'}</span>
-                  </div>
-                  <div style={{ marginBottom: '2px' }}>
-                    Renter %: <span style={{ color: colors.warning }}>{hoveredCounty.renterPercentage ? hoveredCounty.renterPercentage.toFixed(1) + '%' : 'N/A'}</span>
-                  </div>
-                  <div style={{ marginBottom: '2px' }}>
-                    Total Units: <span style={{ color: colors.primary }}>{hoveredCounty.totalHousingUnits?.toLocaleString() || 'N/A'}</span>
-                  </div>
-                  <div style={{ marginBottom: '2px' }}>
-                    Median Rent: <span style={{ color: colors.accent }}>${hoveredCounty.medianGrossRent?.toLocaleString() || 'N/A'}</span>
-                  </div>
-                </div>
-              )}
-              
-              {selectedMetric === 'rentAnalysis' && (
-                <div style={{ fontSize: '0.7rem' }}>
-                  <div style={{ marginBottom: '2px' }}>
-                    FMR (Section 8): <span style={{ color: colors.secondary }}>${hoveredCounty.fmrRent?.toLocaleString() || 'N/A'}</span>
-                  </div>
-                  <div style={{ marginBottom: '2px' }}>
-                    Market Median: <span style={{ color: colors.success }}>${hoveredCounty.estimatedMarketRent?.toLocaleString() || 'N/A'}</span>
-                  </div>
-                  <div style={{ marginBottom: '2px' }}>
-                    Competitive: <span style={{ color: colors.primary }}>${hoveredCounty.competitiveRent?.toLocaleString() || 'N/A'}</span>
-                  </div>
-                  <div style={{ marginBottom: '2px' }}>
-                    Premium: <span style={{ color: colors.warning }}>${hoveredCounty.premiumRent?.toLocaleString() || 'N/A'}</span>
-                  </div>
-                  <div style={{ marginBottom: '2px' }}>
-                    Luxury: <span style={{ color: colors.accent }}>${hoveredCounty.luxuryRent?.toLocaleString() || 'N/A'}</span>
-                  </div>
-                  <div style={{ marginBottom: '2px' }}>
-                    Market Type: <span style={{ 
-                      color: hoveredCounty.marketType === 'superHot' ? colors.error : 
-                             hoveredCounty.marketType === 'hot' ? colors.warning : 
-                             hoveredCounty.marketType === 'warm' ? colors.success : colors.gray.lighter 
-                    }}>
-                      {hoveredCounty.marketType || 'Unknown'}
-                    </span>
-                  </div>
-                  <div style={{ marginBottom: '2px' }}>
-                    Market Score: <span style={{ color: colors.primary }}>
-                      {hoveredCounty.marketScore || 'N/A'}/30
-                    </span>
-                  </div>
-                  <div style={{ marginBottom: '2px' }}>
-                    Confidence: <span style={{ color: colors.accent }}>
-                      {hoveredCounty.marketConfidence || 0}%
-                    </span>
-                  </div>
-                  <div style={{ marginBottom: '2px' }}>
-                    Premium vs FMR: <span style={{ color: hoveredCounty.rentPremiumVsFMR > 0 ? colors.success : colors.error }}>
-                      {hoveredCounty.rentPremiumVsFMR ? (hoveredCounty.rentPremiumVsFMR > 0 ? '+' : '') + hoveredCounty.rentPremiumVsFMR.toFixed(0) + '%' : 'N/A'}
-                    </span>
-                  </div>
-                  <div style={{ marginBottom: '2px' }}>
-                    Cash Flow: <span style={{ 
-                      color: hoveredCounty.cashFlowPotential === 'High' ? colors.success : 
-                             hoveredCounty.cashFlowPotential === 'Medium' ? colors.warning : colors.gray.lighter 
-                    }}>
-                      {hoveredCounty.cashFlowPotential || 'N/A'}
-                    </span>
-                  </div>
-                  <div style={{ marginBottom: '2px' }}>
-                    Affordability: <span style={{ 
-                      color: hoveredCounty.affordabilityIndex <= 30 ? colors.success : 
-                             hoveredCounty.affordabilityIndex <= 40 ? colors.warning : colors.error 
-                    }}>
-                      {hoveredCounty.affordabilityIndex ? hoveredCounty.affordabilityIndex + '%' : 'N/A'}
-                    </span>
-                  </div>
-                  <div style={{ marginBottom: '2px' }}>
-                    Census Median: <span style={{ color: colors.gray.lighter }}>${hoveredCounty.privateMarketRent?.toLocaleString() || 'N/A'}</span>
-                  </div>
-                </div>
-              )}
+            ))}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#f9fafb', border: '1px solid #f3f4f6', padding: '4px 8px', borderRadius: 6 }}>
+              <div style={{ width: 16, height: 16, background: '#e5e7eb', borderRadius: 3, border: '1px solid rgba(0,0,0,.1)' }} />
+              <span style={{ fontSize: '.8rem', color: '#6b7280' }}>No data</span>
             </div>
-          )}
+          </div>
         </div>
       </div>
 
-      <div style={{ flex: 1, position: 'relative' }}>
-        <div style={{
-          position: 'absolute',
-          top: '20px',
-          left: '20px',
-          right: '20px',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          zIndex: 10
-        }}>
+      {/* Sidebar */}
+      <div style={{ width: 400, background: 'white', borderLeft: '1px solid #e5e7eb', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ padding: 20, borderBottom: '1px solid #f3f4f6', background: 'linear-gradient(135deg,#f8fafc 0%,#f1f5f9 100%)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+            <button onClick={() => { if (setCurrentPage) setCurrentPage('home'); else window.history.back(); }} style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#374151', background: 'white', border: '1px solid #e5e7eb', borderRadius: 8, padding: '8px 14px', cursor: 'pointer', fontSize: '.85rem' }}>
+              <ArrowLeft size={16} /> Back
+            </button>
+          </div>
+          <h1 style={{ fontSize: '1.25rem', fontWeight: 800, margin: '0 0 6px 0', color: '#111827' }}>
+            ZIP Market Map
+          </h1>
+          <p style={{ margin: 0, color: '#6b7280', fontSize: '.85rem' }}>
+            {currentMetric?.name || 'Metric'} • {hasDataCount.toLocaleString()} ZIPs
+          </p>
+          <div style={{ marginTop: 6, fontSize: '.75rem', color: '#6b7280' }}>Zoom to 6+ for points.</div>
+          <h2 style={{ fontSize: '1rem', fontWeight: 700, margin: '14px 0 6px 0', color: '#1f2937', display: 'flex', alignItems: 'center', gap: 8 }}>
+            <Filter size={18} style={{ color: '#3b82f6' }} />
+            Analysis Metrics
+          </h2>
+          <p style={{ fontSize: '.8rem', color: '#6b7280', margin: 0 }}>Select a metric to visualize ZIP-level data</p>
+        </div>
+
+        <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+          <div style={{ padding: 20 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {Object.entries(zipMetrics).map(([key, metric]) => {
+                const Icon = metric.icon;
+                const isSel = metricKey === key;
+                return (
+                  <button key={key} onClick={() => setSelectedMetric(key)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'stretch', padding: 16, background: isSel ? 'linear-gradient(135deg,#3b82f6 0%,#1e40af 100%)' : 'white', color: isSel ? 'white' : '#374151', border: isSel ? 'none' : '1px solid #e5e7eb', borderRadius: 12, cursor: 'pointer' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+                      <Icon size={22} style={{ color: isSel ? 'white' : '#3b82f6' }} />
+                      <div style={{ fontWeight: 700 }}>{metric.name}</div>
+                    </div>
+                    <div style={{ fontSize: '.8rem', color: isSel ? 'rgba(255, 255, 255, 0.9)' : '#6b7280' }}>{metric.description}</div>
+                    <div style={{ fontSize: '.72rem', color: isSel ? 'rgba(255, 255, 255, 0.8)' : '#9ca3af', marginTop: 6, fontStyle: 'italic' }}>{metric.dataSource}</div>
+                  </button>
+                );
+              })}
+            </div>
+            <div style={{ marginTop: 20 }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <input type="checkbox" checked={densityEnabled} onChange={(e) => setDensityEnabled(e.target.checked)} style={{ cursor: 'pointer' }} />
+                Population Density (ZCTA)
+              </label>
+            </div>
+          </div>
+
+          {/* CHATBOT SECTION */}
           <div style={{
-            background: 'rgba(15, 23, 42, 0.9)',
-            padding: '12px 16px',
-            borderRadius: '8px',
-            border: `1px solid ${colors.gray.dark}`,
-            backdropFilter: 'blur(8px)'
+            borderTop: '2px solid #e5e7eb',
+            background: 'white',
+            display: 'flex',
+            flexDirection: 'column',
+            height: '300px',
+            marginTop: 'auto'
           }}>
-            <h3 style={{
+            {/* Chatbot Header */}
+            <div style={{
+              padding: '10px 14px',
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
               color: 'white',
-              fontSize: '1.125rem',
+              fontSize: '0.85rem',
               fontWeight: '600',
-              margin: 0,
               display: 'flex',
               alignItems: 'center',
               gap: '8px'
             }}>
-              <MapPin size={20} style={{ color: metrics[selectedMetric].color }} />
-              {metrics[selectedMetric].name} by County
-            </h3>
-          </div>
-          
-          <div style={{
-            background: 'rgba(15, 23, 42, 0.9)',
-            padding: '12px 16px',
-            borderRadius: '8px',
-            border: `1px solid ${colors.gray.dark}`,
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            backdropFilter: 'blur(8px)'
-          }}>
-            <Calendar size={16} style={{ color: colors.gray.lighter }} />
-            <span style={{ fontSize: '0.875rem', color: 'white' }}>ACS 2019-2023</span>
-          </div>
-        </div>
-
-        <div 
-          ref={mapRef} 
-          style={{ 
-            width: '100%', 
-            height: '100vh',
-            background: '#1a202c'
-          }} 
-        />
-
-        <div style={{
-          position: 'absolute',
-          bottom: '20px',
-          right: '20px',
-          background: 'rgba(15, 23, 42, 0.9)',
-          padding: '16px',
-          borderRadius: '8px',
-          border: `1px solid ${colors.gray.dark}`,
-          backdropFilter: 'blur(8px)',
-          zIndex: 10
-        }}>
-          <h4 style={{ color: 'white', fontSize: '0.875rem', fontWeight: '600', margin: '0 0 8px 0' }}>
-            Color Scale
-          </h4>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <MessageSquare size={16} />
+              ZIP Code Data Assistant
+            </div>
+            
+            {/* Chat Messages Area */}
             <div style={{
-              width: '150px',
-              height: '12px',
-              background: selectedMetric === 'populationGrowth' 
-                ? `linear-gradient(to right, ${colors.error}, #4b5563, ${colors.success})`
-                : `linear-gradient(to right, ${colors.error}, ${colors.warning}, ${colors.success})`,
-              borderRadius: '2px'
-            }} />
-          </div>
-          <div style={{ 
-            display: 'flex', 
-            justifyContent: 'space-between', 
-            marginTop: '4px',
-            fontSize: '0.7rem',
-            color: colors.gray.lightest 
-          }}>
-            <span>
-              {selectedMetric === 'populationGrowth' ? 'Decline' : 
-               selectedMetric === 'rentAnalysis' ? 'Low Market Rent' : 'Low'}
-            </span>
-            <span>
-              {selectedMetric === 'populationGrowth' ? 'Growth' : 
-               selectedMetric === 'rentAnalysis' ? 'High Market Rent' : 'High'}
-            </span>
+              flex: 1,
+              overflowY: 'auto',
+              padding: '10px',
+              background: '#f9fafb',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '6px'
+            }}>
+              {chatMessages.map((msg, i) => (
+                <div 
+                  key={i} 
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: msg.sender === 'user' ? 'flex-end' : 'flex-start'
+                  }}
+                >
+                  <div style={{
+                    maxWidth: '85%',
+                    padding: '6px 10px',
+                    borderRadius: '8px',
+                    fontSize: '0.75rem',
+                    lineHeight: '1.3',
+                    whiteSpace: 'pre-wrap',
+                    background: msg.sender === 'user' 
+                      ? '#667eea'
+                      : 'white',
+                    color: msg.sender === 'user' ? 'white' : '#1f2937',
+                    border: msg.sender === 'bot' ? '1px solid #e5e7eb' : 'none'
+                  }}>
+                    {msg.text}
+                  </div>
+                  <span style={{
+                    fontSize: '0.6rem',
+                    color: '#9ca3af',
+                    marginTop: '2px'
+                  }}>
+                    {msg.timestamp.toLocaleTimeString('en-US', { 
+                      hour: 'numeric', 
+                      minute: '2-digit'
+                    })}
+                  </span>
+                </div>
+              ))}
+              {isTyping && (
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '3px',
+                  padding: '6px',
+                  background: 'white',
+                  borderRadius: '6px',
+                  width: 'fit-content',
+                  border: '1px solid #e5e7eb'
+                }}>
+                  <div style={{
+                    width: '5px',
+                    height: '5px',
+                    borderRadius: '50%',
+                    background: '#9ca3af',
+                    animation: 'pulse 1.4s infinite'
+                  }}></div>
+                  <div style={{
+                    width: '5px',
+                    height: '5px',
+                    borderRadius: '50%',
+                    background: '#9ca3af',
+                    animation: 'pulse 1.4s infinite',
+                    animationDelay: '0.2s'
+                  }}></div>
+                  <div style={{
+                    width: '5px',
+                    height: '5px',
+                    borderRadius: '50%',
+                    background: '#9ca3af',
+                    animation: 'pulse 1.4s infinite',
+                    animationDelay: '0.4s'
+                  }}></div>
+                </div>
+              )}
+              <div ref={chatEndRef} />
+            </div>
+            
+            {/* Chat Input Area */}
+            <div style={{
+              padding: '10px',
+              borderTop: '1px solid #e5e7eb',
+              background: 'white'
+            }}>
+              <div style={{
+                display: 'flex',
+                gap: '6px'
+              }}>
+                <input 
+                  value={chatInput} 
+                  onChange={(e) => setChatInput(e.target.value)} 
+                  onKeyPress={(e) => e.key === 'Enter' && handleChatSend()}
+                  style={{
+                    flex: 1,
+                    padding: '6px 10px',
+                    border: '1px solid #d1d5db',
+                    borderRadius: '6px',
+                    fontSize: '0.75rem',
+                    outline: 'none'
+                  }}
+                  placeholder="Ex: 'migration inflow above 10' or 'highest income'" 
+                />
+                <button 
+                  onClick={handleChatSend}
+                  style={{
+                    padding: '6px 10px',
+                    background: '#667eea',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    fontSize: '0.75rem',
+                    fontWeight: '500',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px'
+                  }}
+                >
+                  <Send size={14} />
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 
-        {Object.keys(countyData).length === 0 && !loading && (
-          <div style={{
-            position: 'absolute',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-            background: 'rgba(15, 23, 42, 0.9)',
-            padding: '24px',
-            borderRadius: '8px',
-            border: `1px solid ${colors.gray.dark}`,
-            textAlign: 'center',
-            zIndex: 100
-          }}>
-            <div style={{ color: colors.warning, fontSize: '2rem', marginBottom: '12px' }}>📊</div>
-            <h3 style={{ color: 'white', marginBottom: '8px' }}>No Census Data Available</h3>
-            <p style={{ color: colors.gray.lighter, fontSize: '0.875rem' }}>
-              Check that Census CSV files are in the public folder
+        <div style={{ padding: 20, borderTop: '1px solid #f3f4f6', background: '#f9fafb' }}>
+          <div style={{ background: 'white', padding: 14, borderRadius: 8, border: '1px solid #e5e7eb' }}>
+            <h4 style={{ fontSize: '.85rem', fontWeight: 700, margin: '0 0 6px 0', color: '#1f2937', display: 'flex', alignItems: 'center', gap: 6 }}>
+              <Info size={14} style={{ color: '#3b82f6' }} />
+              {currentMetric?.name} Details
+            </h4>
+            <p style={{ fontSize: '.75rem', color: '#6b7280', margin: 0, lineHeight: 1.4 }}>
+              <strong>Calculation:</strong> {currentMetric.calculation}
             </p>
           </div>
-        )}
+        </div>
       </div>
     </div>
   );

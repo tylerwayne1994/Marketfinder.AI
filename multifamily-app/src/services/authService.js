@@ -31,8 +31,8 @@ export const authService = {
               last_name: lastName,
               phone,
               address,
-              subscription_plan: 'trial',
-              subscription_status: 'active'
+              subscription_plan: 'starter',
+              subscription_status: 'inactive'
             }
           ])
         

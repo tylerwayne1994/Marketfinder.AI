@@ -1,685 +1,619 @@
 import React, { useState, useContext, createContext } from 'react';
-import { Upload, Calculator, TrendingUp, Search, ArrowRight, BarChart3, Home, Map, Zap, FileText, Settings, Moon, Sun, Palette, Type, Bell, Chrome } from 'lucide-react';
+import { Calculator, BarChart3, Map, Zap, DollarSign, MapPin, FileText, ArrowRight, Brain, TrendingUp, CheckCircle, User } from 'lucide-react';
 
-// Theme Context
-const ThemeContext = createContext();
+// Theme Context (minimal implementation for compatibility)
+export const ThemeContext = createContext();
 
-export const useTheme = () => {
-  const context = useContext(ThemeContext);
-  if (!context) {
-    throw new Error('useTheme must be used within ThemeProvider');
-  }
-  return context;
-};
-
-// Theme Provider Component
-const ThemeProvider = ({ children }) => {
-  const [theme, setTheme] = useState('dark');
-  const [accentColor, setAccentColor] = useState('blue');
-  const [fontSize, setFontSize] = useState('medium');
-
-  const toggleTheme = () => {
-    setTheme(prev => prev === 'dark' ? 'light' : 'dark');
-  };
-
-  const themes = {
-    dark: {
-      background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
-      sidebarBg: '#1e293b',
-      cardBg: '#1e293b',
-      borderColor: '#334155',
-      textPrimary: '#ffffff',
-      textSecondary: '#94a3b8',
-      hover: '#374151'
-    },
-    light: {
-      background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
-      sidebarBg: '#ffffff',
-      cardBg: '#ffffff',
-      borderColor: '#e2e8f0',
-      textPrimary: '#0f172a',
-      textSecondary: '#64748b',
-      hover: '#f1f5f9'
-    }
-  };
-
-  const fontSizes = {
-    small: { base: '0.875rem', title: '3rem', subtitle: '1.125rem' },
-    medium: { base: '1rem', title: '3.5rem', subtitle: '1.25rem' },
-    large: { base: '1.125rem', title: '4rem', subtitle: '1.5rem' }
-  };
-
-  const accentColors = {
-    blue: { primary: '#3b82f6', secondary: '#06b6d4' },
-    purple: { primary: '#8b5cf6', secondary: '#a855f7' },
-    green: { primary: '#10b981', secondary: '#22c55e' },
-    orange: { primary: '#f59e0b', secondary: '#fb923c' }
-  };
-
+export const ThemeProvider = ({ children }) => {
+  const [theme, setTheme] = useState('light');
+  
   const value = {
     theme,
     setTheme,
-    toggleTheme,
-    currentTheme: themes[theme],
-    accentColor,
-    setAccentColor,
-    currentAccent: accentColors[accentColor],
-    fontSize,
-    setFontSize,
-    currentFontSize: fontSizes[fontSize]
+    toggleTheme: () => setTheme(prev => prev === 'light' ? 'dark' : 'light')
   };
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 };
 
-// Settings Page Component
-const SettingsPage = ({ setCurrentPage }) => {
-  const { theme, toggleTheme, currentTheme, accentColor, setAccentColor, fontSize, setFontSize } = useTheme();
-  const [notifications, setNotifications] = useState(true);
-
-  const styles = {
-    container: {
-      minHeight: '100vh',
-      background: currentTheme.background,
-      color: currentTheme.textPrimary,
-      padding: '48px',
-      transition: 'all 0.3s ease'
-    },
-    title: {
-      fontSize: '2.5rem',
-      fontWeight: 'bold',
-      marginBottom: '16px'
-    },
-    subtitle: {
-      fontSize: '1.125rem',
-      color: currentTheme.textSecondary,
-      marginBottom: '48px'
-    },
-    section: {
-      background: currentTheme.cardBg,
-      borderRadius: '16px',
-      padding: '32px',
-      marginBottom: '24px',
-      border: `1px solid ${currentTheme.borderColor}`,
-      transition: 'all 0.3s ease'
-    },
-    sectionTitle: {
-      fontSize: '1.25rem',
-      fontWeight: '600',
-      marginBottom: '24px',
-      display: 'flex',
-      alignItems: 'center',
-      gap: '12px'
-    },
-    settingRow: {
-      display: 'flex',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      marginBottom: '24px'
-    },
-    settingLabel: {
-      display: 'flex',
-      flexDirection: 'column',
-      gap: '4px'
-    },
-    settingTitle: {
-      fontSize: '1rem',
-      fontWeight: '500'
-    },
-    settingDescription: {
-      fontSize: '0.875rem',
-      color: currentTheme.textSecondary
-    },
-    toggle: {
-      width: '60px',
-      height: '32px',
-      background: theme === 'dark' ? '#374151' : '#e2e8f0',
-      borderRadius: '16px',
-      position: 'relative',
-      cursor: 'pointer',
-      transition: 'background 0.3s ease'
-    },
-    toggleActive: {
-      background: '#3b82f6'
-    },
-    toggleKnob: {
-      width: '26px',
-      height: '26px',
-      background: 'white',
-      borderRadius: '50%',
-      position: 'absolute',
-      top: '3px',
-      left: theme === 'dark' ? '3px' : '31px',
-      transition: 'left 0.3s ease',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center'
-    },
-    colorOptions: {
-      display: 'flex',
-      gap: '12px'
-    },
-    colorOption: {
-      width: '40px',
-      height: '40px',
-      borderRadius: '8px',
-      cursor: 'pointer',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      transition: 'transform 0.2s ease'
-    },
-    colorOptionSelected: {
-      transform: 'scale(1.1)',
-      boxShadow: '0 0 0 3px rgba(59, 130, 246, 0.3)'
-    },
-    sizeOptions: {
-      display: 'flex',
-      gap: '12px'
-    },
-    sizeOption: {
-      padding: '8px 16px',
-      borderRadius: '8px',
-      border: `1px solid ${currentTheme.borderColor}`,
-      cursor: 'pointer',
-      transition: 'all 0.2s ease',
-      fontSize: '0.875rem'
-    },
-    sizeOptionSelected: {
-      background: '#3b82f6',
-      color: 'white',
-      borderColor: '#3b82f6'
-    },
-    backButton: {
-      display: 'inline-flex',
-      alignItems: 'center',
-      gap: '8px',
-      padding: '12px 24px',
-      background: currentTheme.cardBg,
-      border: `1px solid ${currentTheme.borderColor}`,
-      borderRadius: '8px',
-      cursor: 'pointer',
-      fontSize: '0.875rem',
-      transition: 'all 0.2s ease',
-      marginBottom: '32px'
-    }
-  };
-
-  return (
-    <div style={styles.container}>
-      <div 
-        style={styles.backButton}
-        onClick={() => setCurrentPage('home')}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.background = currentTheme.hover;
-          e.currentTarget.style.transform = 'translateX(-4px)';
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.background = currentTheme.cardBg;
-          e.currentTarget.style.transform = 'translateX(0)';
-        }}
-      >
-        <ArrowRight size={16} style={{ transform: 'rotate(180deg)' }} />
-        Back to Home
-      </div>
-
-      <h1 style={styles.title}>Settings</h1>
-      <p style={styles.subtitle}>Customize your experience across all pages</p>
-
-      {/* Appearance Section */}
-      <div style={styles.section}>
-        <h2 style={styles.sectionTitle}>
-          <Palette size={24} />
-          Appearance
-        </h2>
-
-        {/* Theme Toggle */}
-        <div style={styles.settingRow}>
-          <div style={styles.settingLabel}>
-            <span style={styles.settingTitle}>Theme</span>
-            <span style={styles.settingDescription}>Switch between light and dark mode</span>
-          </div>
-          <div 
-            style={{...styles.toggle, ...(theme === 'light' ? styles.toggleActive : {})}}
-            onClick={toggleTheme}
-          >
-            <div style={styles.toggleKnob}>
-              {theme === 'dark' ? <Moon size={16} color="#374151" /> : <Sun size={16} color="#3b82f6" />}
-            </div>
-          </div>
-        </div>
-
-        {/* Accent Color */}
-        <div style={styles.settingRow}>
-          <div style={styles.settingLabel}>
-            <span style={styles.settingTitle}>Accent Color</span>
-            <span style={styles.settingDescription}>Choose your preferred accent color</span>
-          </div>
-          <div style={styles.colorOptions}>
-            {Object.entries({
-              blue: '#3b82f6',
-              purple: '#8b5cf6',
-              green: '#10b981',
-              orange: '#f59e0b'
-            }).map(([color, hex]) => (
-              <div
-                key={color}
-                style={{
-                  ...styles.colorOption,
-                  background: hex,
-                  ...(accentColor === color ? styles.colorOptionSelected : {})
-                }}
-                onClick={() => setAccentColor(color)}
-              >
-                {accentColor === color && <div style={{ width: '8px', height: '8px', background: 'white', borderRadius: '50%' }} />}
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Font Size */}
-        <div style={styles.settingRow}>
-          <div style={styles.settingLabel}>
-            <span style={styles.settingTitle}>Font Size</span>
-            <span style={styles.settingDescription}>Adjust text size for better readability</span>
-          </div>
-          <div style={styles.sizeOptions}>
-            {['small', 'medium', 'large'].map((size) => (
-              <div
-                key={size}
-                style={{
-                  ...styles.sizeOption,
-                  ...(fontSize === size ? styles.sizeOptionSelected : {})
-                }}
-                onClick={() => setFontSize(size)}
-              >
-                {size.charAt(0).toUpperCase() + size.slice(1)}
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Notifications Section */}
-      <div style={styles.section}>
-        <h2 style={styles.sectionTitle}>
-          <Bell size={24} />
-          Notifications
-        </h2>
-
-        <div style={styles.settingRow}>
-          <div style={styles.settingLabel}>
-            <span style={styles.settingTitle}>Email Notifications</span>
-            <span style={styles.settingDescription}>Receive updates about your saved properties</span>
-          </div>
-          <div 
-            style={{...styles.toggle, ...(notifications ? styles.toggleActive : {})}}
-            onClick={() => setNotifications(!notifications)}
-          >
-            <div style={{...styles.toggleKnob, left: notifications ? '31px' : '3px'}} />
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// Updated HomePage Component with Theme Support
-const HomePage = ({ setCurrentPage }) => {
-  const { currentTheme, currentAccent, currentFontSize } = useTheme();
+const HomePage = ({ setCurrentPage, isAuthenticated = false, currentUser = null }) => {
   const [hoveredCard, setHoveredCard] = useState(null);
   const [hoveredMenuItem, setHoveredMenuItem] = useState(null);
 
+  // Terra.Ai Logo Component - matching landing page exactly
+  const TerraLogo = () => (
+    <svg width="40" height="40" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="50" cy="50" r="45" stroke="black" strokeWidth="5" fill="none"/>
+      <circle cx="50" cy="50" r="15" fill="none" stroke="black" strokeWidth="3"/>
+      {[0, 45, 90, 135, 180, 225, 270, 315].map((angle, i) => {
+        const radian = (angle * Math.PI) / 180;
+        const isCardinal = angle % 90 === 0;
+        const length = isCardinal ? 38 : 35;
+        
+        const innerRadius = 20;
+        const outerRadius = length;
+        
+        const x1 = 50 + innerRadius * Math.cos(radian - 0.15);
+        const y1 = 50 + innerRadius * Math.sin(radian - 0.15);
+        const x2 = 50 + outerRadius * Math.cos(radian);
+        const y2 = 50 + outerRadius * Math.sin(radian);
+        const x3 = 50 + innerRadius * Math.cos(radian + 0.15);
+        const y3 = 50 + innerRadius * Math.sin(radian + 0.15);
+        
+        return (
+          <g key={i}>
+            <path
+              d={`M 50 50 L ${x1} ${y1} Q ${50 + (outerRadius-5) * Math.cos(radian - 0.08)} ${50 + (outerRadius-5) * Math.sin(radian - 0.08)}, ${x2} ${y2} Q ${50 + (outerRadius-5) * Math.cos(radian + 0.08)} ${50 + (outerRadius-5) * Math.sin(radian + 0.08)}, ${x3} ${y3} Z`}
+              fill="black"
+            />
+            {isCardinal && (
+              <line 
+                x1={50 + 22 * Math.cos(radian)} 
+                y1={50 + 22 * Math.sin(radian)} 
+                x2={50 + 30 * Math.cos(radian)} 
+                y2={50 + 30 * Math.sin(radian)} 
+                stroke="white" 
+                strokeWidth="2"
+              />
+            )}
+          </g>
+        );
+      })}
+    </svg>
+  );
+
+  // Menu items - REMOVED Property Scraper
   const menuItems = [
-    {
-      icon: Home,
-      label: 'Dashboard',
-      page: 'dashboard',
-      gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
-    },
     {
       icon: Calculator,
       label: 'Underwrite',
       page: 'underwrite',
-      gradient: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)'
-    },
-    {
-      icon: Chrome,
-      label: 'Property Scraper',
-      page: 'propertyScrape',
-      gradient: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)'
+      color: '#3b82f6',
+      description: 'Instant AI underwriting'
     },
     {
       icon: Map,
       label: 'Market Heat Map',
       page: 'marketHeatMap',
-      gradient: 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)'
+      color: '#8b5cf6',
+      description: 'Visualize market dynamics'
+    },
+    {
+      icon: MapPin,
+      label: 'Census Map Viewer',
+      page: 'censusMapViewer',
+      color: '#f59e0b',
+      description: 'Demographic mapping'
+    },
+    {
+      icon: DollarSign,
+      label: 'Market Rents',
+      page: 'marketHighlights',
+      color: '#ef4444',
+      description: 'Real-time rent data'
+    },
+    {
+      icon: BarChart3,
+      label: 'Market Analysis',
+      page: 'market-analysis',
+      color: '#ec4899',
+      description: 'ZIP code market metrics'
     },
     {
       icon: FileText,
       label: 'Document Generator',
       page: 'documentGenerator',
-      gradient: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)'
+      color: '#6366f1',
+      description: 'AI contract generation'
+    },
+  ];
+
+  const features = [
+    {
+      icon: Brain,
+      title: 'AI Automatic Underwriter',
+      subtitle: 'Instant Deal Analysis & Portfolio Review',
+      description: 'Upload your Offering Memorandum, Rent Roll, or P&L statements and our AI instantly underwrites the deal, providing comprehensive analysis and investment recommendations.',
+      highlights: [
+        'Automatic underwriting with deal scoring',
+        'Analyze OMs, Rent Rolls, P&Ls, PDFs',
+        'Portfolio property analysis',
+        'Investment optimization options'
+      ],
+      color: '#3b82f6',
+      page: 'underwrite'
     },
     {
-      icon: Settings,
-      label: 'Settings',
-      page: 'settings',
-      gradient: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)'
+      icon: Map,
+      title: 'Interactive Market Heat Maps',
+      subtitle: 'Zip Code & County Level Intelligence',
+      description: 'Visualize market dynamics at zip code and county levels with comprehensive heat maps. Features an integrated AI chat interface for intelligent queries.',
+      highlights: [
+        'Zip code and county heat maps',
+        'Population density metrics',
+        'Rent comparisons and trends',
+        'AI-powered chat search'
+      ],
+      color: '#10b981',
+      page: 'marketHeatMap'
+    },
+    {
+      icon: TrendingUp,
+      title: 'Market Intelligence Platform',
+      subtitle: 'AI-Enhanced Location Analysis',
+      description: 'Enter any zip code or city to receive instant market insights based on 10+ critical investment metrics with AI recommendations.',
+      highlights: [
+        'Analysis of 10+ market metrics',
+        'AI-generated recommendations',
+        'City and zip code insights',
+        'Investment opportunity scoring'
+      ],
+      color: '#8b5cf6',
+      page: 'market-analysis'
+    },
+    {
+      icon: FileText,
+      title: 'Legal Document Generator',
+      subtitle: 'AI-Powered Contracts',
+      description: 'Generate professional legal documents instantly with our AI contract generator. Create LOIs, Purchase Agreements, and more.',
+      highlights: [
+        'Custom Letters of Intent',
+        'Purchase & Sale Agreements',
+        'LLC Operating Agreements',
+        'Professional templates'
+      ],
+      color: '#f59e0b',
+      page: 'documentGenerator'
     }
   ];
 
-  const styles = {
-    pageContainer: {
-      minHeight: '100vh',
-      background: currentTheme.background,
-      color: currentTheme.textPrimary,
-      display: 'flex',
-      transition: 'all 0.3s ease',
-      fontSize: currentFontSize.base
-    },
-    sidebar: {
-      width: '280px',
-      background: currentTheme.sidebarBg,
-      borderRight: `1px solid ${currentTheme.borderColor}`,
-      padding: '32px 24px',
-      display: 'flex',
-      flexDirection: 'column',
-      gap: '32px',
-      transition: 'all 0.3s ease'
-    },
-    logo: {
-      fontSize: '1.5rem',
-      fontWeight: 'bold',
-      color: currentTheme.textPrimary,
-      display: 'flex',
-      alignItems: 'center',
-      gap: '12px'
-    },
-    logoIcon: {
-      width: '40px',
-      height: '40px',
-      background: `linear-gradient(135deg, ${currentAccent.secondary}, ${currentAccent.primary})`,
-      borderRadius: '8px',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center'
-    },
-    menuSection: {
-      display: 'flex',
-      flexDirection: 'column',
-      gap: '12px'
-    },
-    sectionTitle: {
-      fontSize: '0.875rem',
-      fontWeight: '600',
-      color: currentTheme.textSecondary,
-      textTransform: 'uppercase',
-      letterSpacing: '0.05em',
-      marginBottom: '8px'
-    },
-    menuItem: {
-      display: 'flex',
-      alignItems: 'center',
-      gap: '12px',
-      padding: '12px 16px',
-      borderRadius: '8px',
-      cursor: 'pointer',
-      transition: 'all 0.3s ease',
-      fontSize: '0.875rem',
-      fontWeight: '500',
-      color: currentTheme.textPrimary
-    },
-    menuItemHover: {
-      background: currentTheme.hover,
-      transform: 'translateX(4px)'
-    },
-    mainContent: {
-      flex: 1,
-      padding: '48px',
-      overflow: 'auto'
-    },
-    heroSection: {
-      textAlign: 'center',
-      marginBottom: '64px'
-    },
-    heroTitle: {
-      fontSize: currentFontSize.title,
-      fontWeight: 'bold',
-      marginBottom: '24px',
-      background: `linear-gradient(135deg, ${currentAccent.secondary} 0%, ${currentAccent.primary} 50%, #8b5cf6 100%)`,
-      WebkitBackgroundClip: 'text',
-      WebkitTextFillColor: 'transparent',
-      backgroundClip: 'text',
-      lineHeight: '1.1'
-    },
-    heroSubtitle: {
-      fontSize: currentFontSize.subtitle,
-      color: currentTheme.textSecondary,
-      lineHeight: '1.6',
-      maxWidth: '800px',
-      margin: '0 auto'
-    },
-    cardGrid: {
-      display: 'grid',
-      gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-      gap: '32px',
-      marginBottom: '48px'
-    },
-    card: {
-      background: currentTheme.cardBg,
-      borderRadius: '16px',
-      padding: '32px',
-      textAlign: 'center',
-      transition: 'all 0.3s ease',
-      border: `1px solid ${currentTheme.borderColor}`,
-      cursor: 'pointer'
-    },
-    cardHover: {
-      transform: 'translateY(-8px)',
-      boxShadow: '0 20px 40px rgba(0, 0, 0, 0.1)',
-      borderColor: currentAccent.primary
-    },
-    iconBox: {
-      width: '80px',
-      height: '80px',
-      borderRadius: '16px',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      margin: '0 auto 24px',
-      transition: 'transform 0.3s ease'
-    },
-    iconBoxBlue: {
-      background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)'
-    },
-    iconBoxCyan: {
-      background: 'linear-gradient(135deg, #06b6d4, #0891b2)'
-    },
-    iconBoxGreen: {
-      background: 'linear-gradient(135deg, #10b981, #059669)'
-    },
-    iconBoxPurple: {
-      background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)'
-    },
-    iconBoxOrange: {
-      background: 'linear-gradient(135deg, #f59e0b, #d97706)'
-    },
-    cardTitle: {
-      fontSize: '1.5rem',
-      fontWeight: '600',
-      color: currentTheme.textPrimary,
-      marginBottom: '16px'
-    },
-    cardText: {
-      color: currentTheme.textSecondary,
-      lineHeight: '1.6',
-      fontSize: '1rem'
-    }
-  };
-
   return (
-    <div style={styles.pageContainer}>
-      {/* Sidebar */}
-      <div style={styles.sidebar}>
-        {/* Logo */}
-        <div style={styles.logo}>
-          <div style={styles.logoIcon}>
-            <BarChart3 size={24} color="white" />
-          </div>
-          <span>MultifamilyAI</span>
-        </div>
+    <div style={{
+      minHeight: '100vh',
+      backgroundColor: 'white',
+      color: '#000000',
+      position: 'relative',
+      overflow: 'hidden'
+    }}>
+      {/* Background Image with White Overlay - Same as Landing Page */}
+      <div style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundImage: 'url("https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80")',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+  opacity: 0.5,
+        zIndex: 0
+      }} />
 
-        {/* Navigation Menu */}
-        <div style={styles.menuSection}>
-          <div style={styles.sectionTitle}>Navigation</div>
-          {menuItems.map((item, index) => (
-            <div
-              key={index}
-              style={{
-                ...styles.menuItem,
-                ...(hoveredMenuItem === index ? styles.menuItemHover : {})
-              }}
-              onMouseEnter={() => setHoveredMenuItem(index)}
-              onMouseLeave={() => setHoveredMenuItem(null)}
-              onClick={() => setCurrentPage(item.page)}
-            >
-              <div style={{
-                width: '32px',
-                height: '32px',
-                borderRadius: '6px',
-                background: item.gradient,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}>
-                <item.icon size={18} color="white" />
-              </div>
-              <span>{item.label}</span>
-            </div>
-          ))}
-        </div>
-
-        {/* Resources Section */}
-        <div style={styles.menuSection}>
-          <div style={styles.sectionTitle}>Resources</div>
-          <div style={styles.menuItem}>
+      {/* Content Container */}
+      <div style={{ position: 'relative', zIndex: 1 }}>
+        {/* Header with Terra.Ai Logo */}
+        <div style={{
+          backgroundColor: 'white',
+          borderBottom: '1px solid #e5e5e5',
+          padding: '16px 24px',
+          position: 'sticky',
+          top: 0,
+          zIndex: 100
+        }}>
+          <div style={{
+            maxWidth: '1400px',
+            margin: '0 auto',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between'
+          }}>
             <div style={{
-              width: '32px',
-              height: '32px',
-              borderRadius: '6px',
-              background: 'linear-gradient(135deg, #f59e0b, #d97706)',
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'center'
+              gap: '12px'
             }}>
-              <Zap size={18} color="white" />
+              <TerraLogo />
+              <span style={{
+                fontSize: '1.5rem',
+                fontWeight: '700',
+                color: '#000000'
+              }}>
+                Terra.Ai
+              </span>
             </div>
-            <span>Templates</span>
+
+            {/* Navigation Menu with Dashboard Button */}
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '24px'
+            }}>
+              {menuItems.slice(0, 3).map((item, index) => (
+                <button
+                  key={index}
+                  onClick={() => setCurrentPage(item.page)}
+                  style={{
+                    backgroundColor: 'transparent',
+                    border: 'none',
+                    color: hoveredMenuItem === index ? item.color : '#333333',
+                    cursor: 'pointer',
+                    fontSize: '0.875rem',
+                    fontWeight: '600',
+                    transition: 'color 0.2s ease',
+                    padding: '8px 0'
+                  }}
+                  onMouseEnter={() => setHoveredMenuItem(index)}
+                  onMouseLeave={() => setHoveredMenuItem(null)}
+                >
+                  {item.label}
+                </button>
+              ))}
+              
+              {/* Dashboard Button */}
+              <button
+                onClick={() => setCurrentPage('dashboard')}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  padding: '10px 20px',
+                  backgroundColor: '#000000',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontSize: '0.875rem',
+                  fontWeight: '600',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = '#333333';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = '#000000';
+                }}
+              >
+                <User size={16} />
+                Dashboard
+              </button>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Main Content */}
-      <div style={styles.mainContent}>
-        <div style={styles.heroSection}>
-          <h1 style={styles.heroTitle}>AI Multifamily Market Finder</h1>
-          <p style={styles.heroSubtitle}>
-            Analyze multifamily properties instantly with AI-powered underwriting and discover deals with intelligent market scanning across major real estate platforms.
+        {/* Hero Section */}
+        <div style={{
+          padding: '60px 24px',
+          textAlign: 'center',
+          maxWidth: '1200px',
+          margin: '0 auto'
+        }}>
+          <div style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '8px',
+            backgroundColor: '#f5f5f5',
+            border: '1px solid #000000',
+            borderRadius: '12px',
+            padding: '12px 24px',
+            marginBottom: '32px'
+          }}>
+            <Zap size={20} style={{ color: '#000000' }} />
+            <span style={{
+              fontSize: '1rem',
+              color: '#000000',
+              fontWeight: '600'
+            }}>
+              AI-Powered Real Estate Platform
+            </span>
+          </div>
+
+          <h1 style={{
+            fontSize: '3.5rem',
+            fontWeight: '800',
+            color: '#000000',
+            marginBottom: '24px',
+            lineHeight: '1.1'
+          }}>
+            AI Multifamily Market Finder
+          </h1>
+
+          <p style={{
+            fontSize: '1.25rem',
+            color: '#333333',
+            maxWidth: '700px',
+            margin: '0 auto 48px auto',
+            lineHeight: '1.6'
+          }}>
+            Analyze multifamily properties instantly with AI-powered underwriting and discover deals with intelligent market scanning
           </p>
+
+          <button
+            onClick={() => setCurrentPage('underwrite')}
+            style={{
+              backgroundColor: '#000000',
+              color: 'white',
+              padding: '16px 40px',
+              borderRadius: '12px',
+              border: 'none',
+              cursor: 'pointer',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '12px',
+              fontSize: '1.125rem',
+              fontWeight: '700',
+              transition: 'all 0.3s ease',
+              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.15)'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-4px)';
+              e.currentTarget.style.boxShadow = '0 8px 30px rgba(0, 0, 0, 0.25)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = '0 4px 20px rgba(0, 0, 0, 0.15)';
+            }}
+          >
+            <span>Start Analyzing Now</span>
+            <ArrowRight size={20} />
+          </button>
         </div>
-        
-        {/* Page Feature Boxes */}
-        <div style={styles.cardGrid}>
-          {[
-            { 
-              icon: Home, 
-              title: 'Dashboard', 
-              text: 'View your saved properties, portfolio analytics, and investment performance metrics. Track deals from analysis to closing with comprehensive portfolio management.',
-              gradient: styles.iconBoxBlue,
-              page: 'dashboard'
-            },
-            { 
-              icon: Calculator, 
-              title: 'Underwrite Properties', 
-              text: 'Upload PDFs or manually enter property data for instant financial analysis. Get cap rates, cash flow projections, and AI-powered investment recommendations.',
-              gradient: styles.iconBoxGreen,
-              page: 'underwrite'
-            },
-            { 
-              icon: Chrome, 
-              title: 'Property Scraper', 
-              text: 'Chrome extension and web scraping tools to automatically collect property listings from Zillow, Crexi, and LoopNet with AI-powered analysis.',
-              gradient: styles.iconBoxCyan,
-              page: 'propertyScrape'
-            },
-            { 
-              icon: Map, 
-              title: 'Market Heat Map', 
-              text: 'Discover emerging markets and identify investment opportunities with real-time market data visualization and property value trend analysis.',
-              gradient: styles.iconBoxPurple,
-              page: 'marketHeatMap'
-            },
-            { 
-              icon: FileText, 
-              title: 'Document Generator', 
-              text: 'Generate professional legal documents for real estate investments. Create promissory notes, operating agreements, purchase contracts, and more with AI assistance.',
-              gradient: styles.iconBoxOrange,
-              page: 'documentGenerator'
-            }
-          ].map((item, index) => (
-            <div 
-              key={index}
-              style={{
-                ...styles.card,
-                ...(hoveredCard === index ? styles.cardHover : {})
-              }}
-              onMouseEnter={() => setHoveredCard(index)}
-              onMouseLeave={() => setHoveredCard(null)}
-              onClick={() => setCurrentPage(item.page)}
-            >
-              <div style={{...styles.iconBox, ...item.gradient}}>
-                <item.icon size={32} color="white" />
-              </div>
-              <h3 style={styles.cardTitle}>{item.title}</h3>
-              <p style={styles.cardText}>{item.text}</p>
-              <div style={{
-                marginTop: '20px',
-                padding: '12px 24px',
-                background: `rgba(${currentAccent.primary.match(/\d+/g).slice(0,3).join(',')}, 0.1)`,
-                border: `1px solid ${currentAccent.primary}`,
-                borderRadius: '8px',
-                color: currentAccent.primary,
-                fontSize: '0.875rem',
-                fontWeight: '600'
-              }}>
-                Click to Access →
-              </div>
-            </div>
-          ))}
+
+        {/* Quick Access Buttons - MOVED ABOVE FEATURES */}
+        <div style={{
+          backgroundColor: '#f8f8f8',
+          borderTop: '1px solid #e5e5e5',
+          borderBottom: '1px solid #e5e5e5',
+          padding: '40px 24px',
+          marginBottom: '60px'
+        }}>
+          <div style={{
+            maxWidth: '1400px',
+            margin: '0 auto',
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+            gap: '16px'
+          }}>
+            {menuItems.map((item, index) => {
+              const IconComponent = item.icon;
+              return (
+                <button
+                  key={index}
+                  onClick={() => setCurrentPage(item.page)}
+                  style={{
+                    backgroundColor: 'white',
+                    border: '1px solid #e5e5e5',
+                    borderRadius: '12px',
+                    padding: '16px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    transition: 'all 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.borderColor = item.color;
+                    e.currentTarget.style.transform = 'translateY(-2px)';
+                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.borderColor = '#e5e5e5';
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = 'none';
+                  }}
+                >
+                  <div style={{
+                    backgroundColor: `${item.color}15`,
+                    borderRadius: '8px',
+                    padding: '8px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}>
+                    <IconComponent size={18} style={{ color: item.color }} />
+                  </div>
+                  <div style={{ textAlign: 'left' }}>
+                    <div style={{
+                      fontSize: '0.875rem',
+                      fontWeight: '600',
+                      color: '#000000'
+                    }}>
+                      {item.label}
+                    </div>
+                    <div style={{
+                      fontSize: '0.75rem',
+                      color: '#666666',
+                      marginTop: '2px'
+                    }}>
+                      {item.description}
+                    </div>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Features Grid */}
+        <div style={{
+          maxWidth: '1400px',
+          margin: '0 auto',
+          padding: '0 24px 80px 24px'
+        }}>
+          <div style={{
+            textAlign: 'center',
+            marginBottom: '48px'
+          }}>
+            <h2 style={{
+              fontSize: '2.5rem',
+              fontWeight: '800',
+              color: '#000000',
+              marginBottom: '16px'
+            }}>
+              Powerful AI-Driven Features
+            </h2>
+            <p style={{
+              fontSize: '1.125rem',
+              color: '#333333',
+              maxWidth: '600px',
+              margin: '0 auto'
+            }}>
+              Everything you need to analyze, underwrite, and close multifamily deals faster than ever before.
+            </p>
+          </div>
+
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+            gap: '24px'
+          }}>
+            {features.map((feature, index) => {
+              const IconComponent = feature.icon;
+              const isHovered = hoveredCard === index;
+              
+              return (
+                <div
+                  key={index}
+                  style={{
+                    backgroundColor: 'white',
+                    border: `2px solid ${isHovered ? '#000000' : '#e5e5e5'}`,
+                    borderRadius: '20px',
+                    padding: '32px',
+                    cursor: 'pointer',
+                    transition: 'all 0.4s ease',
+                    transform: isHovered ? 'translateY(-8px)' : 'translateY(0)',
+                    boxShadow: isHovered ? '0 15px 40px rgba(0, 0, 0, 0.15)' : '0 4px 20px rgba(0, 0, 0, 0.05)',
+                    minHeight: '420px',
+                    display: 'flex',
+                    flexDirection: 'column'
+                  }}
+                  onMouseEnter={() => setHoveredCard(index)}
+                  onMouseLeave={() => setHoveredCard(null)}
+                  onClick={() => setCurrentPage(feature.page)}
+                >
+                  {/* Header */}
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    gap: '16px',
+                    marginBottom: '24px'
+                  }}>
+                    <div style={{
+                      backgroundColor: `${feature.color}15`,
+                      border: `2px solid ${feature.color}`,
+                      borderRadius: '12px',
+                      padding: '12px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0
+                    }}>
+                      <IconComponent size={24} style={{ color: feature.color }} />
+                    </div>
+                    
+                    <div style={{ flex: 1 }}>
+                      <h3 style={{
+                        fontSize: '1.25rem',
+                        fontWeight: '700',
+                        margin: '0 0 6px 0',
+                        color: '#000000'
+                      }}>
+                        {feature.title}
+                      </h3>
+                      <p style={{
+                        fontSize: '0.875rem',
+                        color: '#666666',
+                        margin: 0,
+                        fontWeight: '600'
+                      }}>
+                        {feature.subtitle}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Description */}
+                  <p style={{
+                    fontSize: '0.875rem',
+                    color: '#333333',
+                    lineHeight: 1.6,
+                    marginBottom: '24px',
+                    flex: 1
+                  }}>
+                    {feature.description}
+                  </p>
+
+                  {/* Key Features */}
+                  <div>
+                    <h4 style={{
+                      fontSize: '0.75rem',
+                      fontWeight: '600',
+                      color: '#666666',
+                      marginBottom: '12px',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.05em'
+                    }}>
+                      KEY FEATURES
+                    </h4>
+                    
+                    <div style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '8px'
+                    }}>
+                      {feature.highlights.map((highlight, hIndex) => (
+                        <div
+                          key={hIndex}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            fontSize: '0.75rem',
+                            color: '#333333'
+                          }}
+                        >
+                          <CheckCircle size={12} style={{ color: feature.color, flexShrink: 0 }} />
+                          {highlight}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Action Button */}
+                  <div style={{
+                    marginTop: '24px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between'
+                  }}>
+                    <span style={{
+                      fontSize: '0.75rem',
+                      color: '#666666',
+                      fontWeight: '600'
+                    }}>
+                      Available now →
+                    </span>
+                    
+                    <div style={{
+                      backgroundColor: feature.color,
+                      borderRadius: '6px',
+                      padding: '4px 8px',
+                      fontSize: '0.625rem',
+                      color: 'white',
+                      fontWeight: '600',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.05em'
+                    }}>
+                      AI POWERED
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
       </div>
     </div>
   );
 };
 
-// Main App Component
-const App = () => {
-  const [currentPage, setCurrentPage] = useState('home');
-
-  return (
-    <ThemeProvider>
-      {currentPage === 'home' && <HomePage setCurrentPage={setCurrentPage} />}
-      {currentPage === 'settings' && <SettingsPage setCurrentPage={setCurrentPage} />}
-      {/* Add other pages here */}
-      {currentPage === 'dashboard' && (
-        <div style={{ padding: '48px', minHeight: '100vh', background: '#0f172a', color: 'white' }}>
-          <h1>Dashboard Page</h1>
-          <button onClick={() => setCurrentPage('home')} style={{ marginTop: '20px', padding: '10px 20px' }}>Back to Home</button>
-        </div>
-      )}
-    </ThemeProvider>
-  );
-};
-
-export default App;
+export default HomePage;

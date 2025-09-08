@@ -1,119 +1,3000 @@
-import React, { useState } from 'react';
-import { Upload, ArrowRight, ArrowLeft } from 'lucide-react';
-import { styles } from './styles';
+import React, { useEffect, useState } from "react";
+import { supabase } from './lib/supabase';
+import {
+  Upload, ArrowRight, ArrowLeft, AlertCircle, Loader, Check, TrendingUp,
+  DollarSign, Building, FileText, ThumbsUp, ThumbsDown, AlertTriangle,
+  PieChart as PieChartIcon, BarChart3, Calculator, CheckCircle, XCircle, Home, Edit3,
+  Save, RefreshCw, Activity, Target, Briefcase, Download, Share2, Award
+} from "lucide-react";
+import { 
+  PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, 
+  ResponsiveContainer, LineChart, Line, AreaChart, Area
+} from 'recharts';
 
-const UploadPage = ({ setCurrentPage, uploadedFile, handleFileUpload }) => {
-  const [hoveredCard, setHoveredCard] = useState(null);
-  const [hoveredButton, setHoveredButton] = useState(false);
-  const [isDragOver, setIsDragOver] = useState(false);
+const API_BASE = (typeof import.meta !== "undefined" && import.meta.env?.VITE_API_BASE_URL) || "http://localhost:8010";
 
-  const handleFileSelect = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      handleFileUpload(file);
+const COLORS = {
+  primary: '#4F46E5',
+  secondary: '#10B981',
+  danger: '#EF4444',
+  warning: '#F59E0B',
+  info: '#3B82F6',
+  dark: '#111827',
+  light: '#F9FAFB',
+  border: '#E5E7EB'
+};
+
+const CHART_COLORS = ['#4F46E5', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899', '#14B8A6', '#F97316'];
+
+const styles = {
+  page: { minHeight: "100vh", background: "linear-gradient(to bottom, #f8fafc, #ffffff)" },
+  container: { maxWidth: 1400, margin: "0 auto", padding: 20 },
+  h1: { fontSize: "2.5rem", fontWeight: 800, color: "#111827", marginBottom: 8, textAlign: "center" },
+  card: { 
+    background: "#fff", 
+    border: "1px solid #e5e7eb", 
+    boxShadow: "0 4px 6px rgba(0,0,0,.04)", 
+    borderRadius: 16, 
+    padding: 24,
+    marginBottom: 20
+  },
+  button: {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: 8,
+    padding: "12px 24px",
+    background: "linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)",
+    color: "#fff",
+    border: "none",
+    borderRadius: 10,
+    fontSize: 15,
+    fontWeight: 600,
+    cursor: "pointer",
+    transition: "all 0.2s ease",
+  },
+  homeButton: {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: 8,
+    padding: "10px 18px",
+    background: "#ffffff",
+    color: "#374151",
+    border: "1px solid #e5e7eb",
+    borderRadius: 10,
+    fontSize: 14,
+    fontWeight: 600,
+    cursor: "pointer",
+    transition: "all 0.2s ease",
+    boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
+  },
+  input: {
+    width: "100%",
+    padding: "10px 14px",
+    border: "2px solid #e5e7eb",
+    borderRadius: 8,
+    fontSize: 14,
+    transition: "border-color 0.2s",
+    outline: "none",
+  },
+  select: {
+    width: "100%",
+    padding: "10px 14px",
+    border: "2px solid #e5e7eb",
+    borderRadius: 8,
+    fontSize: 14,
+    transition: "border-color 0.2s",
+    outline: "none",
+    background: "#fff",
+    appearance: "none",
+    backgroundImage: `url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e")`,
+    backgroundRepeat: "no-repeat",
+    backgroundPosition: "right 1rem center",
+    backgroundSize: "1em",
+  },
+  inputError: {
+    border: "2px solid #ef4444",
+  },
+  inputSuccess: {
+    border: "2px solid #10b981",
+  },
+  dealScoreCard: {
+    background: "linear-gradient(135deg, #ffffff 0%, #f9fafb 100%)",
+    border: "2px solid",
+    borderRadius: 16,
+    padding: 24,
+    textAlign: "center",
+    position: "relative",
+  },
+};
+
+const getDealScoreColor = (score) => {
+  if (score >= 80) return { bg: "#059669", gradient: "linear-gradient(135deg, #10b981, #059669)", text: "#ffffff", label: "STRONG BUY" };
+  if (score >= 60) return { bg: "#2563eb", gradient: "linear-gradient(135deg, #3b82f6, #2563eb)", text: "#ffffff", label: "BUY" };
+  if (score >= 40) return { bg: "#f59e0b", gradient: "linear-gradient(135deg, #fbbf24, #f59e0b)", text: "#ffffff", label: "HOLD" };
+  if (score >= 20) return { bg: "#dc2626", gradient: "linear-gradient(135deg, #f87171, #dc2626)", text: "#ffffff", label: "PASS" };
+  return { bg: "#991b1b", gradient: "linear-gradient(135deg, #ef4444, #991b1b)", text: "#ffffff", label: "STRONG PASS" };
+};
+
+const fmtCurrency = (v) => {
+  if (v == null || v === "" || v === 0) return "—";
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: 0,
+  }).format(Number(v));
+};
+
+const fmtNumber = (v) => {
+  if (v == null || v === "") return "—";
+  return new Intl.NumberFormat("en-US").format(Number(v));
+};
+
+const fmtPct = (v) => {
+  if (v == null || v === "") return "—";
+  const n = Number(v);
+  const pct = n <= 1 ? n * 100 : n;
+  return `${pct.toFixed(2)}%`;
+};
+
+function pagesToSpec(sortedPages) {
+  if (!sortedPages.length) return "";
+  const ranges = [];
+  let start = sortedPages[0];
+  let prev = sortedPages[0];
+  for (let i = 1; i < sortedPages.length; i++) {
+    const cur = sortedPages[i];
+    if (cur === prev + 1) {
+      prev = cur;
+      continue;
+    }
+    ranges.push(start === prev ? `${start}` : `${start}-${prev}`);
+    start = cur;
+    prev = cur;
+  }
+  ranges.push(start === prev ? `${start}` : `${start}-${prev}`);
+  return ranges.join(",");
+}
+
+const EnhancedUploadPage = ({ setCurrentPage }) => {
+  const [error, setError] = useState("");
+  // Subscription and user state - ADD THESE
+  const [currentUser, setCurrentUser] = useState(null);
+  const [userPlan, setUserPlan] = useState(null);
+  const [userLimits, setUserLimits] = useState(null);
+  const [userUsage, setUserUsage] = useState(null);
+  const [subscriptionLoading, setSubscriptionLoading] = useState(true);
+  const [subscriptionError, setSubscriptionError] = useState("");
+  // Check user access and load subscription info - ADD THIS ENTIRE BLOCK
+  useEffect(() => {
+    const checkUserAccess = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (!session) {
+          setSubscriptionError('Please log in to access AI document analysis');
+          setSubscriptionLoading(false);
+          return;
+        }
+
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .single();
+
+        if (profileError) {
+          setSubscriptionError('Error loading user profile');
+          setSubscriptionLoading(false);
+          return;
+        }
+
+        const userId = session.user.id;
+        const plan = profile?.subscription_plan || 'starter';
+  const status = profile?.subscription_status || 'inactive';
+
+        setCurrentUser({ id: userId, email: session.user.email, ...profile });
+        setUserPlan(plan);
+
+        if (plan === 'starter') {
+          setSubscriptionError('AI Document Analysis requires Pro or Power plan. Please upgrade.');
+          setSubscriptionLoading(false);
+          return;
+        }
+
+        if (status !== 'active') {
+          setSubscriptionError('Your subscription is not active. Please update payment method.');
+          setSubscriptionLoading(false);
+          return;
+        }
+
+        if (plan === 'pro') {
+          const { data: limits } = await supabase
+            .from('subscription_limits')
+            .select('*')
+            .eq('plan_name', plan)
+            .single();
+
+          if (limits) setUserLimits(limits);
+
+          const currentMonth = new Date().toISOString().slice(0, 7);
+          const { data: usage } = await supabase
+            .from('user_usage')
+            .select('*')
+            .eq('user_id', userId)
+            .eq('month_year', currentMonth)
+            .single();
+
+          setUserUsage(usage || { om_pdfs_parsed: 0, pages_processed: 0, underwriting_sessions: 0 });
+        }
+        setSubscriptionLoading(false);
+      } catch (err) {
+        setSubscriptionError('Error loading user access');
+        setSubscriptionLoading(false);
+      }
+    };
+
+    checkUserAccess();
+  }, []);
+  // Function to increment usage - ADD THIS
+  const incrementUsage = async (userId, usageType, amount = 1) => {
+    try {
+      const currentMonth = new Date().toISOString().slice(0, 7);
+      const { data: currentUsage } = await supabase
+        .from('user_usage')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('month_year', currentMonth)
+        .single();
+
+      const newValue = (currentUsage?.[usageType] || 0) + amount;
+      await supabase
+        .from('user_usage')
+        .upsert({
+          user_id: userId,
+          month_year: currentMonth,
+          [usageType]: newValue,
+          ...(currentUsage ? {} : {
+            om_pdfs_parsed: usageType === 'om_pdfs_parsed' ? amount : 0,
+            pages_processed: usageType === 'pages_processed' ? amount : 0,
+            underwriting_sessions: usageType === 'underwriting_sessions' ? amount : 0
+          })
+        }, { onConflict: 'user_id,month_year' });
+
+      setUserUsage(prev => ({ ...prev, [usageType]: newValue }));
+      return true;
+    } catch (error) {
+      console.error('Error incrementing usage:', error);
+      return false;
+    }
+  };
+  // Check if user can process files - ADD THIS
+  const canProcessFile = () => {
+    if (userPlan === 'power') return { canProcess: true };
+    if (userPlan === 'pro' && userLimits && userUsage) {
+      if (userUsage.om_pdfs_parsed >= userLimits.max_pdfs_per_month) {
+        return { canProcess: false, reason: 'Monthly PDF limit reached. Upgrade to Power for unlimited processing.' };
+      }
+      return { canProcess: true, remaining: userLimits.max_pdfs_per_month - userUsage.om_pdfs_parsed };
+    }
+    return { canProcess: true };
+  };
+  const [step, setStep] = useState("upload");
+  const [file, setFile] = useState(null);
+  const [pdfPages, setPdfPages] = useState([]);
+  const [selectedPages, setSelectedPages] = useState(new Set());
+  const [loadingPreview, setLoadingPreview] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [processingMsg, setProcessingMsg] = useState("");
+  const [backendData, setBackendData] = useState(null);
+  const [showMonthly, setShowMonthly] = useState(false);
+  const [verifiedData, setVerifiedData] = useState(null);
+  const [validationErrors, setValidationErrors] = useState({});
+  const [activeTab, setActiveTab] = useState("property");
+  const [resultsTab, setResultsTab] = useState('overview');
+  const [cashFlowYears, setCashFlowYears] = useState(10);
+
+  const parsed = backendData?.parsed || null;
+
+  const onFileInput = async (e) => {
+    const f = e.target.files?.[0];
+    if (!f) return;
+    if (f.type !== "application/pdf") {
+      setError(`Only PDF is supported. Got: ${f.type || "unknown"}`);
+      return;
+    }
+    setError("");
+    setFile(f);
+    await genPdfThumbs(f);
+  };
+
+  const genPdfThumbs = async (pdfFile) => {
+    setStep("pageSelect");
+    setLoadingPreview(true);
+    try {
+      let pdfjsLib = window.pdfjsLib;
+      if (!pdfjsLib) {
+        await new Promise((resolve, reject) => {
+          const s = document.createElement("script");
+          s.src = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js";
+          s.onload = () => {
+            pdfjsLib = window.pdfjsLib;
+            if (pdfjsLib) {
+              pdfjsLib.GlobalWorkerOptions.workerSrc =
+                "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+              resolve();
+            } else reject(new Error("Failed to load pdf.js"));
+          };
+          s.onerror = () => reject(new Error("Failed to load pdf.js"));
+          document.head.appendChild(s);
+        });
+      }
+      const ab = await pdfFile.arrayBuffer();
+      const doc = await window.pdfjsLib.getDocument({ data: ab }).promise;
+
+      const pages = [];
+      const MAX = Math.min(doc.numPages, 100);
+      for (let p = 1; p <= MAX; p++) {
+        const page = await doc.getPage(p);
+        const viewport = page.getViewport({ scale: 0.3 });
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+        canvas.height = viewport.height;
+        canvas.width = viewport.width;
+        await page.render({ canvasContext: ctx, viewport }).promise;
+        pages.push({ pageNum: p, thumbnail: canvas.toDataURL() });
+      }
+      setPdfPages(pages);
+    } catch (e) {
+      setError(`PDF preview failed: ${e.message}`);
+      setStep("upload");
+    } finally {
+      setLoadingPreview(false);
     }
   };
 
-  const handleDragOver = (e) => {
-    e.preventDefault();
-    setIsDragOver(true);
+  const togglePage = (n) =>
+    setSelectedPages((prev) => {
+      const s = new Set(prev);
+      s.has(n) ? s.delete(n) : s.add(n);
+      return s;
+    });
+
+  const selectAll = () => setSelectedPages(new Set(pdfPages.map((p) => p.pageNum)));
+  const clearAll = () => setSelectedPages(new Set());
+
+  const calculateMonthlyPayment = (principal, rate, months) => {
+    if (!principal || !months) return 0;
+    if (rate === 0) return principal / months;
+    const monthlyRate = rate / 12;
+    return principal * (monthlyRate / (1 - Math.pow(1 + monthlyRate, -months)));
   };
 
-  const handleDragLeave = (e) => {
-    e.preventDefault();
-    setIsDragOver(false);
+  const calculateBalloon = (principal, rate, monthsPaid, amortizationMonths, ioYears) => {
+    if (!principal || !monthsPaid || !amortizationMonths) return principal;
+    if (ioYears * 12 >= monthsPaid) return principal;
+    const monthlyRate = rate / 12;
+    const amortMonthsAfterIO = Math.max(0, monthsPaid - ioYears * 12);
+    return principal * Math.pow(1 + monthlyRate, amortMonthsAfterIO) -
+           calculateMonthlyPayment(principal, rate, amortizationMonths) *
+           (Math.pow(1 + monthlyRate, amortMonthsAfterIO) - 1) / monthlyRate;
   };
 
-  const handleDrop = (e) => {
-    e.preventDefault();
-    setIsDragOver(false);
-    const files = e.dataTransfer.files;
-    if (files.length > 0) {
-      handleFileUpload(files[0]);
+  const recalculateFinancingMetrics = () => {
+    if (!verifiedData?.pricing_financing) {
+      console.log("❌ DEBUG: No pricing_financing data found");
+      return;
+    }
+
+    const pricing = { ...verifiedData.pricing_financing };
+    const financingMode = pricing.financing_mode || 'traditional';
+
+    console.log("🔄 DEBUG: Starting financing calculation");
+    console.log("📊 DEBUG: Initial pricing data:", pricing);
+    console.log("💰 DEBUG: Financing mode:", financingMode);
+
+    if (financingMode === 'traditional') {
+      if (!pricing.loan_amount && pricing.price && pricing.down_payment_pct != null) {
+        pricing.loan_amount = pricing.price * (1 - pricing.down_payment_pct / 100);
+        console.log("📈 DEBUG: Calculated loan amount:", pricing.loan_amount);
+      }
+      if (!pricing.amortization_years && pricing.term_years) {
+        pricing.amortization_years = pricing.term_years;
+        console.log("📅 DEBUG: Set amortization years to term years:", pricing.amortization_years);
+      }
+    }
+
+    console.log("🔍 DEBUG: Pre-calculation check:");
+    console.log("  - Monthly Payment:", pricing.monthly_payment);
+    console.log("  - Loan Amount:", pricing.loan_amount);
+    console.log("  - Interest Rate:", pricing.interest_rate);
+    console.log("  - Amortization Years:", pricing.amortization_years);
+
+    if (!pricing.monthly_payment && pricing.loan_amount && pricing.interest_rate != null && pricing.amortization_years) {
+      console.log("💡 DEBUG: Calculating monthly payment...");
+      
+      if (financingMode === 'seller_finance' && pricing.io_period_years > 0) {
+        const ioMonths = pricing.io_period_years * 12;
+        const monthsPaid = (pricing.balloon_years || pricing.amortization_years) * 12;
+        if (ioMonths >= monthsPaid) {
+          pricing.monthly_payment = pricing.loan_amount * (pricing.interest_rate / 12);
+        } else {
+          pricing.monthly_payment = calculateMonthlyPayment(
+            pricing.loan_amount,
+            pricing.interest_rate,
+            pricing.amortization_years * 12
+          );
+        }
+      } else {
+        const principal = financingMode === 'subject_to' ? pricing.existing_loan_balance : pricing.loan_amount;
+        const months = (pricing.amortization_years || pricing.remaining_term_years || pricing.term_years) * 12;
+        pricing.monthly_payment = calculateMonthlyPayment(principal, pricing.interest_rate, months);
+      }
+      
+      console.log("✅ DEBUG: Calculated monthly payment:", pricing.monthly_payment);
+    }
+
+    // CRITICAL FIX: Ensure annual debt service is always calculated
+    if (pricing.monthly_payment && !pricing.annual_debt_service) {
+      pricing.annual_debt_service = pricing.monthly_payment * 12;
+      console.log("✅ DEBUG: Calculated annual debt service from monthly:", pricing.annual_debt_service);
+    }
+
+    // Force recalculation if debt service is missing but we have loan details
+    if (!pricing.annual_debt_service && pricing.loan_amount && pricing.interest_rate && pricing.amortization_years) {
+      console.log("🚨 DEBUG: Force calculating debt service...");
+      
+      const monthlyPayment = calculateMonthlyPayment(
+        pricing.loan_amount,
+        pricing.interest_rate,
+        pricing.amortization_years * 12
+      );
+      pricing.monthly_payment = monthlyPayment;
+      pricing.annual_debt_service = monthlyPayment * 12;
+      
+      console.log("🔧 DEBUG: Force calculated values:");
+      console.log("  - Monthly Payment:", monthlyPayment);
+      console.log("  - Annual Debt Service:", pricing.annual_debt_service);
+    }
+
+    if (financingMode === 'seller_finance' && pricing.loan_amount && pricing.interest_rate != null && pricing.balloon_years && pricing.amortization_years) {
+      pricing.balloon_amount = calculateBalloon(
+        pricing.loan_amount,
+        pricing.interest_rate,
+        pricing.balloon_years * 12,
+        pricing.amortization_years * 12,
+        pricing.io_period_years || 0
+      );
+      console.log("🎈 DEBUG: Calculated balloon amount:", pricing.balloon_amount);
+    }
+
+    console.log("📤 DEBUG: Final pricing data before state update:", pricing);
+
+    setVerifiedData(prev => ({
+      ...prev,
+      pricing_financing: pricing
+    }));
+
+    console.log("✅ DEBUG: State updated with new pricing data");
+  };
+
+  const processNow = async () => {
+    setError("");
+    // Check usage limits before processing - ADD THIS BLOCK
+    const accessCheck = canProcessFile();
+    if (!accessCheck.canProcess) {
+      setError(accessCheck.reason);
+      return;
+    }
+    try {
+      if (!file) {
+        setError("No file loaded");
+        return;
+      }
+      if (selectedPages.size === 0) {
+        setError("Select at least one page to process.");
+        return;
+      }
+      setStep("processing");
+      setProgress(10);
+      setProcessingMsg("Uploading PDF to backend...");
+
+      const pages = pagesToSpec(Array.from(selectedPages).sort((a, b) => a - b));
+      const pricing = verifiedData?.pricing_financing || {};
+
+      const fd = new FormData();
+      fd.append("file", file);
+      fd.append("pages", pages);
+      fd.append("financing_mode", pricing.financing_mode || "traditional");
+      fd.append("price", pricing.price || "");
+      if (pricing.monthly_payment) fd.append("monthly_payment", pricing.monthly_payment);
+      if (pricing.annual_debt_service) fd.append("annual_debt_service", pricing.annual_debt_service);
+      fd.append("user_id", currentUser.id);
+      fd.append("page_count", selectedPages.size);
+
+      if (pricing.financing_mode === "traditional") {
+        if (pricing.down_payment_pct != null) fd.append("down_payment_pct", pricing.down_payment_pct);
+        if (pricing.term_years) fd.append("term_years", pricing.term_years);
+        if (pricing.amortization_years) fd.append("amortization_years", pricing.amortization_years);
+        if (pricing.interest_rate != null) fd.append("interest_rate", pricing.interest_rate);
+        if (pricing.loan_amount) fd.append("loan_amount", pricing.loan_amount);
+      } else if (pricing.financing_mode === "seller_finance") {
+        if (pricing.down_payment_amount != null) fd.append("down_payment_amount", pricing.down_payment_amount);
+        if (pricing.interest_rate != null) fd.append("interest_rate", pricing.interest_rate);
+        if (pricing.amortization_years) fd.append("amortization_years", pricing.amortization_years);
+        if (pricing.balloon_years) fd.append("balloon_years", pricing.balloon_years);
+        if (pricing.io_period_years) fd.append("io_period_years", pricing.io_period_years);
+      } else if (pricing.financing_mode === "subject_to") {
+        if (pricing.existing_loan_balance) fd.append("existing_loan_balance", pricing.existing_loan_balance);
+        if (pricing.interest_rate != null) fd.append("interest_rate", pricing.interest_rate);
+        if (pricing.remaining_term_years) fd.append("remaining_term_years", pricing.remaining_term_years);
+        if (pricing.amortization_years) fd.append("amortization_years", pricing.amortization_years);
+      }
+
+      setProgress(30);
+      setProcessingMsg("OCR processing with Mistral...");
+
+      const res = await fetch(`${API_BASE}/api/ai-parse-pdf`, {
+        method: "POST",
+        body: fd,
+      });
+
+      setProgress(60);
+      setProcessingMsg("AI analyzing deal with Claude...");
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        
+        if (res.status === 403 && errorData.detail?.upgrade_required) {
+          setError(errorData.detail.error + " Please upgrade your plan.");
+          return;
+        }
+        
+        const errorText = errorData.detail || await res.text().catch(() => "");
+        throw new Error(`Backend ${res.status}: ${errorText || res.statusText}`);
+      }
+
+      setProgress(80);
+      setProcessingMsg("Preparing data for verification...");
+
+      const json = await res.json();
+      setBackendData(json);
+
+      setVerifiedData(prev => ({
+        ...JSON.parse(JSON.stringify(json.parsed || {})),
+        pricing_financing: {
+          ...json.parsed?.pricing_financing,
+          ...prev?.pricing_financing,
+          financing_mode: prev?.pricing_financing?.financing_mode || "traditional"
+        }
+      }));
+
+      setProgress(100);
+      setProcessingMsg("Complete! Please verify data...");
+      // Track usage after successful processing - ADD THIS BLOCK
+      if (userPlan === 'pro') {
+        await incrementUsage(currentUser.id, 'om_pdfs_parsed', 1);
+        await incrementUsage(currentUser.id, 'pages_processed', selectedPages.size);
+      }
+      setStep("verify");
+    } catch (e) {
+      setError(e.message || String(e));
+      setStep("pageSelect");
     }
   };
 
-  return (
-    <div style={styles.pageContainer}>
-      <div style={styles.container}>
-        <div style={{ paddingTop: '48px', paddingBottom: '48px' }}>
-          <button
-            style={styles.backButton}
-            onClick={() => setCurrentPage('underwrite')}
-            onMouseEnter={(e) => e.target.style.color = '#06b6d4'}
-            onMouseLeave={(e) => e.target.style.color = '#94a3b8'}
-          >
-            <ArrowLeft size={16} /> Back
-          </button>
-          <h1 style={styles.pageTitle}>Upload Property Documents</h1>
-          <p style={styles.pageSubtitle}>Upload your offering memorandum, T12, or other property documents</p>
-          
-          <div style={styles.formContainer}>
-            <div 
-              style={{
-                ...styles.uploadArea,
-                ...(hoveredCard === 'upload' || isDragOver ? styles.uploadAreaHover : {})
-              }}
-              onMouseEnter={() => setHoveredCard('upload')}
-              onMouseLeave={() => setHoveredCard(null)}
-              onDragOver={handleDragOver}
-              onDragLeave={handleDragLeave}
-              onDrop={handleDrop}
-            >
-              <div style={{...styles.iconBox, ...styles.iconBoxCyan, margin: '0 auto 24px'}}>
-                <Upload size={48} color="white" />
-              </div>
-              <h3 style={{...styles.cardTitle, marginBottom: '16px', fontSize: '1.5rem'}}>
-                {uploadedFile ? '✅ Document Uploaded' : 'Drop your PDF here or click to browse'}
-              </h3>
-              <p style={{...styles.cardText, marginBottom: '24px'}}>
-                {uploadedFile 
-                  ? `File: ${uploadedFile.name} - Data extracted successfully!`
-                  : 'Supported formats: PDF (Offering Memorandums, T12 statements, Property Reports)'
-                }
-              </p>
-              
-              {/* File input - NO overlapping positioning */}
-              <input
-                type="file"
-                accept=".pdf"
-                onChange={handleFileSelect}
-                style={{ display: 'none' }}
-                id="fileInput"
-              />
-              <label
-                htmlFor="fileInput"
-                style={{
-                  ...styles.button,
-                  ...(hoveredButton ? styles.buttonHover : {}),
-                  cursor: 'pointer'
-                }}
-                onMouseEnter={() => setHoveredButton(true)}
-                onMouseLeave={() => setHoveredButton(false)}
-              >
-                <Upload size={20} /> Choose File
-              </label>
+  const updateVerifiedField = (section, field, value) => {
+    setVerifiedData(prev => ({
+      ...prev,
+      [section]: {
+        ...prev[section],
+        [field]: value
+      }
+    }));
+    
+    setValidationErrors(prev => {
+      const newErrors = {...prev};
+      delete newErrors[`${section}.${field}`];
+      return newErrors;
+    });
+  };
+
+  const validateRequiredFields = () => {
+    const errors = {};
+    const required = {
+      property: ['address', 'units'],
+      pricing_financing: ['price', 'financing_mode'],
+      pnl: ['gross_potential_rent', 'operating_expenses', 'noi']
+    };
+
+    const financingMode = verifiedData?.pricing_financing?.financing_mode || 'traditional';
+    if (financingMode === 'traditional') {
+      required.pricing_financing.push('interest_rate', 'term_years');
+      if (!verifiedData?.pricing_financing?.loan_amount && !verifiedData?.pricing_financing?.down_payment_pct) {
+        errors['pricing_financing.loan_amount'] = true;
+        errors['pricing_financing.down_payment_pct'] = true;
+      }
+    } else if (financingMode === 'seller_finance') {
+      required.pricing_financing.push('down_payment_amount', 'interest_rate', 'amortization_years', 'balloon_years');
+    } else if (financingMode === 'subject_to') {
+      required.pricing_financing.push('existing_loan_balance', 'interest_rate', 'remaining_term_years');
+    }
+
+    Object.keys(required).forEach(section => {
+      required[section].forEach(field => {
+        if (!verifiedData?.[section]?.[field]) {
+          errors[`${section}.${field}`] = true;
+        }
+      });
+    });
+
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const recalculateMetrics = () => {
+    if (!verifiedData) return;
+    
+    // CRITICAL FIX: Always recalculate financing first
+    recalculateFinancingMetrics();
+    
+    const price = parseFloat(verifiedData.pricing_financing?.price) || 0;
+    const units = parseFloat(verifiedData.property?.units) || 0;
+    const grossRent = parseFloat(verifiedData.pnl?.gross_potential_rent) || 0;
+    
+    // Calculate percentage-based expenses
+    let totalExpenses = 0;
+    if (grossRent > 0) {
+      if (verifiedData.expenses?.vacancy_pct) {
+        verifiedData.pnl.vacancy_amount = grossRent * verifiedData.expenses.vacancy_pct / 100;
+        totalExpenses += verifiedData.pnl.vacancy_amount;
+      }
+      if (verifiedData.expenses?.property_management_pct) {
+        const mgmtAmount = grossRent * verifiedData.expenses.property_management_pct / 100;
+        if (!verifiedData.expenses.management) {
+          verifiedData.expenses.management = mgmtAmount;
+        }
+        totalExpenses += mgmtAmount;
+      }
+      if (verifiedData.expenses?.capex_pct) {
+        verifiedData.expenses.capex = grossRent * verifiedData.expenses.capex_pct / 100;
+        totalExpenses += verifiedData.expenses.capex;
+      }
+    }
+    
+    // Calculate total utilities
+    const utilities = (verifiedData.expenses?.gas || 0) + 
+                     (verifiedData.expenses?.electrical || 0) +
+                     (verifiedData.expenses?.water || 0) +
+                     (verifiedData.expenses?.sewer || 0) +
+                     (verifiedData.expenses?.trash || 0);
+    if (utilities > 0) {
+      verifiedData.expenses.utilities = utilities;
+    }
+    
+    // Calculate total operating expenses
+    totalExpenses += (verifiedData.expenses?.taxes || 0) +
+                    (verifiedData.expenses?.insurance || 0) +
+                    (verifiedData.expenses?.utilities || 0) +
+                    (verifiedData.expenses?.repairs_maintenance || 0) +
+                    (verifiedData.expenses?.management || 0) +
+                    (verifiedData.expenses?.payroll || 0) +
+                    (verifiedData.expenses?.other || 0);
+    
+    if (totalExpenses > 0) {
+      verifiedData.pnl.operating_expenses = totalExpenses;
+      verifiedData.expenses.total = totalExpenses;
+    }
+    
+    // Recalculate NOI
+    const egi = parseFloat(verifiedData.pnl?.effective_gross_income) || grossRent;
+    const expenses = parseFloat(verifiedData.pnl?.operating_expenses) || totalExpenses;
+    if (egi && expenses) {
+      verifiedData.pnl.noi = egi - expenses;
+    }
+    
+    // Continue with existing calculations
+    const noi = parseFloat(verifiedData.pnl?.noi) || 0;
+    const debtService = parseFloat(verifiedData.pricing_financing?.annual_debt_service) || 0;
+    
+    if (price && units) {
+      verifiedData.pricing_financing.price_per_unit = Math.round(price / units);
+    }
+    
+    if (price && noi) {
+      verifiedData.pnl.cap_rate = noi / price;
+      if (!verifiedData.underwriting) verifiedData.underwriting = {};
+      verifiedData.underwriting.cap_rate_calculated = noi / price;
+    }
+    
+    if (noi && debtService) {
+      if (!verifiedData.underwriting) verifiedData.underwriting = {};
+      verifiedData.underwriting.dscr = noi / debtService;
+    }
+    
+    if (expenses && egi) {
+      verifiedData.pnl.expense_ratio = expenses / egi;
+    }
+    
+    setVerifiedData({...verifiedData});
+  };
+
+  const proceedWithVerifiedData = () => {
+    if (!validateRequiredFields()) {
+      setError("Please fill in all required fields marked in red");
+      return;
+    }
+    
+    // CRITICAL FIX: Validate debt service calculation
+    if (verifiedData.pricing_financing?.loan_amount && 
+        verifiedData.pricing_financing?.interest_rate && 
+        !verifiedData.pricing_financing?.annual_debt_service) {
+      
+      const monthlyPayment = calculateMonthlyPayment(
+        verifiedData.pricing_financing.loan_amount,
+        verifiedData.pricing_financing.interest_rate,
+        (verifiedData.pricing_financing.amortization_years || verifiedData.pricing_financing.term_years || 30) * 12
+      );
+      
+      verifiedData.pricing_financing.monthly_payment = monthlyPayment;
+      verifiedData.pricing_financing.annual_debt_service = monthlyPayment * 12;
+    }
+    
+    recalculateMetrics();
+    
+    setBackendData(prev => ({
+      ...prev,
+      parsed: verifiedData
+    }));
+    
+    setStep("done");
+  };
+
+  const reset = () => {
+    setError("");
+    setStep("upload");
+    setFile(null);
+    setPdfPages([]);
+    setSelectedPages(new Set());
+    setBackendData(null);
+    setVerifiedData(null);
+    setValidationErrors({});
+    setActiveTab("property");
+    setResultsTab('overview');
+  };
+
+  // Modified edit data handler to force recalculation
+  const handleEditData = () => {
+    // Force recalculation when returning from results to edit mode
+    if (verifiedData) {
+      recalculateFinancingMetrics();
+      recalculateMetrics();
+    }
+    setStep("verify");
+  };
+
+  // Generate projections for charts
+  const generateProjections = () => {
+    const years = [];
+    const cashFlow = (parsed?.pnl?.noi || 0) - (parsed?.pricing_financing?.annual_debt_service || 0);
+    const price = parsed?.pricing_financing?.price || 0;
+    
+    for (let i = 1; i <= 10; i++) {
+      const year = 2024 + i;
+      const projectedCashFlow = cashFlow * Math.pow(1.03, i); // 3% annual growth
+      const propertyValue = price * Math.pow(1.04, i); // 4% appreciation
+      const netWorth = propertyValue - (parsed?.pricing_financing?.loan_amount || 0) * Math.pow(0.97, i);
+      
+      years.push({
+        year: `Year ${i}`,
+        cashFlow: Math.round(projectedCashFlow),
+        principalPaydown: Math.round((parsed?.pricing_financing?.loan_amount || 0) * 0.03 * i),
+        propertyValue: Math.round(propertyValue),
+        netWorth: Math.round(netWorth),
+        noi: Math.round((parsed?.pnl?.noi || 0) * Math.pow(1.025, i)),
+        expenses: Math.round((parsed?.pnl?.operating_expenses || 0) * Math.pow(1.02, i))
+      });
+    }
+    return years;
+  };
+
+  // Expense breakdown for charts
+  const getExpenseData = () => {
+    const expenses = parsed?.expenses || {};
+    const data = [];
+    if (expenses.taxes) data.push({ name: 'Taxes', value: expenses.taxes });
+    if (expenses.insurance) data.push({ name: 'Insurance', value: expenses.insurance });
+    if (expenses.management) data.push({ name: 'Management', value: expenses.management });
+    if (expenses.repairs_maintenance) data.push({ name: 'R&M', value: expenses.repairs_maintenance });
+    if (expenses.utilities) data.push({ name: 'Utilities', value: expenses.utilities });
+    if (expenses.payroll) data.push({ name: 'Payroll', value: expenses.payroll });
+    if (expenses.other) data.push({ name: 'Other', value: expenses.other });
+    return data;
+  };
+
+  if (step === "upload") {
+    if (subscriptionLoading) {
+      return (
+        <div style={styles.page}>
+          <div style={styles.container}>
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}>
+              <div>Loading subscription details...</div>
             </div>
-            
-            {uploadedFile && (
-              <div style={{ marginTop: '40px' }}>
+          </div>
+        </div>
+      );
+    }
+    if (subscriptionError) {
+      return (
+        // ACCESS DENIED UI - copy from PropertyAnalyzer example
+        <div style={styles.page}>
+          <div style={styles.container}>
+            <div style={{ color: 'red', textAlign: 'center', marginTop: '48px' }}>
+              <h2>Access Denied</h2>
+              <p>{subscriptionError}</p>
+              <button onClick={() => setCurrentPage ? setCurrentPage('underwrite') : window.location.href = '/'} style={{ marginTop: '24px' }}>Go Back</button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+    return (
+      <div style={styles.page}>
+        <div style={styles.container}>
+          <div style={{ padding: "20px 0" }}>
+            <button 
+              onClick={() => setCurrentPage ? setCurrentPage('underwrite') : window.location.href = '/'} 
+              style={styles.homeButton}
+              onMouseEnter={(e) => {
+                e.target.style.background = '#f9fafb';
+                e.target.style.borderColor = '#d1d5db';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.background = '#ffffff';
+                e.target.style.borderColor = '#e5e7eb';
+              }}
+            >
+              <Home size={16} /> Back to Home
+            </button>
+          </div>
+          
+          <div style={{ padding: "20px 0" }}>
+            <h1 style={styles.h1}>AI-Powered Deal Analyzer</h1>
+            <p style={{ fontSize: 16, color: "#6b7280", textAlign: "center", marginBottom: 24 }}>
+              Upload OM → Verify Data → Get Deal Score & Recommendations
+            </p>
+            {/* Plan display and usage - ADD THIS BLOCK */}
+            <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+              <div style={{ /* Crown icon and plan display */ }}>
+                Current Plan: {userPlan?.charAt(0).toUpperCase() + userPlan?.slice(1)}
+              </div>
+              {userPlan === 'pro' && userLimits && userUsage && (
+                <div>PDFs this month: {userUsage.om_pdfs_parsed}/{userLimits.max_pdfs_per_month}</div>
+              )}
+            </div>
+            {error && (
+              <div style={{ marginBottom: 20, padding: 16, background: "#fef2f2", border: "1px solid #fecaca", borderRadius: 12, display: "flex", gap: 12, alignItems: "center" }}>
+                <AlertCircle size={20} color="#b91c1c" />
+                <span style={{ color: "#991b1b", fontSize: 14 }}>{error}</span>
+              </div>
+            )}
+            <div style={styles.card}>
+              <div 
+                style={{
+                  border: "2px dashed #cbd5e1",
+                  borderRadius: 12,
+                  padding: 48,
+                  textAlign: "center",
+                  background: "linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)",
+                }}
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  const f = e.dataTransfer.files[0];
+                  if (f) onFileInput({ target: { files: [f] } });
+                }}
+              >
+                <div style={{ margin: "0 auto 16px", width: 80, height: 80, borderRadius: 20, background: "linear-gradient(135deg, #2563eb, #1d4ed8)", display: "grid", placeItems: "center" }}>
+                  <Upload size={40} color="#fff" />
+                </div>
+                <div style={{ marginBottom: 12, fontWeight: 700, fontSize: 20, color: "#111827" }}>
+                  Drop your PDF here or click to browse
+                </div>
+                <input id="fileInput" type="file" accept=".pdf" onChange={onFileInput} style={{ display: "none" }} />
+                <label htmlFor="fileInput" style={{ ...styles.button, cursor: "pointer" }}>
+                  <Upload size={18} /> Choose PDF
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (step === "pageSelect") {
+    return (
+      <div style={styles.page}>
+        <div style={styles.container}>
+          <div style={{ display: "flex", gap: 12, marginBottom: 20 }}>
+            <button 
+              onClick={() => setCurrentPage ? setCurrentPage('underwrite') : window.location.href = '/'} 
+              style={styles.homeButton}
+              onMouseEnter={(e) => {
+                e.target.style.background = '#f9fafb';
+                e.target.style.borderColor = '#d1d5db';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.background = '#ffffff';
+                e.target.style.borderColor = '#e5e7eb';
+              }}
+            >
+              <Home size={16} /> Home
+            </button>
+            <button style={{ ...styles.button, background: "#f3f4f6", color: "#374151" }} onClick={() => setStep("upload")}>
+              <ArrowLeft size={16} /> Back to Upload
+            </button>
+          </div>
+          
+          <h1 style={styles.h1}>Select Pages to Analyze</h1>
+
+          {error && (
+            <div style={{ marginBottom: 20, padding: 16, background: "#fef2f2", border: "1px solid #fecaca", borderRadius: 12 }}>
+              <AlertCircle size={20} color="#b91c1c" />
+              <span style={{ color: "#991b1b", fontSize: 14 }}>{error}</span>
+            </div>
+          )}
+
+          <div style={styles.card}>
+            <div style={{ display: "flex", gap: 12, justifyContent: "center", marginBottom: 20 }}>
+              <button style={{ ...styles.button, background: "#10b981" }} onClick={selectAll}>
+                Select All
+              </button>
+              <button style={{ ...styles.button, background: "#6b7280" }} onClick={clearAll}>
+                Clear All
+              </button>
+              <span style={{ alignSelf: "center", fontSize: 14, color: "#6b7280", fontWeight: 600 }}>
+                {selectedPages.size} selected
+              </span>
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: 16, maxHeight: 400, overflowY: "auto" }}>
+              {loadingPreview ? (
+                <div style={{ gridColumn: "1 / -1", textAlign: "center", padding: 60 }}>
+                  <Loader size={32} />
+                  <div>Generating previews...</div>
+                </div>
+              ) : (
+                pdfPages.map((p) => (
+                  <div
+                    key={p.pageNum}
+                    onClick={() => togglePage(p.pageNum)}
+                    style={{
+                      border: selectedPages.has(p.pageNum) ? "3px solid #2563eb" : "2px solid #e5e7eb",
+                      borderRadius: 12,
+                      padding: 8,
+                      cursor: "pointer",
+                      background: selectedPages.has(p.pageNum) ? "#eff6ff" : "#fff",
+                      position: "relative",
+                    }}
+                  >
+                    <img src={p.thumbnail} alt={`Page ${p.pageNum}`} style={{ width: "100%", borderRadius: 8 }} />
+                    <div style={{ textAlign: "center", marginTop: 8, fontSize: 13, fontWeight: 600 }}>
+                      Page {p.pageNum}
+                    </div>
+                    {selectedPages.has(p.pageNum) && (
+                      <div style={{ position: "absolute", top: 8, right: 8, width: 28, height: 28, borderRadius: "50%", background: "#2563eb", display: "grid", placeItems: "center" }}>
+                        <Check size={16} color="#fff" />
+                      </div>
+                    )}
+                  </div>
+                ))
+              )}
+            </div>
+
+            <div style={{ display: "flex", gap: 12, justifyContent: "center", marginTop: 24 }}>
+              <button
+                style={styles.button}
+                disabled={selectedPages.size === 0}
+                onClick={processNow}
+              >
+                Process Selected Pages <ArrowRight size={18} />
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (step === "processing") {
+    return (
+      <div style={styles.page}>
+        <div style={styles.container}>
+          <div style={{ maxWidth: 600, margin: "100px auto" }}>
+            <div style={styles.card}>
+              <div style={{ textAlign: "center" }}>
+                <div style={{ margin: "0 auto 24px", width: 80, height: 80, borderRadius: 20, background: "linear-gradient(135deg, #2563eb, #1d4ed8)", display: "grid", placeItems: "center" }}>
+                  <Loader size={40} color="#fff" />
+                </div>
+                <h2 style={{ fontSize: 24, fontWeight: 700, marginBottom: 12 }}>Analyzing Your Deal</h2>
+                <div style={{ width: "100%", height: 12, background: "#e5e7eb", borderRadius: 999, overflow: "hidden", marginBottom: 16 }}>
+                  <div style={{ width: `${progress}%`, height: "100%", background: "linear-gradient(90deg, #2563eb, #7c3aed)", transition: "width 0.5s ease" }} />
+                </div>
+                <div style={{ fontSize: 14, color: "#6b7280" }}>{processingMsg}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (step === "verify") {
+    const tabs = [
+      { id: "property", label: "Property Info", icon: Building },
+      { id: "financial", label: "Financials", icon: DollarSign },
+      { id: "expenses", label: "Expenses", icon: FileText },
+      { id: "unitMix", label: "Unit Mix", icon: Home }
+    ];
+
+    const financingMode = verifiedData?.pricing_financing?.financing_mode || 'traditional';
+
+    return (
+      <div style={styles.page}>
+        <div style={styles.container}>
+          <div style={{ display: "flex", gap: 12, marginBottom: 20 }}>
+            <button 
+              onClick={() => window.location.href = '/'} 
+              style={styles.homeButton}
+            >
+              <Home size={16} /> Home
+            </button>
+            <button style={{ ...styles.button, background: "#f3f4f6", color: "#374151" }} onClick={() => setStep("pageSelect")}>
+              <ArrowLeft size={16} /> Back to Page Selection
+            </button>
+          </div>
+          
+          <h1 style={styles.h1}>Verify & Complete Deal Information</h1>
+          <p style={{ fontSize: 16, color: "#6b7280", textAlign: "center", marginBottom: 24 }}>
+            Review the extracted data and fill in any missing fields for accurate underwriting
+          </p>
+
+          {error && (
+            <div style={{ marginBottom: 20, padding: 16, background: "#fef2f2", border: "1px solid #fecaca", borderRadius: 12, display: "flex", gap: 12, alignItems: "center" }}>
+              <AlertCircle size={20} color="#b91c1c" />
+              <span style={{ color: "#991b1b", fontSize: 14 }}>{error}</span>
+            </div>
+          )}
+
+          {backendData?.parsed?.data_quality?.missing_critical_fields?.length > 0 && (
+            <div style={{ ...styles.card, background: "#fffbeb", borderColor: "#fbbf24", marginBottom: 20 }}>
+              <div style={{ display: "flex", alignItems: "start", gap: 12 }}>
+                <AlertTriangle size={20} color="#f59e0b" style={{ marginTop: 2 }} />
+                <div>
+                  <div style={{ fontWeight: 600, marginBottom: 8, color: "#92400e" }}>Missing Critical Data</div>
+                  <div style={{ fontSize: 14, color: "#78350f" }}>
+                    The following fields could not be extracted and need your input:
+                  </div>
+                  <div style={{ marginTop: 8, display: "flex", flexWrap: "wrap", gap: 8 }}>
+                    {backendData.parsed.data_quality.missing_critical_fields.map((field, i) => (
+                      <span key={i} style={{ 
+                        padding: "4px 12px", 
+                        background: "#fef3c7", 
+                        borderRadius: 6, 
+                        fontSize: 13,
+                        border: "1px solid #fde68a"
+                      }}>
+                        {field}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div style={{ display: "flex", gap: 4, marginBottom: 24, background: "#f9fafb", padding: 4, borderRadius: 12 }}>
+            {tabs.map(tab => {
+              const Icon = tab.icon;
+              return (
                 <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
                   style={{
-                    ...styles.button,
-                    width: '100%',
-                    justifyContent: 'center'
+                    flex: 1,
+                    padding: "12px 16px",
+                    background: activeTab === tab.id ? "#fff" : "transparent",
+                    border: "none",
+                    borderRadius: 8,
+                    fontSize: 14,
+                    fontWeight: activeTab === tab.id ? 600 : 500,
+                    color: activeTab === tab.id ? "#111827" : "#6b7280",
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 8,
+                    boxShadow: activeTab === tab.id ? "0 1px 3px rgba(0,0,0,0.1)" : "none",
+                    transition: "all 0.2s ease"
                   }}
-                  onClick={() => setCurrentPage('financing')}
                 >
-                  Continue to Financing <ArrowRight size={20} />
+                  <Icon size={16} />
+                  {tab.label}
                 </button>
+              );
+            })}
+          </div>
+
+          {activeTab === "property" && (
+            <div style={styles.card}>
+              <h3 style={{ marginBottom: 20, display: "flex", alignItems: "center", gap: 8 }}>
+                <Building size={20} /> Property Information
+                <span style={{ marginLeft: "auto", fontSize: 13, color: "#ef4444" }}>* Required fields</span>
+              </h3>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 20 }}>
+                <div>
+                  <label style={{ display: "block", marginBottom: 6, fontSize: 13, color: "#6b7280", fontWeight: 500 }}>
+                    Address *
+                  </label>
+                  <input
+                    type="text"
+                    style={{
+                      ...styles.input,
+                      ...(validationErrors['property.address'] ? styles.inputError : {}),
+                      ...(verifiedData?.property?.address ? styles.inputSuccess : {})
+                    }}
+                    value={verifiedData?.property?.address || ""}
+                    onChange={(e) => updateVerifiedField("property", "address", e.target.value)}
+                    placeholder="Enter property address"
+                  />
+                </div>
+                <div>
+                  <label style={{ display: "block", marginBottom: 6, fontSize: 13, color: "#6b7280", fontWeight: 500 }}>
+                    City
+                  </label>
+                  <input
+                    type="text"
+                    style={{
+                      ...styles.input,
+                      ...(verifiedData?.property?.city ? styles.inputSuccess : {})
+                    }}
+                    value={verifiedData?.property?.city || ""}
+                    onChange={(e) => updateVerifiedField("property", "city", e.target.value)}
+                    placeholder="Enter city"
+                  />
+                </div>
+                <div>
+                  <label style={{ display: "block", marginBottom: 6, fontSize: 13, color: "#6b7280", fontWeight: 500 }}>
+                    State
+                  </label>
+                  <input
+                    type="text"
+                    style={{
+                      ...styles.input,
+                      ...(verifiedData?.property?.state ? styles.inputSuccess : {})
+                    }}
+                    value={verifiedData?.property?.state || ""}
+                    onChange={(e) => updateVerifiedField("property", "state", e.target.value)}
+                    placeholder="Enter state"
+                  />
+                </div>
+                <div>
+                  <label style={{ display: "block", marginBottom: 6, fontSize: 13, color: "#6b7280", fontWeight: 500 }}>
+                    ZIP Code
+                  </label>
+                  <input
+                    type="text"
+                    style={{
+                      ...styles.input,
+                      ...(verifiedData?.property?.zip ? styles.inputSuccess : {})
+                    }}
+                    value={verifiedData?.property?.zip || ""}
+                    onChange={(e) => updateVerifiedField("property", "zip", e.target.value)}
+                    placeholder="Enter ZIP"
+                  />
+                </div>
+                <div>
+                  <label style={{ display: "block", marginBottom: 6, fontSize: 13, color: "#6b7280", fontWeight: 500 }}>
+                    Total Units *
+                  </label>
+                  <input
+                    type="number"
+                    style={{
+                      ...styles.input,
+                      ...(validationErrors['property.units'] ? styles.inputError : {}),
+                      ...(verifiedData?.property?.units ? styles.inputSuccess : {})
+                    }}
+                    value={verifiedData?.property?.units || ""}
+                    onChange={(e) => updateVerifiedField("property", "units", parseFloat(e.target.value))}
+                    placeholder="Enter number of units"
+                  />
+                </div>
+                <div>
+                  <label style={{ display: "block", marginBottom: 6, fontSize: 13, color: "#6b7280", fontWeight: 500 }}>
+                    Year Built
+                  </label>
+                  <input
+                    type="number"
+                    style={{
+                      ...styles.input,
+                      ...(verifiedData?.property?.year_built ? styles.inputSuccess : {})
+                    }}
+                    value={verifiedData?.property?.year_built || ""}
+                    onChange={(e) => updateVerifiedField("property", "year_built", parseInt(e.target.value))}
+                    placeholder="Enter year built"
+                  />
+                </div>
+                <div>
+                  <label style={{ display: "block", marginBottom: 6, fontSize: 13, color: "#6b7280", fontWeight: 500 }}>
+                    Building SF
+                  </label>
+                  <input
+                    type="number"
+                    style={{
+                      ...styles.input,
+                      ...(verifiedData?.property?.rba_sqft ? styles.inputSuccess : {})
+                    }}
+                    value={verifiedData?.property?.rba_sqft || ""}
+                    onChange={(e) => updateVerifiedField("property", "rba_sqft", parseFloat(e.target.value))}
+                    placeholder="Enter square footage"
+                  />
+                </div>
+                <div>
+                  <label style={{ display: "block", marginBottom: 6, fontSize: 13, color: "#6b7280", fontWeight: 500 }}>
+                    Land Area (Acres)
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    style={{
+                      ...styles.input,
+                      ...(verifiedData?.property?.land_area_acres ? styles.inputSuccess : {})
+                    }}
+                    value={verifiedData?.property?.land_area_acres || ""}
+                    onChange={(e) => updateVerifiedField("property", "land_area_acres", parseFloat(e.target.value))}
+                    placeholder="Enter land area"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === "financial" && (
+            <div style={styles.card}>
+              <h3 style={{ marginBottom: 20, display: "flex", alignItems: "center", gap: 8 }}>
+                <DollarSign size={20} /> Financial Information
+                <span style={{ marginLeft: "auto", fontSize: 13, color: "#ef4444" }}>* Required fields</span>
+              </h3>
+              
+              <div style={{ marginBottom: 32 }}>
+                <h4 style={{ marginBottom: 16, fontSize: 16, fontWeight: 600, color: "#374151" }}>Pricing & Financing</h4>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 20 }}>
+                  <div>
+                    <label style={{ display: "block", marginBottom: 6, fontSize: 13, color: "#6b7280", fontWeight: 500 }}>
+                      Financing Type *
+                    </label>
+                    <select
+                      style={{
+                        ...styles.select,
+                        ...(validationErrors['pricing_financing.financing_mode'] ? styles.inputError : {}),
+                        ...(verifiedData?.pricing_financing?.financing_mode ? styles.inputSuccess : {})
+                      }}
+                      value={verifiedData?.pricing_financing?.financing_mode || "traditional"}
+                      onChange={(e) => {
+                        updateVerifiedField("pricing_financing", "financing_mode", e.target.value);
+                        const resetFields = [
+                          'down_payment_pct', 'term_years', 'amortization_years',
+                          'down_payment_amount', 'balloon_years', 'io_period_years',
+                          'existing_loan_balance', 'remaining_term_years'
+                        ];
+                        const newPricing = { ...verifiedData.pricing_financing };
+                        resetFields.forEach(field => delete newPricing[field]);
+                        setVerifiedData(prev => ({
+                          ...prev,
+                          pricing_financing: { ...newPricing, financing_mode: e.target.value }
+                        }));
+                      }}
+                    >
+                      <option value="traditional">Traditional</option>
+                      <option value="seller_finance">Seller Finance</option>
+                      <option value="subject_to">Subject-To</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label style={{ display: "block", marginBottom: 6, fontSize: 13, color: "#6b7280", fontWeight: 500 }}>
+                      Purchase Price *
+                    </label>
+                    <input
+                      type="number"
+                      style={{
+                        ...styles.input,
+                        ...(validationErrors['pricing_financing.price'] ? styles.inputError : {}),
+                        ...(verifiedData?.pricing_financing?.price ? styles.inputSuccess : {})
+                      }}
+                      value={verifiedData?.pricing_financing?.price || ""}
+                      onChange={(e) => updateVerifiedField("pricing_financing", "price", parseFloat(e.target.value))}
+                      placeholder="Enter purchase price"
+                    />
+                  </div>
+                  {financingMode === 'traditional' && (
+                    <>
+                      <div>
+                        <label style={{ display: "block", marginBottom: 6, fontSize: 13, color: "#6b7280", fontWeight: 500 }}>
+                          Down Payment (%) *
+                        </label>
+                        <input
+                          type="number"
+                          step="0.1"
+                          style={{
+                            ...styles.input,
+                            ...(validationErrors['pricing_financing.down_payment_pct'] ? styles.inputError : {}),
+                            ...(verifiedData?.pricing_financing?.down_payment_pct ? styles.inputSuccess : {})
+                          }}
+                          value={verifiedData?.pricing_financing?.down_payment_pct || ""}
+                          onChange={(e) => updateVerifiedField("pricing_financing", "down_payment_pct", parseFloat(e.target.value))}
+                          placeholder="Enter down payment %"
+                        />
+                      </div>
+                      <div>
+                        <label style={{ display: "block", marginBottom: 6, fontSize: 13, color: "#6b7280", fontWeight: 500 }}>
+                          Term (Years) *
+                        </label>
+                        <input
+                          type="number"
+                          style={{
+                            ...styles.input,
+                            ...(validationErrors['pricing_financing.term_years'] ? styles.inputError : {}),
+                            ...(verifiedData?.pricing_financing?.term_years ? styles.inputSuccess : {})
+                          }}
+                          value={verifiedData?.pricing_financing?.term_years || ""}
+                          onChange={(e) => updateVerifiedField("pricing_financing", "term_years", parseInt(e.target.value))}
+                          placeholder="Enter loan term"
+                        />
+                      </div>
+                      <div>
+                        <label style={{ display: "block", marginBottom: 6, fontSize: 13, color: "#6b7280", fontWeight: 500 }}>
+                          Amortization (Years)
+                        </label>
+                        <input
+                          type="number"
+                          style={{
+                            ...styles.input,
+                            ...(verifiedData?.pricing_financing?.amortization_years ? styles.inputSuccess : {})
+                          }}
+                          value={verifiedData?.pricing_financing?.amortization_years || ""}
+                          onChange={(e) => updateVerifiedField("pricing_financing", "amortization_years", parseInt(e.target.value))}
+                          placeholder="Enter amortization years"
+                        />
+                      </div>
+                    </>
+                  )}
+                  {financingMode === 'seller_finance' && (
+                    <>
+                      <div>
+                        <label style={{ display: "block", marginBottom: 6, fontSize: 13, color: "#6b7280", fontWeight: 500 }}>
+                          Down Payment (Amount $) *
+                        </label>
+                        <input
+                          type="number"
+                          style={{
+                            ...styles.input,
+                            ...(validationErrors['pricing_financing.down_payment_amount'] ? styles.inputError : {}),
+                            ...(verifiedData?.pricing_financing?.down_payment_amount ? styles.inputSuccess : {})
+                          }}
+                          value={verifiedData?.pricing_financing?.down_payment_amount || ""}
+                          onChange={(e) => updateVerifiedField("pricing_financing", "down_payment_amount", parseFloat(e.target.value))}
+                          placeholder="Enter down payment amount"
+                        />
+                      </div>
+                      <div>
+                        <label style={{ display: "block", marginBottom: 6, fontSize: 13, color: "#6b7280", fontWeight: 500 }}>
+                          Amortization (Years) *
+                        </label>
+                        <input
+                          type="number"
+                          style={{
+                            ...styles.input,
+                            ...(validationErrors['pricing_financing.amortization_years'] ? styles.inputError : {}),
+                            ...(verifiedData?.pricing_financing?.amortization_years ? styles.inputSuccess : {})
+                          }}
+                          value={verifiedData?.pricing_financing?.amortization_years || ""}
+                          onChange={(e) => updateVerifiedField("pricing_financing", "amortization_years", parseInt(e.target.value))}
+                          placeholder="Enter amortization years"
+                        />
+                      </div>
+                      <div>
+                        <label style={{ display: "block", marginBottom: 6, fontSize: 13, color: "#6b7280", fontWeight: 500 }}>
+                          Balloon (Years) *
+                        </label>
+                        <input
+                          type="number"
+                          style={{
+                            ...styles.input,
+                            ...(validationErrors['pricing_financing.balloon_years'] ? styles.inputError : {}),
+                            ...(verifiedData?.pricing_financing?.balloon_years ? styles.inputSuccess : {})
+                          }}
+                          value={verifiedData?.pricing_financing?.balloon_years || ""}
+                          onChange={(e) => updateVerifiedField("pricing_financing", "balloon_years", parseInt(e.target.value))}
+                          placeholder="Enter balloon years"
+                        />
+                      </div>
+                      <div>
+                        <label style={{ display: "block", marginBottom: 6, fontSize: 13, color: "#6b7280", fontWeight: 500 }}>
+                          Interest-Only Period (Years)
+                        </label>
+                        <input
+                          type="number"
+                          style={{
+                            ...styles.input,
+                            ...(verifiedData?.pricing_financing?.io_period_years ? styles.inputSuccess : {})
+                          }}
+                          value={verifiedData?.pricing_financing?.io_period_years || ""}
+                          onChange={(e) => updateVerifiedField("pricing_financing", "io_period_years", parseInt(e.target.value))}
+                          placeholder="Enter IO period years"
+                        />
+                      </div>
+                    </>
+                  )}
+                  {financingMode === 'subject_to' && (
+                    <>
+                      <div>
+                        <label style={{ display: "block", marginBottom: 6, fontSize: 13, color: "#6b7280", fontWeight: 500 }}>
+                          Existing Loan Balance ($) *
+                        </label>
+                        <input
+                          type="number"
+                          style={{
+                            ...styles.input,
+                            ...(validationErrors['pricing_financing.existing_loan_balance'] ? styles.inputError : {}),
+                            ...(verifiedData?.pricing_financing?.existing_loan_balance ? styles.inputSuccess : {})
+                          }}
+                          value={verifiedData?.pricing_financing?.existing_loan_balance || ""}
+                          onChange={(e) => updateVerifiedField("pricing_financing", "existing_loan_balance", parseFloat(e.target.value))}
+                          placeholder="Enter existing loan balance"
+                        />
+                      </div>
+                      <div>
+                        <label style={{ display: "block", marginBottom: 6, fontSize: 13, color: "#6b7280", fontWeight: 500 }}>
+                          Remaining Term (Years) *
+                        </label>
+                        <input
+                          type="number"
+                          style={{
+                            ...styles.input,
+                            ...(validationErrors['pricing_financing.remaining_term_years'] ? styles.inputError : {}),
+                            ...(verifiedData?.pricing_financing?.remaining_term_years ? styles.inputSuccess : {})
+                          }}
+                          value={verifiedData?.pricing_financing?.remaining_term_years || ""}
+                          onChange={(e) => updateVerifiedField("pricing_financing", "remaining_term_years", parseInt(e.target.value))}
+                          placeholder="Enter remaining term"
+                        />
+                      </div>
+                      <div>
+                        <label style={{ display: "block", marginBottom: 6, fontSize: 13, color: "#6b7280", fontWeight: 500 }}>
+                          Amortization (Years)
+                        </label>
+                        <input
+                          type="number"
+                          style={{
+                            ...styles.input,
+                            ...(verifiedData?.pricing_financing?.amortization_years ? styles.inputSuccess : {})
+                          }}
+                          value={verifiedData?.pricing_financing?.amortization_years || ""}
+                          onChange={(e) => updateVerifiedField("pricing_financing", "amortization_years", parseInt(e.target.value))}
+                          placeholder="Enter amortization years"
+                        />
+                      </div>
+                    </>
+                  )}
+                  <div>
+                    <label style={{ display: "block", marginBottom: 6, fontSize: 13, color: "#6b7280", fontWeight: 500 }}>
+                      Loan Amount
+                    </label>
+                    <input
+                      type="number"
+                      style={{
+                        ...styles.input,
+                        ...(validationErrors['pricing_financing.loan_amount'] && financingMode === 'traditional' ? styles.inputError : {}),
+                        ...(verifiedData?.pricing_financing?.loan_amount ? styles.inputSuccess : {})
+                      }}
+                      value={verifiedData?.pricing_financing?.loan_amount || ""}
+                      onChange={(e) => updateVerifiedField("pricing_financing", "loan_amount", parseFloat(e.target.value))}
+                      placeholder="Enter loan amount"
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: "block", marginBottom: 6, fontSize: 13, color: "#6b7280", fontWeight: 500 }}>
+                      Interest Rate (%) *
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      style={{
+                        ...styles.input,
+                        ...(validationErrors['pricing_financing.interest_rate'] ? styles.inputError : {}),
+                        ...(verifiedData?.pricing_financing?.interest_rate ? styles.inputSuccess : {})
+                      }}
+                      value={verifiedData?.pricing_financing?.interest_rate ? (verifiedData.pricing_financing.interest_rate * 100) : ""}
+                      onChange={(e) => updateVerifiedField("pricing_financing", "interest_rate", parseFloat(e.target.value) / 100)}
+                      placeholder="Enter interest rate"
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: "block", marginBottom: 6, fontSize: 13, color: "#6b7280", fontWeight: 500 }}>
+                      Monthly Payment
+                    </label>
+                    <input
+                      type="number"
+                      style={{
+                        ...styles.input,
+                        ...(verifiedData?.pricing_financing?.monthly_payment ? styles.inputSuccess : {})
+                      }}
+                      value={verifiedData?.pricing_financing?.monthly_payment || ""}
+                      onChange={(e) => updateVerifiedField("pricing_financing", "monthly_payment", parseFloat(e.target.value))}
+                      placeholder="Enter monthly payment"
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: "block", marginBottom: 6, fontSize: 13, color: "#6b7280", fontWeight: 500 }}>
+                      Annual Debt Service
+                    </label>
+                    <input
+                      type="number"
+                      style={{
+                        ...styles.input,
+                        ...(verifiedData?.pricing_financing?.annual_debt_service ? styles.inputSuccess : {})
+                      }}
+                      value={verifiedData?.pricing_financing?.annual_debt_service || ""}
+                      onChange={(e) => updateVerifiedField("pricing_financing", "annual_debt_service", parseFloat(e.target.value))}
+                      placeholder="Enter annual debt service"
+                    />
+                  </div>
+                </div>
+
+                {/* Acquisition & Disposition Costs */}
+                <h4 style={{ marginTop: 32, marginBottom: 16, fontSize: 16, fontWeight: 600, color: "#374151" }}>Acquisition & Disposition Costs</h4>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 20 }}>
+                  <div>
+                    <label style={{ display: "block", marginBottom: 6, fontSize: 13, color: "#6b7280", fontWeight: 500 }}>
+                      Realtor Fees (%)
+                    </label>
+                    <input
+                      type="number"
+                      step="0.1"
+                      style={{
+                        ...styles.input,
+                        ...(verifiedData?.pricing_financing?.realtor_fee_pct ? styles.inputSuccess : {})
+                      }}
+                      value={verifiedData?.pricing_financing?.realtor_fee_pct || ""}
+                      onChange={(e) => updateVerifiedField("pricing_financing", "realtor_fee_pct", parseFloat(e.target.value))}
+                      placeholder="Enter realtor fee %"
+                    />
+                    {verifiedData?.pricing_financing?.realtor_fee_pct && verifiedData?.pricing_financing?.price && (
+                      <div style={{ fontSize: 11, color: "#6b7280", marginTop: 4 }}>
+                        {fmtCurrency((verifiedData.pricing_financing.price * verifiedData.pricing_financing.realtor_fee_pct / 100))}
+                      </div>
+                    )}
+                  </div>
+                  <div>
+                    <label style={{ display: "block", marginBottom: 6, fontSize: 13, color: "#6b7280", fontWeight: 500 }}>
+                      Closing Costs (%)
+                    </label>
+                    <input
+                      type="number"
+                      step="0.1"
+                      style={{
+                        ...styles.input,
+                        ...(verifiedData?.pricing_financing?.closing_costs_pct ? styles.inputSuccess : {})
+                      }}
+                      value={verifiedData?.pricing_financing?.closing_costs_pct || ""}
+                      onChange={(e) => updateVerifiedField("pricing_financing", "closing_costs_pct", parseFloat(e.target.value))}
+                      placeholder="Enter closing costs %"
+                    />
+                    {verifiedData?.pricing_financing?.closing_costs_pct && verifiedData?.pricing_financing?.price && (
+                      <div style={{ fontSize: 11, color: "#6b7280", marginTop: 4 }}>
+                        {fmtCurrency((verifiedData.pricing_financing.price * verifiedData.pricing_financing.closing_costs_pct / 100))}
+                      </div>
+                    )}
+                  </div>
+                  <div>
+                    <label style={{ display: "block", marginBottom: 6, fontSize: 13, color: "#6b7280", fontWeight: 500 }}>
+                      Disposition/Acquisition Fees (%)
+                    </label>
+                    <input
+                      type="number"
+                      step="0.1"
+                      style={{
+                        ...styles.input,
+                        ...(verifiedData?.pricing_financing?.acquisition_fee_pct ? styles.inputSuccess : {})
+                      }}
+                      value={verifiedData?.pricing_financing?.acquisition_fee_pct || ""}
+                      onChange={(e) => updateVerifiedField("pricing_financing", "acquisition_fee_pct", parseFloat(e.target.value))}
+                      placeholder="Enter acquisition fee %"
+                    />
+                    {verifiedData?.pricing_financing?.acquisition_fee_pct && verifiedData?.pricing_financing?.price && (
+                      <div style={{ fontSize: 11, color: "#6b7280", marginTop: 4 }}>
+                        {fmtCurrency((verifiedData.pricing_financing.price * verifiedData.pricing_financing.acquisition_fee_pct / 100))}
+                      </div>
+                    )}
+                  </div>
+                  <div>
+                    <label style={{ display: "block", marginBottom: 6, fontSize: 13, color: "#6b7280", fontWeight: 500 }}>
+                      Total Initial Cash Investment
+                    </label>
+                    <div style={{
+                      padding: "10px 14px",
+                      background: "#f9fafb",
+                      border: "2px solid #e5e7eb",
+                      borderRadius: 8,
+                      fontSize: 14,
+                      fontWeight: 600
+                    }}>
+                      {(() => {
+                        const price = verifiedData?.pricing_financing?.price || 0;
+                        const downPayment = financingMode === 'traditional' 
+                          ? price * (verifiedData?.pricing_financing?.down_payment_pct || 0) / 100
+                          : (verifiedData?.pricing_financing?.down_payment_amount || 0);
+                        const realtorFees = price * (verifiedData?.pricing_financing?.realtor_fee_pct || 0) / 100;
+                        const closingCosts = price * (verifiedData?.pricing_financing?.closing_costs_pct || 0) / 100;
+                        const acquisitionFees = price * (verifiedData?.pricing_financing?.acquisition_fee_pct || 0) / 100;
+                        return fmtCurrency(downPayment + realtorFees + closingCosts + acquisitionFees);
+                      })()}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <h4 style={{ marginBottom: 16, fontSize: 16, fontWeight: 600, color: "#374151" }}>Income & NOI</h4>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 20 }}>
+                  <div>
+                    <label style={{ display: "block", marginBottom: 6, fontSize: 13, color: "#6b7280", fontWeight: 500 }}>
+                      Gross Potential Rent (Annual) *
+                    </label>
+                    <input
+                      type="number"
+                      style={{
+                        ...styles.input,
+                        ...(validationErrors['pnl.gross_potential_rent'] ? styles.inputError : {}),
+                        ...(verifiedData?.pnl?.gross_potential_rent ? styles.inputSuccess : {})
+                      }}
+                      value={verifiedData?.pnl?.gross_potential_rent || ""}
+                      onChange={(e) => updateVerifiedField("pnl", "gross_potential_rent", parseFloat(e.target.value))}
+                      placeholder="Enter annual gross rent"
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: "block", marginBottom: 6, fontSize: 13, color: "#6b7280", fontWeight: 500 }}>
+                      Other Income (Annual)
+                    </label>
+                    <input
+                      type="number"
+                      style={{
+                        ...styles.input,
+                        ...(verifiedData?.pnl?.other_income ? styles.inputSuccess : {})
+                      }}
+                      value={verifiedData?.pnl?.other_income || ""}
+                      onChange={(e) => updateVerifiedField("pnl", "other_income", parseFloat(e.target.value))}
+                      placeholder="Enter other income"
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: "block", marginBottom: 6, fontSize: 13, color: "#6b7280", fontWeight: 500 }}>
+                      Vacancy Rate (%)
+                    </label>
+                    <input
+                      type="number"
+                      step="0.1"
+                      style={{
+                        ...styles.input,
+                        ...(verifiedData?.pnl?.vacancy_rate ? styles.inputSuccess : {})
+                      }}
+                      value={verifiedData?.pnl?.vacancy_rate ? (verifiedData.pnl.vacancy_rate * 100) : ""}
+                      onChange={(e) => updateVerifiedField("pnl", "vacancy_rate", parseFloat(e.target.value) / 100)}
+                      placeholder="Enter vacancy %"
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: "block", marginBottom: 6, fontSize: 13, color: "#6b7280", fontWeight: 500 }}>
+                      Effective Gross Income (Annual)
+                    </label>
+                    <input
+                      type="number"
+                      style={{
+                        ...styles.input,
+                        ...(verifiedData?.pnl?.effective_gross_income ? styles.inputSuccess : {})
+                      }}
+                      value={verifiedData?.pnl?.effective_gross_income || ""}
+                      onChange={(e) => updateVerifiedField("pnl", "effective_gross_income", parseFloat(e.target.value))}
+                      placeholder="Enter EGI"
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: "block", marginBottom: 6, fontSize: 13, color: "#6b7280", fontWeight: 500 }}>
+                      Operating Expenses (Annual) *
+                    </label>
+                    <input
+                      type="number"
+                      style={{
+                        ...styles.input,
+                        ...(validationErrors['pnl.operating_expenses'] ? styles.inputError : {}),
+                        ...(verifiedData?.pnl?.operating_expenses ? styles.inputSuccess : {})
+                      }}
+                      value={verifiedData?.pnl?.operating_expenses || ""}
+                      onChange={(e) => updateVerifiedField("pnl", "operating_expenses", parseFloat(e.target.value))}
+                      placeholder="Enter total expenses"
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: "block", marginBottom: 6, fontSize: 13, color: "#6b7280", fontWeight: 500 }}>
+                      Net Operating Income (Annual) *
+                    </label>
+                    <input
+                      type="number"
+                      style={{
+                        ...styles.input,
+                        ...(validationErrors['pnl.noi'] ? styles.inputError : {}),
+                        ...(verifiedData?.pnl?.noi ? styles.inputSuccess : {})
+                      }}
+                      value={verifiedData?.pnl?.noi || ""}
+                      onChange={(e) => updateVerifiedField("pnl", "noi", parseFloat(e.target.value))}
+                      placeholder="Enter NOI"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === "expenses" && (
+            <div style={styles.card}>
+              <h3 style={{ marginBottom: 20, display: "flex", alignItems: "center", gap: 8 }}>
+                <FileText size={20} /> Operating Expenses Breakdown
+              </h3>
+              
+              {/* Percentage-based Expenses */}
+              <h4 style={{ marginBottom: 16, fontSize: 15, fontWeight: 600, color: "#374151" }}>Percentage-Based Expenses</h4>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 20, marginBottom: 32 }}>
+                <div>
+                  <label style={{ display: "block", marginBottom: 6, fontSize: 13, color: "#6b7280", fontWeight: 500 }}>
+                    Vacancy Rate (%)
+                  </label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    style={{
+                      ...styles.input,
+                      ...(verifiedData?.expenses?.vacancy_pct ? styles.inputSuccess : {})
+                    }}
+                    value={verifiedData?.expenses?.vacancy_pct || ""}
+                    onChange={(e) => updateVerifiedField("expenses", "vacancy_pct", parseFloat(e.target.value))}
+                    placeholder="Enter vacancy %"
+                  />
+                  {verifiedData?.expenses?.vacancy_pct && verifiedData?.pnl?.gross_potential_rent && (
+                    <div style={{ fontSize: 11, color: "#6b7280", marginTop: 4 }}>
+                      Annual: {fmtCurrency((verifiedData.pnl.gross_potential_rent * verifiedData.expenses.vacancy_pct / 100))}
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <label style={{ display: "block", marginBottom: 6, fontSize: 13, color: "#6b7280", fontWeight: 500 }}>
+                    Property Management (%)
+                  </label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    style={{
+                      ...styles.input,
+                      ...(verifiedData?.expenses?.property_management_pct ? styles.inputSuccess : {})
+                    }}
+                    value={verifiedData?.expenses?.property_management_pct || ""}
+                    onChange={(e) => updateVerifiedField("expenses", "property_management_pct", parseFloat(e.target.value))}
+                    placeholder="Enter property mgmt %"
+                  />
+                  {verifiedData?.expenses?.property_management_pct && verifiedData?.pnl?.gross_potential_rent && (
+                    <div style={{ fontSize: 11, color: "#6b7280", marginTop: 4 }}>
+                      Annual: {fmtCurrency((verifiedData.pnl.gross_potential_rent * verifiedData.expenses.property_management_pct / 100))}
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <label style={{ display: "block", marginBottom: 6, fontSize: 13, color: "#6b7280", fontWeight: 500 }}>
+                    Capital Expenditures (%)
+                  </label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    style={{
+                      ...styles.input,
+                      ...(verifiedData?.expenses?.capex_pct ? styles.inputSuccess : {})
+                    }}
+                    value={verifiedData?.expenses?.capex_pct || ""}
+                    onChange={(e) => updateVerifiedField("expenses", "capex_pct", parseFloat(e.target.value))}
+                    placeholder="Enter CapEx %"
+                  />
+                  {verifiedData?.expenses?.capex_pct && verifiedData?.pnl?.gross_potential_rent && (
+                    <div style={{ fontSize: 11, color: "#6b7280", marginTop: 4 }}>
+                      Annual: {fmtCurrency((verifiedData.pnl.gross_potential_rent * verifiedData.expenses.capex_pct / 100))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Fixed Expenses */}
+              <h4 style={{ marginBottom: 16, fontSize: 15, fontWeight: 600, color: "#374151" }}>Fixed Annual Expenses</h4>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 20 }}>
+                <div>
+                  <label style={{ display: "block", marginBottom: 6, fontSize: 13, color: "#6b7280", fontWeight: 500 }}>
+                    Real Estate Taxes
+                  </label>
+                  <input
+                    type="number"
+                    style={{
+                      ...styles.input,
+                      ...(verifiedData?.expenses?.taxes ? styles.inputSuccess : {})
+                    }}
+                    value={verifiedData?.expenses?.taxes || ""}
+                    onChange={(e) => updateVerifiedField("expenses", "taxes", parseFloat(e.target.value))}
+                    placeholder="Enter annual taxes"
+                  />
+                </div>
+                <div>
+                  <label style={{ display: "block", marginBottom: 6, fontSize: 13, color: "#6b7280", fontWeight: 500 }}>
+                    Insurance
+                  </label>
+                  <input
+                    type="number"
+                    style={{
+                      ...styles.input,
+                      ...(verifiedData?.expenses?.insurance ? styles.inputSuccess : {})
+                    }}
+                    value={verifiedData?.expenses?.insurance || ""}
+                    onChange={(e) => updateVerifiedField("expenses", "insurance", parseFloat(e.target.value))}
+                    placeholder="Enter annual insurance"
+                  />
+                </div>
+                <div>
+                  <label style={{ display: "block", marginBottom: 6, fontSize: 13, color: "#6b7280", fontWeight: 500 }}>
+                    Repairs & Maintenance
+                  </label>
+                  <input
+                    type="number"
+                    style={{
+                      ...styles.input,
+                      ...(verifiedData?.expenses?.repairs_maintenance ? styles.inputSuccess : {})
+                    }}
+                    value={verifiedData?.expenses?.repairs_maintenance || ""}
+                    onChange={(e) => updateVerifiedField("expenses", "repairs_maintenance", parseFloat(e.target.value))}
+                    placeholder="Enter R&M costs"
+                  />
+                </div>
+                <div>
+                  <label style={{ display: "block", marginBottom: 6, fontSize: 13, color: "#6b7280", fontWeight: 500 }}>
+                    Management Fees
+                  </label>
+                  <input
+                    type="number"
+                    style={{
+                      ...styles.input,
+                      ...(verifiedData?.expenses?.management ? styles.inputSuccess : {})
+                    }}
+                    value={verifiedData?.expenses?.management || ""}
+                    onChange={(e) => updateVerifiedField("expenses", "management", parseFloat(e.target.value))}
+                    placeholder="Enter management fees"
+                  />
+                </div>
+                <div>
+                  <label style={{ display: "block", marginBottom: 6, fontSize: 13, color: "#6b7280", fontWeight: 500 }}>
+                    Payroll
+                  </label>
+                  <input
+                    type="number"
+                    style={{
+                      ...styles.input,
+                      ...(verifiedData?.expenses?.payroll ? styles.inputSuccess : {})
+                    }}
+                    value={verifiedData?.expenses?.payroll || ""}
+                    onChange={(e) => updateVerifiedField("expenses", "payroll", parseFloat(e.target.value))}
+                    placeholder="Enter payroll costs"
+                  />
+                </div>
+                <div>
+                  <label style={{ display: "block", marginBottom: 6, fontSize: 13, color: "#6b7280", fontWeight: 500 }}>
+                    Other Expenses
+                  </label>
+                  <input
+                    type="number"
+                    style={{
+                      ...styles.input,
+                      ...(verifiedData?.expenses?.other ? styles.inputSuccess : {})
+                    }}
+                    value={verifiedData?.expenses?.other || ""}
+                    onChange={(e) => updateVerifiedField("expenses", "other", parseFloat(e.target.value))}
+                    placeholder="Enter other expenses"
+                  />
+                </div>
+              </div>
+
+              {/* Utilities Section */}
+              <h4 style={{ marginTop: 32, marginBottom: 16, fontSize: 15, fontWeight: 600, color: "#374151" }}>Utilities (Annual)</h4>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 20 }}>
+                <div>
+                  <label style={{ display: "block", marginBottom: 6, fontSize: 13, color: "#6b7280", fontWeight: 500 }}>
+                    Gas
+                  </label>
+                  <input
+                    type="number"
+                    style={{
+                      ...styles.input,
+                      ...(verifiedData?.expenses?.gas ? styles.inputSuccess : {})
+                    }}
+                    value={verifiedData?.expenses?.gas || ""}
+                    onChange={(e) => updateVerifiedField("expenses", "gas", parseFloat(e.target.value))}
+                    placeholder="Enter annual gas"
+                  />
+                </div>
+                <div>
+                  <label style={{ display: "block", marginBottom: 6, fontSize: 13, color: "#6b7280", fontWeight: 500 }}>
+                    Electrical
+                  </label>
+                  <input
+                    type="number"
+                    style={{
+                      ...styles.input,
+                      ...(verifiedData?.expenses?.electrical ? styles.inputSuccess : {})
+                    }}
+                    value={verifiedData?.expenses?.electrical || ""}
+                    onChange={(e) => updateVerifiedField("expenses", "electrical", parseFloat(e.target.value))}
+                    placeholder="Enter annual electrical"
+                  />
+                </div>
+                <div>
+                  <label style={{ display: "block", marginBottom: 6, fontSize: 13, color: "#6b7280", fontWeight: 500 }}>
+                    Water
+                  </label>
+                  <input
+                    type="number"
+                    style={{
+                      ...styles.input,
+                      ...(verifiedData?.expenses?.water ? styles.inputSuccess : {})
+                    }}
+                    value={verifiedData?.expenses?.water || ""}
+                    onChange={(e) => updateVerifiedField("expenses", "water", parseFloat(e.target.value))}
+                    placeholder="Enter annual water"
+                  />
+                </div>
+                <div>
+                  <label style={{ display: "block", marginBottom: 6, fontSize: 13, color: "#6b7280", fontWeight: 500 }}>
+                    Sewer
+                  </label>
+                  <input
+                    type="number"
+                    style={{
+                      ...styles.input,
+                      ...(verifiedData?.expenses?.sewer ? styles.inputSuccess : {})
+                    }}
+                    value={verifiedData?.expenses?.sewer || ""}
+                    onChange={(e) => updateVerifiedField("expenses", "sewer", parseFloat(e.target.value))}
+                    placeholder="Enter annual sewer"
+                  />
+                </div>
+                <div>
+                  <label style={{ display: "block", marginBottom: 6, fontSize: 13, color: "#6b7280", fontWeight: 500 }}>
+                    Trash
+                  </label>
+                  <input
+                    type="number"
+                    style={{
+                      ...styles.input,
+                      ...(verifiedData?.expenses?.trash ? styles.inputSuccess : {})
+                    }}
+                    value={verifiedData?.expenses?.trash || ""}
+                    onChange={(e) => updateVerifiedField("expenses", "trash", parseFloat(e.target.value))}
+                    placeholder="Enter annual trash"
+                  />
+                </div>
+                <div>
+                  <label style={{ display: "block", marginBottom: 6, fontSize: 13, color: "#6b7280", fontWeight: 500 }}>
+                    Total Utilities
+                  </label>
+                  <input
+                    type="number"
+                    style={{
+                      ...styles.input,
+                      background: "#f9fafb",
+                      ...(verifiedData?.expenses?.utilities ? styles.inputSuccess : {})
+                    }}
+                    value={verifiedData?.expenses?.utilities || ""}
+                    onChange={(e) => updateVerifiedField("expenses", "utilities", parseFloat(e.target.value))}
+                    placeholder="Total utilities"
+                  />
+                </div>
+              </div>
+
+              {/* Total Expenses */}
+              <div style={{ marginTop: 32, paddingTop: 20, borderTop: "2px solid #e5e7eb" }}>
+                <div style={{ maxWidth: 400 }}>
+                  <label style={{ display: "block", marginBottom: 6, fontSize: 14, color: "#111827", fontWeight: 600 }}>
+                    Total Operating Expenses
+                  </label>
+                  <input
+                    type="number"
+                    style={{
+                      ...styles.input,
+                      background: "#f3f4f6",
+                      fontWeight: 700,
+                      fontSize: 16,
+                      border: "2px solid #9ca3af",
+                      ...(verifiedData?.expenses?.total ? styles.inputSuccess : {})
+                    }}
+                    value={verifiedData?.expenses?.total || ""}
+                    onChange={(e) => updateVerifiedField("expenses", "total", parseFloat(e.target.value))}
+                    placeholder="Total annual expenses"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === "unitMix" && (
+            <div style={styles.card}>
+              <h3 style={{ marginBottom: 20, display: "flex", alignItems: "center", gap: 8 }}>
+                <Home size={20} /> Unit Mix
+                <button
+                  onClick={() => {
+                    const newUnit = { type: "", units: 0, unit_sf: 0, rent_current: 0, rent_market: 0 };
+                    setVerifiedData(prev => ({
+                      ...prev,
+                      unit_mix: [...(prev.unit_mix || []), newUnit]
+                    }));
+                  }}
+                  style={{ 
+                    marginLeft: "auto", 
+                    padding: "6px 12px", 
+                    background: "#10b981", 
+                    color: "white",
+                    border: "none",
+                    borderRadius: 6,
+                    fontSize: 13,
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 4
+                  }}
+                >
+                  + Add Unit Type
+                </button>
+              </h3>
+              
+              {(!verifiedData?.unit_mix || verifiedData.unit_mix.length === 0) ? (
+                <div style={{ textAlign: "center", padding: 40, color: "#6b7280" }}>
+                  <Home size={48} style={{ marginBottom: 16, opacity: 0.3 }} />
+                  <div>No unit mix data available</div>
+                  <button
+                    onClick={() => {
+                      const defaultUnits = [
+                        { type: "Studio", units: 0, unit_sf: 0, rent_current: 0, rent_market: 0 },
+                        { type: "1BR/1BA", units: 0, unit_sf: 0, rent_current: 0, rent_market: 0 },
+                        { type: "2BR/2BA", units: 0, unit_sf: 0, rent_current: 0, rent_market: 0 }
+                      ];
+                      setVerifiedData(prev => ({
+                        ...prev,
+                        unit_mix: defaultUnits
+                      }));
+                    }}
+                    style={{ 
+                      marginTop: 16,
+                      padding: "8px 16px", 
+                      background: "#3b82f6", 
+                      color: "white",
+                      border: "none",
+                      borderRadius: 6,
+                      cursor: "pointer"
+                    }}
+                  >
+                    Add Default Unit Types
+                  </button>
+                </div>
+              ) : (
+                <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                  <thead>
+                    <tr style={{ borderBottom: "2px solid #e5e7eb", background: "#f9fafb" }}>
+                      <th style={{ padding: 12, textAlign: "left", fontSize: 12, color: "#6b7280", textTransform: "uppercase" }}>Type</th>
+                      <th style={{ padding: 12, textAlign: "center", fontSize: 12, color: "#6b7280", textTransform: "uppercase" }}>Units</th>
+                      <th style={{ padding: 12, textAlign: "right", fontSize: 12, color: "#6b7280", textTransform: "uppercase" }}>Unit SF</th>
+                      <th style={{ padding: 12, textAlign: "right", fontSize: 12, color: "#6b7280", textTransform: "uppercase" }}>Current Rent</th>
+                      <th style={{ padding: 12, textAlign: "right", fontSize: 12, color: "#6b7280", textTransform: "uppercase" }}>Market Rent</th>
+                      <th style={{ padding: 12, textAlign: "center", fontSize: 12, color: "#6b7280" }}>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {verifiedData.unit_mix.map((unit, i) => (
+                      <tr key={i} style={{ borderBottom: "1px solid #f3f4f6" }}>
+                        <td style={{ padding: 8 }}>
+                          <input
+                            type="text"
+                            style={{ ...styles.input, padding: "6px 10px" }}
+                            value={unit.type || ""}
+                            onChange={(e) => {
+                              const newUnits = [...verifiedData.unit_mix];
+                              newUnits[i].type = e.target.value;
+                              setVerifiedData(prev => ({...prev, unit_mix: newUnits}));
+                            }}
+                            placeholder="e.g., 1BR/1BA"
+                          />
+                        </td>
+                        <td style={{ padding: 8 }}>
+                          <input
+                            type="number"
+                            style={{ ...styles.input, padding: "6px 10px", textAlign: "center" }}
+                            value={unit.units || ""}
+                            onChange={(e) => {
+                              const newUnits = [...verifiedData.unit_mix];
+                              newUnits[i].units = parseInt(e.target.value) || 0;
+                              setVerifiedData(prev => ({...prev, unit_mix: newUnits}));
+                            }}
+                          />
+                        </td>
+                        <td style={{ padding: 8 }}>
+                          <input
+                            type="number"
+                            style={{ ...styles.input, padding: "6px 10px", textAlign: "right" }}
+                            value={unit.unit_sf || ""}
+                            onChange={(e) => {
+                              const newUnits = [...verifiedData.unit_mix];
+                              newUnits[i].unit_sf = parseFloat(e.target.value) || 0;
+                              setVerifiedData(prev => ({...prev, unit_mix: newUnits}));
+                            }}
+                          />
+                        </td>
+                        <td style={{ padding: 8 }}>
+                          <input
+                            type="number"
+                            style={{ ...styles.input, padding: "6px 10px", textAlign: "right" }}
+                            value={unit.rent_current || ""}
+                            onChange={(e) => {
+                              const newUnits = [...verifiedData.unit_mix];
+                              newUnits[i].rent_current = parseFloat(e.target.value) || 0;
+                              setVerifiedData(prev => ({...prev, unit_mix: newUnits}));
+                            }}
+                          />
+                        </td>
+                        <td style={{ padding: 8 }}>
+                          <input
+                            type="number"
+                            style={{ ...styles.input, padding: "6px 10px", textAlign: "right" }}
+                            value={unit.rent_market || ""}
+                            onChange={(e) => {
+                              const newUnits = [...verifiedData.unit_mix];
+                              newUnits[i].rent_market = parseFloat(e.target.value) || 0;
+                              setVerifiedData(prev => ({...prev, unit_mix: newUnits}));
+                            }}
+                          />
+                        </td>
+                        <td style={{ padding: 8, textAlign: "center" }}>
+                          <button
+                            onClick={() => {
+                              const newUnits = verifiedData.unit_mix.filter((_, idx) => idx !== i);
+                              setVerifiedData(prev => ({...prev, unit_mix: newUnits}));
+                            }}
+                            style={{ 
+                              padding: "4px 8px", 
+                              background: "#ef4444", 
+                              color: "white",
+                              border: "none",
+                              borderRadius: 4,
+                              fontSize: 12,
+                              cursor: "pointer"
+                            }}
+                          >
+                            Remove
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          )}
+
+          <div style={{ display: "flex", gap: 12, justifyContent: "center", marginTop: 32 }}>
+            <button
+              onClick={recalculateMetrics}
+              style={{ ...styles.button, background: "linear-gradient(135deg, #6b7280, #4b5563)" }}
+            >
+              <RefreshCw size={18} /> Recalculate Metrics
+            </button>
+            <button
+              onClick={proceedWithVerifiedData}
+              style={{ ...styles.button, background: "linear-gradient(135deg, #10b981, #059669)" }}
+            >
+              <Save size={18} /> Complete Underwriting Analysis
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (step === "done") {
+    const property = parsed?.property || {};
+    const pricing = parsed?.pricing_financing || {};
+    const pnl = parsed?.pnl || {};
+    const underwriting = parsed?.underwriting || {};
+    const dealAnalysis = parsed?.deal_analysis || {};
+    
+    // CRITICAL FIX: Ensure debt service is calculated before cash flow
+    const debtService = pricing.annual_debt_service || 0;
+    const adjustedCashFlow = (pnl.noi || 0) - debtService;
+
+    // Warning if debt service is missing
+    if (!pricing.annual_debt_service && pricing.loan_amount) {
+      console.warn("Missing debt service calculation - cash flow may be incorrect");
+    }
+    
+    const adjustedCapRate = pricing.price > 0 ? (pnl.noi || 0) / pricing.price : 0;
+    const adjustedPricePerUnit = property.units > 0 ? pricing.price / property.units : 0;
+    
+    const dealScore = dealAnalysis.deal_score || 50;
+    const scoreColors = getDealScoreColor(dealScore);
+    const projections = generateProjections();
+    const expenseData = getExpenseData();
+
+    const tabs = [
+      { id: 'overview', label: 'Overview', icon: Activity },
+      { id: 'cashflow', label: 'Cash Flow', icon: TrendingUp },
+      { id: 'profitability', label: 'Profitability', icon: DollarSign },
+      { id: 'sensitivity', label: 'Sensitivity', icon: Target },
+      { id: 'financing', label: 'Capital Structure', icon: Calculator },
+      { id: 'returns', label: 'Returns', icon: Briefcase }
+    ];
+
+    return (
+      <div style={{ minHeight: '100vh', background: '#F8F9FA' }}>
+        {/* Header */}
+        <div style={{ background: 'white', borderBottom: '1px solid #E5E7EB', padding: '16px 24px' }}>
+          <div style={{ maxWidth: 1400, margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
+              {/* Terra.Ai Logo */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 20, fontWeight: 600 }}>
+                <div style={{ width: 32, height: 32, borderRadius: '50%', background: '#111', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
+                    <circle cx="12" cy="12" r="3" />
+                    <path d="M12 1v6m0 6v6m5.2-10.8l-4.2 4.2m-2 2l-4.2 4.2M23 12h-6m-6 0H1m16.2 5.2l-4.2-4.2m-2-2L6.8 6.8" />
+                  </svg>
+                </div>
+                <span>Terra.Ai</span>
+              </div>
+              <button
+                onClick={() => window.location.href = '/'}
+                style={{ 
+                  padding: '8px 16px', 
+                  background: 'white', 
+                  border: '1px solid #E5E7EB',
+                  borderRadius: 6,
+                  fontSize: 14,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8
+                }}
+              >
+                <Home size={16} />
+                Home
+              </button>
+              <h2 style={{ fontSize: 20, fontWeight: 600, color: COLORS.dark }}>
+                {property.address || 'Property Analysis'}
+              </h2>
+            </div>
+            <div style={{ display: 'flex', gap: 12 }}>
+              <button 
+                onClick={handleEditData}
+                style={{ 
+                  padding: '8px 16px', 
+                  background: 'white', 
+                  border: '1px solid #E5E7EB', 
+                  borderRadius: 6, 
+                  fontSize: 14, 
+                  cursor: 'pointer', 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: 8 
+                }}
+              >
+                <Edit3 size={16} />
+                Edit Data
+              </button>
+              <button 
+                onClick={reset}
+                style={{ 
+                  padding: '8px 16px', 
+                  background: COLORS.primary, 
+                  color: 'white', 
+                  border: 'none', 
+                  borderRadius: 6, 
+                  fontSize: 14, 
+                  cursor: 'pointer', 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: 8 
+                }}
+              >
+                <Upload size={16} />
+                New Deal
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Tab Navigation */}
+        <div style={{ background: 'white', borderBottom: '1px solid #E5E7EB', padding: '0 24px' }}>
+          <div style={{ maxWidth: 1400, margin: '0 auto', display: 'flex', gap: 32 }}>
+            {tabs.map(tab => {
+              const Icon = tab.icon;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setResultsTab(tab.id)}
+                  style={{
+                    padding: '16px 0',
+                    background: 'none',
+                    border: 'none',
+                    borderBottom: resultsTab === tab.id ? `3px solid ${COLORS.primary}` : '3px solid transparent',
+                    fontSize: 14,
+                    fontWeight: resultsTab === tab.id ? 600 : 400,
+                    color: resultsTab === tab.id ? COLORS.primary : '#6B7280',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 8,
+                    marginBottom: -1,
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  <Icon size={16} />
+                  {tab.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Content Area */}
+        <div style={{ padding: 24 }}>
+          <div style={{ maxWidth: 1400, margin: '0 auto' }}>
+            {/* Overview Tab */}
+            {resultsTab === 'overview' && (
+              <div>
+                {/* Deal Score Card - Enhanced UI */}
+                <div style={{ 
+                  background: 'white', 
+                  borderRadius: 16, 
+                  marginBottom: 24,
+                  overflow: 'hidden',
+                  boxShadow: '0 10px 25px rgba(0,0,0,0.1)'
+                }}>
+                  {/* Score Header with Gradient Background */}
+                  <div style={{
+                    background: scoreColors.gradient,
+                    padding: '32px',
+                    position: 'relative',
+                    overflow: 'hidden'
+                  }}>
+                    {/* Background Pattern */}
+                    <div style={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      opacity: 0.1,
+                      background: `repeating-linear-gradient(
+                        45deg,
+                        transparent,
+                        transparent 10px,
+                        rgba(255,255,255,0.1) 10px,
+                        rgba(255,255,255,0.1) 20px
+                      )`
+                    }} />
+                    
+                    <div style={{ position: 'relative', textAlign: 'center' }}>
+                      {/* Score Circle */}
+                      <div style={{
+                        width: 140,
+                        height: 140,
+                        margin: '0 auto 20px',
+                        position: 'relative'
+                      }}>
+                        <svg width="140" height="140" style={{ transform: 'rotate(-90deg)' }}>
+                          <circle
+                            cx="70"
+                            cy="70"
+                            r="60"
+                            stroke="rgba(255,255,255,0.2)"
+                            strokeWidth="8"
+                            fill="none"
+                          />
+                          <circle
+                            cx="70"
+                            cy="70"
+                            r="60"
+                            stroke="white"
+                            strokeWidth="8"
+                            fill="none"
+                            strokeDasharray={`${(dealScore / 100) * 377} 377`}
+                            strokeLinecap="round"
+                            style={{
+                              filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.1))',
+                              transition: 'stroke-dasharray 0.5s ease'
+                            }}
+                          />
+                        </svg>
+                        <div style={{
+                          position: 'absolute',
+                          top: '50%',
+                          left: '50%',
+                          transform: 'translate(-50%, -50%)',
+                          textAlign: 'center'
+                        }}>
+                          <div style={{ 
+                            fontSize: 48, 
+                            fontWeight: 800, 
+                            color: scoreColors.text,
+                            lineHeight: 1,
+                            textShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                          }}>
+                            {dealScore}
+                          </div>
+                          <div style={{ 
+                            fontSize: 11, 
+                            fontWeight: 600,
+                            color: scoreColors.text,
+                            opacity: 0.9,
+                            marginTop: 4,
+                            letterSpacing: 1
+                          }}>
+                            SCORE
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Recommendation Badge */}
+                      <div style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 8,
+                        background: 'rgba(255,255,255,0.2)',
+                        backdropFilter: 'blur(10px)',
+                        padding: '12px 24px',
+                        borderRadius: 100,
+                        border: '2px solid rgba(255,255,255,0.3)'
+                      }}>
+                        <Award size={20} color={scoreColors.text} />
+                        <span style={{ 
+                          fontSize: 16, 
+                          fontWeight: 700, 
+                          color: scoreColors.text,
+                          letterSpacing: 0.5
+                        }}>
+                          {dealAnalysis.recommendation || scoreColors.label}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Pros and Cons Section */}
+                  <div style={{ padding: 32 }}>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 32 }}>
+                      {/* Strengths */}
+                      <div>
+                        <div style={{ 
+                          display: "flex", 
+                          alignItems: "center", 
+                          gap: 10, 
+                          marginBottom: 20,
+                          paddingBottom: 12,
+                          borderBottom: '2px solid #e5e7eb'
+                        }}>
+                          <div style={{
+                            width: 36,
+                            height: 36,
+                            borderRadius: 8,
+                            background: 'linear-gradient(135deg, #10b981, #059669)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                          }}>
+                            <ThumbsUp size={18} color="white" />
+                          </div>
+                          <span style={{ fontSize: 16, fontWeight: 700, color: '#111827' }}>
+                            Deal Strengths
+                          </span>
+                        </div>
+                        <div style={{ space: 12 }}>
+                          {(dealAnalysis.pros || []).map((pro, i) => (
+                            <div key={i} style={{ 
+                              display: "flex", 
+                              gap: 12, 
+                              marginBottom: 12,
+                              padding: '10px 12px',
+                              background: '#f0fdf4',
+                              borderRadius: 8,
+                              border: '1px solid #bbf7d0'
+                            }}>
+                              <CheckCircle size={16} color="#10b981" style={{ flexShrink: 0, marginTop: 2 }} />
+                              <span style={{ fontSize: 14, color: '#064e3b', lineHeight: 1.5 }}>{pro}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Weaknesses */}
+                      <div>
+                        <div style={{ 
+                          display: "flex", 
+                          alignItems: "center", 
+                          gap: 10, 
+                          marginBottom: 20,
+                          paddingBottom: 12,
+                          borderBottom: '2px solid #e5e7eb'
+                        }}>
+                          <div style={{
+                            width: 36,
+                            height: 36,
+                            borderRadius: 8,
+                            background: 'linear-gradient(135deg, #ef4444, #dc2626)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                          }}>
+                            <AlertTriangle size={18} color="white" />
+                          </div>
+                          <span style={{ fontSize: 16, fontWeight: 700, color: '#111827' }}>
+                            Risk Factors
+                          </span>
+                        </div>
+                        <div style={{ space: 12 }}>
+                          {(dealAnalysis.cons || []).map((con, i) => (
+                            <div key={i} style={{ 
+                              display: "flex", 
+                              gap: 12, 
+                              marginBottom: 12,
+                              padding: '10px 12px',
+                              background: '#fef2f2',
+                              borderRadius: 8,
+                              border: '1px solid #fecaca'
+                            }}>
+                              <XCircle size={16} color="#ef4444" style={{ flexShrink: 0, marginTop: 2 }} />
+                              <span style={{ fontSize: 14, color: '#7f1d1d', lineHeight: 1.5 }}>{con}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Key Metrics Row */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 20, marginBottom: 24 }}>
+                  <div style={{ background: 'white', borderRadius: 12, padding: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+                    <div style={{ fontSize: 12, color: '#6B7280', marginBottom: 8, fontWeight: 500 }}>Cap Rate</div>
+                    <div style={{ fontSize: 28, fontWeight: 700, color: COLORS.secondary }}>{fmtPct(adjustedCapRate)}</div>
+                  </div>
+                  <div style={{ background: 'white', borderRadius: 12, padding: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+                    <div style={{ fontSize: 12, color: '#6B7280', marginBottom: 8, fontWeight: 500 }}>DSCR</div>
+                    <div style={{ fontSize: 28, fontWeight: 700, color: COLORS.dark }}>{fmtNumber(underwriting.dscr)}</div>
+                  </div>
+                  <div style={{ background: 'white', borderRadius: 12, padding: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+                    <div style={{ fontSize: 12, color: '#6B7280', marginBottom: 8, fontWeight: 500 }}>Cash Flow</div>
+                    <div style={{ fontSize: 28, fontWeight: 700, color: COLORS.info }}>
+                      {fmtCurrency(adjustedCashFlow)}
+                    </div>
+                  </div>
+                  <div style={{ background: 'white', borderRadius: 12, padding: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+                    <div style={{ fontSize: 12, color: '#6B7280', marginBottom: 8, fontWeight: 500 }}>Price/Unit</div>
+                    <div style={{ fontSize: 28, fontWeight: 700, color: COLORS.warning }}>{fmtCurrency(adjustedPricePerUnit)}</div>
+                  </div>
+                </div>
+
+                {/* Property & Financial Summary */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
+                  <div style={{ background: 'white', borderRadius: 12, padding: 24, boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+                    <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 20, display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <Building size={20} /> Property Details
+                    </h3>
+                    <div style={{ display: 'grid', gap: 12 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #F3F4F6' }}>
+                        <span style={{ fontSize: 14, color: '#6B7280' }}>Address</span>
+                        <span style={{ fontSize: 14, fontWeight: 600 }}>{property.address || "—"}</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #F3F4F6' }}>
+                        <span style={{ fontSize: 14, color: '#6B7280' }}>Units</span>
+                        <span style={{ fontSize: 14, fontWeight: 600 }}>{fmtNumber(property.units)}</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #F3F4F6' }}>
+                        <span style={{ fontSize: 14, color: '#6B7280' }}>Year Built</span>
+                        <span style={{ fontSize: 14, fontWeight: 600 }}>{property.year_built || "—"}</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0' }}>
+                        <span style={{ fontSize: 14, color: '#6B7280' }}>Square Footage</span>
+                        <span style={{ fontSize: 14, fontWeight: 600 }}>{fmtNumber(property.rba_sqft)}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div style={{ background: 'white', borderRadius: 12, padding: 24, boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+                    <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 20, display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <DollarSign size={20} /> Financial Summary
+                    </h3>
+                    <div style={{ display: 'grid', gap: 12 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #F3F4F6' }}>
+                        <span style={{ fontSize: 14, color: '#6B7280' }}>Purchase Price</span>
+                        <span style={{ fontSize: 14, fontWeight: 600 }}>{fmtCurrency(pricing.price)}</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #F3F4F6' }}>
+                        <span style={{ fontSize: 14, color: '#6B7280' }}>NOI</span>
+                        <span style={{ fontSize: 14, fontWeight: 600 }}>{fmtCurrency(pnl.noi)}</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #F3F4F6' }}>
+                        <span style={{ fontSize: 14, color: '#6B7280' }}>Loan Amount</span>
+                        <span style={{ fontSize: 14, fontWeight: 600 }}>{fmtCurrency(pricing.loan_amount)}</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0' }}>
+                        <span style={{ fontSize: 14, color: '#6B7280' }}>Debt Service</span>
+                        <span style={{ fontSize: 14, fontWeight: 600 }}>{fmtCurrency(pricing.annual_debt_service)}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Cash Flow Tab */}
+            {resultsTab === 'cashflow' && (
+              <div style={{ background: 'white', borderRadius: 12, padding: 24, boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+                  <h3 style={{ fontSize: 18, fontWeight: 600 }}>Cash Flow Projection</h3>
+                  <select
+                    value={cashFlowYears || 10}
+                    onChange={(e) => setCashFlowYears(parseInt(e.target.value))}
+                    style={{
+                      padding: '8px 12px',
+                      border: '1px solid #e5e7eb',
+                      borderRadius: 6,
+                      fontSize: 14,
+                      background: 'white',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    <option value={1}>1 Year</option>
+                    <option value={5}>5 Years</option>
+                    <option value={10}>10 Years</option>
+                  </select>
+                </div>
+                <ResponsiveContainer width="100%" height={400}>
+                  <LineChart data={projections.slice(0, cashFlowYears || 10)}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
+                    <XAxis dataKey="year" stroke="#6B7280" fontSize={12} />
+                    <YAxis stroke="#6B7280" fontSize={12} tickFormatter={(value) => `${(value/1000).toFixed(0)}K`} />
+                    <Tooltip 
+                      contentStyle={{ background: 'white', border: '1px solid #E5E7EB', borderRadius: 8 }}
+                      formatter={(value) => fmtCurrency(value)}
+                    />
+                    <Line 
+                      type="monotone" 
+                      dataKey="cashFlow" 
+                      stroke={COLORS.primary} 
+                      strokeWidth={3}
+                      dot={{ fill: COLORS.primary, r: 4 }}
+                      activeDot={{ r: 6 }}
+                      name="Cash Flow"
+                    />
+                    <Line 
+                      type="monotone" 
+                      dataKey="noi" 
+                      stroke={COLORS.secondary} 
+                      strokeWidth={3}
+                      dot={{ fill: COLORS.secondary, r: 4 }}
+                      activeDot={{ r: 6 }}
+                      name="NOI"
+                    />
+                    <Legend />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            )}
+
+            {/* Profitability Tab */}
+            {resultsTab === 'profitability' && (
+              <div>
+                <div style={{ background: 'white', borderRadius: 12, padding: 24, boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+                  <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 24 }}>10-Year Profitability Analysis</h3>
+                  <div style={{ overflowX: 'auto' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
+                      <thead>
+                        <tr style={{ borderBottom: '2px solid #E5E7EB' }}>
+                          <th style={{ padding: 12, textAlign: 'left', color: '#6B7280', fontWeight: 600 }}>Metric</th>
+                          {projections.slice(0, 5).map((_, i) => (
+                            <th key={i} style={{ padding: 12, textAlign: 'right', color: '#6B7280', fontWeight: 600 }}>
+                              Year {i + 1}
+                            </th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr style={{ borderBottom: '1px solid #F3F4F6' }}>
+                          <td style={{ padding: 12, fontWeight: 500 }}>Cash Flow</td>
+                          {projections.slice(0, 5).map((year, i) => (
+                            <td key={i} style={{ padding: 12, textAlign: 'right' }}>{fmtCurrency(year.cashFlow)}</td>
+                          ))}
+                        </tr>
+                        <tr style={{ borderBottom: '1px solid #F3F4F6' }}>
+                          <td style={{ padding: 12, fontWeight: 500 }}>Property Value</td>
+                          {projections.slice(0, 5).map((year, i) => (
+                            <td key={i} style={{ padding: 12, textAlign: 'right' }}>{fmtCurrency(year.propertyValue)}</td>
+                          ))}
+                        </tr>
+                        <tr style={{ borderBottom: '1px solid #F3F4F6', background: '#F9FAFB' }}>
+                          <td style={{ padding: 12, fontWeight: 600 }}>Net Worth Increase</td>
+                          {projections.slice(0, 5).map((year, i) => (
+                            <td key={i} style={{ padding: 12, textAlign: 'right', fontWeight: 600 }}>
+                              {fmtCurrency(year.netWorth)}
+                            </td>
+                          ))}
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                {/* Cumulative Cash Flow Chart */}
+                <div style={{ background: 'white', borderRadius: 12, padding: 24, marginTop: 24, boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+                  <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 24 }}>Cumulative Returns</h3>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <AreaChart data={projections}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
+                      <XAxis dataKey="year" stroke="#6B7280" fontSize={12} />
+                      <YAxis stroke="#6B7280" fontSize={12} tickFormatter={(value) => `${(value/1000).toFixed(0)}K`} />
+                      <Tooltip 
+                        contentStyle={{ background: 'white', border: '1px solid #E5E7EB', borderRadius: 8 }}
+                        formatter={(value) => fmtCurrency(value)}
+                      />
+                      <Area 
+                        type="monotone" 
+                        dataKey="netWorth" 
+                        stroke={COLORS.primary} 
+                        fill={COLORS.primary}
+                        fillOpacity={0.2}
+                        strokeWidth={2}
+                        name="Net Worth"
+                      />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            )}
+
+            {/* Sensitivity Tab */}
+            {resultsTab === 'sensitivity' && (
+              <div style={{ background: 'white', borderRadius: 12, padding: 24, boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+                <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 24 }}>Purchase Price Sensitivity Analysis</h3>
+                <div style={{ overflowX: 'auto' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
+                    <thead>
+                      <tr style={{ borderBottom: '2px solid #E5E7EB', background: '#F9FAFB' }}>
+                        <th style={{ padding: 12, textAlign: 'left', fontWeight: 600 }}>Purchase Price</th>
+                        <th style={{ padding: 12, textAlign: 'center', fontWeight: 600 }}>Cap Rate</th>
+                        <th style={{ padding: 12, textAlign: 'center', fontWeight: 600 }}>DSCR</th>
+                        <th style={{ padding: 12, textAlign: 'center', fontWeight: 600 }}>Cash Flow</th>
+                        <th style={{ padding: 12, textAlign: 'center', fontWeight: 600 }}>ROI</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {[0.8, 0.9, 1.0, 1.1, 1.2].map(multiplier => {
+                        const testPrice = (pricing.price || 0) * multiplier;
+                        const testCapRate = (pnl.noi || 0) / testPrice;
+                        const testCashFlow = (pnl.noi || 0) - (pricing.annual_debt_service || 0);
+                        const color = testCapRate > 0.08 ? COLORS.secondary : testCapRate > 0.06 ? COLORS.warning : COLORS.danger;
+                        return (
+                          <tr key={multiplier} style={{ borderBottom: '1px solid #F3F4F6' }}>
+                            <td style={{ padding: 12, fontWeight: 500 }}>{fmtCurrency(testPrice)}</td>
+                            <td style={{ padding: 12, textAlign: 'center', fontWeight: 600, color }}>
+                              {fmtPct(testCapRate)}
+                            </td>
+                            <td style={{ padding: 12, textAlign: 'center' }}>{fmtNumber(underwriting.dscr)}</td>
+                            <td style={{ padding: 12, textAlign: 'center' }}>{fmtCurrency(testCashFlow)}</td>
+                            <td style={{ padding: 12, textAlign: 'center', fontWeight: 600 }}>
+                              {fmtPct(testCashFlow / testPrice)}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {/* Capital Structure Tab */}
+            {resultsTab === 'financing' && (
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
+                <div style={{ background: 'white', borderRadius: 12, padding: 24, boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+                  <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 24 }}>Capital Structure</h3>
+                  
+                  {/* Pie Chart */}
+                  {pricing.loan_amount && pricing.price && (
+                    <>
+                      <ResponsiveContainer width="100%" height={300}>
+                        <PieChart>
+                          <Pie
+                            data={[
+                              { name: 'Equity', value: ((pricing.price - pricing.loan_amount) / pricing.price) * 100, fill: COLORS.primary },
+                              { name: 'Debt', value: (pricing.loan_amount / pricing.price) * 100, fill: COLORS.info }
+                            ]}
+                            cx="50%"
+                            cy="50%"
+                            innerRadius={60}
+                            outerRadius={100}
+                            paddingAngle={2}
+                            dataKey="value"
+                            label={({ name, value }) => `${name} ${value.toFixed(1)}%`}
+                          >
+                            {[COLORS.primary, COLORS.info].map((color, index) => (
+                              <Cell key={`cell-${index}`} fill={color} />
+                            ))}
+                          </Pie>
+                          <Tooltip formatter={(value) => `${value.toFixed(1)}%`} />
+                        </PieChart>
+                      </ResponsiveContainer>
+
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginTop: 24 }}>
+                        <div>
+                          <div style={{ fontSize: 12, color: '#6B7280', marginBottom: 4 }}>LTV</div>
+                          <div style={{ fontSize: 18, fontWeight: 600 }}>
+                            {fmtPct((pricing.loan_amount / pricing.price))}
+                          </div>
+                        </div>
+                        <div>
+                          <div style={{ fontSize: 12, color: '#6B7280', marginBottom: 4 }}>DSCR</div>
+                          <div style={{ fontSize: 18, fontWeight: 600 }}>{fmtNumber(underwriting.dscr)}</div>
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </div>
+
+                <div style={{ background: 'white', borderRadius: 12, padding: 24, boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+                  <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 24 }}>Expense Breakdown</h3>
+                  {expenseData.length > 0 ? (
+                    <ResponsiveContainer width="100%" height={300}>
+                      <PieChart>
+                        <Pie
+                          data={expenseData}
+                          cx="50%"
+                          cy="50%"
+                          outerRadius={100}
+                          dataKey="value"
+                          label={({ name, percent }) => `${name}`}
+                        >
+                          {expenseData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+                          ))}
+                        </Pie>
+                        <Tooltip formatter={(value) => fmtCurrency(value)} />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <div style={{ textAlign: 'center', padding: 60, color: '#6B7280' }}>
+                      No expense breakdown available
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Returns Tab */}
+            {resultsTab === 'returns' && (
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
+                <div style={{ background: 'white', borderRadius: 12, padding: 24, boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+                  <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 24 }}>Investment Returns</h3>
+                  <div style={{ marginBottom: 24 }}>
+                    <div style={{ marginBottom: 20 }}>
+                      <div style={{ fontSize: 14, color: '#6B7280', marginBottom: 8 }}>10-Year Cash Flow</div>
+                      <div style={{ fontSize: 24, fontWeight: 700 }}>
+                        {fmtCurrency(projections.reduce((sum, year) => sum + year.cashFlow, 0))}
+                      </div>
+                    </div>
+                    
+                    <div style={{ marginBottom: 20 }}>
+                      <div style={{ fontSize: 14, color: '#6B7280', marginBottom: 8 }}>Projected Property Value (Year 10)</div>
+                      <div style={{ fontSize: 24, fontWeight: 700 }}>
+                        {fmtCurrency(projections[9]?.propertyValue || 0)}
+                      </div>
+                    </div>
+
+                    <div style={{ padding: 20, background: COLORS.primary, borderRadius: 8 }}>
+                      <div style={{ fontSize: 14, color: 'white', opacity: 0.9, marginBottom: 4 }}>Total Return</div>
+                      <div style={{ fontSize: 32, fontWeight: 700, color: 'white' }}>
+                        {fmtCurrency(projections[9]?.netWorth || 0)}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div style={{ background: 'white', borderRadius: 12, padding: 24, boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+                  <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 24 }}>Return Metrics</h3>
+                  
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 16 }}>
+                    <div style={{ padding: 12, background: '#F9FAFB', borderRadius: 8 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span style={{ fontSize: 14, color: '#6B7280' }}>Cap Rate</span>
+                        <span style={{ fontSize: 14, fontWeight: 700, color: COLORS.secondary }}>{fmtPct(adjustedCapRate)}</span>
+                      </div>
+                    </div>
+                    <div style={{ padding: 12, background: '#F9FAFB', borderRadius: 8 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span style={{ fontSize: 14, color: '#6B7280' }}>Cash on Cash Return (Year 1)</span>
+                        <span style={{ fontSize: 14, fontWeight: 700, color: COLORS.info }}>
+                          {fmtPct((() => {
+                            const cashFlow = (pnl.noi || 0) - (pricing.annual_debt_service || 0);
+                            const price = pricing.price || 0;
+                            const downPayment = pricing.financing_mode === 'traditional'
+                              ? price * (pricing.down_payment_pct || 0) / 100
+                              : (pricing.down_payment_amount || (price * 0.2));
+                            const realtorFees = price * (pricing.realtor_fee_pct || 0) / 100;
+                            const closingCosts = price * (pricing.closing_costs_pct || 0) / 100;
+                            const acquisitionFees = price * (pricing.acquisition_fee_pct || 0) / 100;
+                            const totalCashInvested = downPayment + realtorFees + closingCosts + acquisitionFees;
+                            return totalCashInvested > 0 ? cashFlow / totalCashInvested : 0;
+                          })())}
+                        </span>
+                      </div>
+                    </div>
+                    <div style={{ padding: 12, background: '#F9FAFB', borderRadius: 8 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span style={{ fontSize: 14, color: '#6B7280' }}>ROI (Year 1)</span>
+                        <span style={{ fontSize: 14, fontWeight: 700, color: COLORS.primary }}>
+                          {fmtPct((() => {
+                            const cashFlow = (pnl.noi || 0) - (pricing.annual_debt_service || 0);
+                            const price = pricing.price || 0;
+                            const downPayment = pricing.financing_mode === 'traditional'
+                              ? price * (pricing.down_payment_pct || 0) / 100
+                              : (pricing.down_payment_amount || (price * 0.2));
+                            const realtorFees = price * (pricing.realtor_fee_pct || 0) / 100;
+                            const closingCosts = price * (pricing.closing_costs_pct || 0) / 100;
+                            const acquisitionFees = price * (pricing.acquisition_fee_pct || 0) / 100;
+                            const totalCashInvested = downPayment + realtorFees + closingCosts + acquisitionFees;
+                            
+                            // Year 1 ROI = First Year Cash Flow / Total Initial Investment
+                            return totalCashInvested > 0 ? cashFlow / totalCashInvested : 0;
+                          })())}
+                        </span>
+                      </div>
+                    </div>
+                    <div style={{ padding: 12, background: '#F9FAFB', borderRadius: 8 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span style={{ fontSize: 14, color: '#6B7280' }}>DSCR</span>
+                        <span style={{ fontSize: 14, fontWeight: 700, color: COLORS.warning }}>{fmtNumber(underwriting.dscr)}</span>
+                      </div>
+                    </div>
+                    <div style={{ padding: 12, background: '#F9FAFB', borderRadius: 8 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span style={{ fontSize: 14, color: '#6B7280' }}>Expense Ratio</span>
+                        <span style={{ fontSize: 14, fontWeight: 700 }}>{fmtPct(pnl.expense_ratio)}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
           </div>
         </div>
       </div>
-    </div>
-  );
+    );
+  }
+
+  return null;
 };
 
-export default UploadPage;
+export default EnhancedUploadPage;
