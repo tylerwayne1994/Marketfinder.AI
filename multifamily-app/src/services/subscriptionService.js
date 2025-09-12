@@ -6,7 +6,7 @@ export const subscriptionService = {
   async createCheckoutSession({ priceId, userId, successUrl, cancelUrl }) {
     try {
       // Call your backend API to create checkout session
-  const response = await fetch(`${process.env.REACT_APP_STRIPE_URL}/api/create-checkout-session`, {
+  const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/create-checkout-session`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -68,7 +68,7 @@ export const subscriptionService = {
   // Cancel subscription
   async cancelSubscription(subscriptionId) {
     try {
-  const response = await fetch(`${process.env.REACT_APP_STRIPE_URL}/api/cancel-subscription`, {
+  const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/cancel-subscription`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -90,7 +90,7 @@ export const subscriptionService = {
   // Resume subscription
   async resumeSubscription(subscriptionId) {
     try {
-  const response = await fetch(`${process.env.REACT_APP_STRIPE_URL}/api/resume-subscription`, {
+  const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/resume-subscription`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -112,7 +112,7 @@ export const subscriptionService = {
   // Change subscription plan
   async changeSubscriptionPlan(subscriptionId, newPriceId) {
     try {
-  const response = await fetch(`${process.env.REACT_APP_STRIPE_URL}/api/change-subscription`, {
+  const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/change-subscription`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

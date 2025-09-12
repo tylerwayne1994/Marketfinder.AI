@@ -245,7 +245,7 @@ const SignUpPage = ({ setCurrentPage }) => {
           power: 'price_1S6Kit2Xp6FKKwINQBHnNglZ'
         };
 
-        const response = await fetch(`${process.env.REACT_APP_STRIPE_URL}/api/create-checkout-session`, {
+  const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/create-checkout-session`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

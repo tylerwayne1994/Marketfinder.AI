@@ -196,8 +196,8 @@ const DashboardPage = ({ setCurrentPage, currentUser }) => {
       setIsUpgrading(true);
       setSubscriptionError(null);
       
-  const stripeUrl = process.env.REACT_APP_STRIPE_URL || 'http://localhost:4242';
-  const response = await fetch(`${stripeUrl}/api/create-checkout-session`, {
+  const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8000';
+  const response = await fetch(`${backendUrl}/api/create-checkout-session`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -232,8 +232,8 @@ const DashboardPage = ({ setCurrentPage, currentUser }) => {
       setIsCancelling(true);
       setSubscriptionError(null);
       
-  const stripeUrl = process.env.REACT_APP_STRIPE_URL || 'http://localhost:4242';
-      const response = await fetch(`${stripeUrl}/api/cancel-subscription`, {
+  const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8000';
+  const response = await fetch(`${backendUrl}/api/cancel-subscription`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -271,8 +271,8 @@ const DashboardPage = ({ setCurrentPage, currentUser }) => {
       setIsReactivating(true);
       setSubscriptionError(null);
       
-      const stripeUrl = process.env.REACT_APP_STRIPE_URL || 'http://localhost:4242';
-      const response = await fetch(`${stripeUrl}/api/reactivate-subscription`, {
+  const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8000';
+  const response = await fetch(`${backendUrl}/api/reactivate-subscription`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
