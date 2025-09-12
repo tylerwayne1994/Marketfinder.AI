@@ -1,6 +1,11 @@
 fastapi
 uvicorn
 python-dotenv
+pypdf
 stripe
 supabase
 requests
+flask
+pydantic
+mistralai
+anthropic
