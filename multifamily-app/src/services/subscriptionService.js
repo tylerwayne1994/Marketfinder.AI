@@ -1,6 +1,9 @@
 import { supabase } from './supabaseClient'
 import { stripeConfig } from './stripeClient'
 
+// DEBUG: Print backend URL at runtime
+console.log('REACT_APP_BACKEND_URL:', process.env.REACT_APP_BACKEND_URL);
+
 export const subscriptionService = {
   // Create Stripe Customer and Checkout Session
   async createCheckoutSession({ priceId, userId, successUrl, cancelUrl }) {
