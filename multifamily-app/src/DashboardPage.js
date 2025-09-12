@@ -35,19 +35,19 @@ const PRICING_PLANS = {
     id: 'starter',
     name: 'Starter',
     price: 35,
-    priceId: process.env.REACT_APP_STRIPE_STARTER_PRICE_ID || 'price_1S1cAc2VFAlQshuqsVTF14Op'
+  priceId: process.env.REACT_APP_STRIPE_STARTER_PRICE_ID || 'price_1S6Khq2Xp6FKKwINgUI5caDQ'
   },
   pro: {
     id: 'pro',
     name: 'Pro',
     price: 99,
-    priceId: process.env.REACT_APP_STRIPE_PRO_PRICE_ID || 'price_1S1cCR2VFAlQshuqGK9uNtSK'
+  priceId: process.env.REACT_APP_STRIPE_PRO_PRICE_ID || 'price_1S6Kk62Xp6FKKwINIyh13ZGN'
   },
   power: {
     id: 'power',
     name: 'Power',
     price: 199,
-    priceId: process.env.REACT_APP_STRIPE_POWER_PRICE_ID || 'price_1S1cBM2VFAlQshuqgj3lNfja'
+  priceId: process.env.REACT_APP_STRIPE_POWER_PRICE_ID || 'price_1S6Kit2Xp6FKKwINQBHnNglZ'
   }
 };
 

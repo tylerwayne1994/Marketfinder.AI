@@ -1,0 +1,6 @@
+fastapi
+uvicorn
+python-dotenv
+stripe
+supabase
+requests

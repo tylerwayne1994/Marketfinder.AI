@@ -240,9 +240,9 @@ const SignUpPage = ({ setCurrentPage }) => {
         }
 
         const priceIds = {
-          starter: 'price_1S1cAc2VFAlQshuqsVTF14Op',
-          pro: 'price_1S1cCR2VFAlQshuqGK9uNtSK',
-          power: 'price_1S1cBM2VFAlQshuqgj3lNfja'
+          starter: 'price_1S6Khq2Xp6FKKwINgUI5caDQ',
+          pro: 'price_1S6Kk62Xp6FKKwINIyh13ZGN',
+          power: 'price_1S6Kit2Xp6FKKwINQBHnNglZ'
         };
 
         const response = await fetch(`${process.env.REACT_APP_STRIPE_URL}/api/create-checkout-session`, {
