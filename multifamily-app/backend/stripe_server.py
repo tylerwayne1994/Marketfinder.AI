@@ -12,7 +12,11 @@ load_dotenv()
 app = FastAPI(title="Stripe Server", version="1.0.0")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=[
+        "https://terra-investai.com",
+        "https://marketfinder-ai-git-main-tyler-torres-projects.vercel.app",
+        "http://localhost:3000"
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
