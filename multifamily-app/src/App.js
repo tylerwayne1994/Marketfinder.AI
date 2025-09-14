@@ -162,7 +162,44 @@ function App() {
             margin: '0 auto 16px'
           }}></div>
           <p style={{ color: '#666666', fontSize: '1rem' }}>Loading Terra.Ai...</p>
-          <button onClick={() => { localStorage.clear(); sessionStorage.clear(); window.location.reload(); }} style={{ marginTop: 20, padding: '10px 20px', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}>Reset App</button>
+          <button 
+            onClick={() => {
+              // Instead of clearing storage and reloading, just reset loading state
+              setIsLoading(true);
+              // Optionally, re-trigger the session check
+              (async () => {
+                const { data: { session } } = await supabase.auth.getSession();
+                if (session) {
+                  // Get user profile from database
+                  const { data: profile } = await supabase
+                    .from('profiles')
+                    .select('*')
+                    .eq('id', session.user.id)
+                    .single();
+                  const userData = {
+                    id: session.user.id,
+                    email: session.user.email,
+                    firstName: profile?.first_name || session.user.user_metadata?.firstName || 'User',
+                    lastName: profile?.last_name || session.user.user_metadata?.lastName || '',
+                    company: profile?.company || '',
+                    phone: profile?.phone || '',
+                    investorType: profile?.investor_type || '',
+                    address: profile?.address || '',
+                    city: profile?.city || '',
+                    state: profile?.state || '',
+                    zipCode: profile?.zip_code || '',
+                    subscriptionStatus: profile?.subscription_status || 'inactive'
+                  };
+                  setCurrentUser(userData);
+                  setIsAuthenticated(true);
+                }
+                setIsLoading(false);
+              })();
+            }}
+            style={{ marginTop: 20, padding: '10px 20px', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}
+          >
+            Retry Loading
+          </button>
         </div>
         <style>
           {`
