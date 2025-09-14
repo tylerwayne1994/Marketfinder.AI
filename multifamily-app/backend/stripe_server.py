@@ -1,3 +1,4 @@
+from protected_routes import router as protected_router
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -21,6 +22,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Include protected routes (dashboard, etc.)
+app.include_router(protected_router, prefix="/api")
 
 # Include routers
 app.include_router(checkout_router, prefix="/api")
