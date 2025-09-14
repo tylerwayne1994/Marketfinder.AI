@@ -22,21 +22,6 @@ import { supabase } from './lib/supabase';
 const backendUrl = process.env.REACT_APP_BACKEND_URL;
 
 function App() {
-  // DEBUG: Show backend URL visibly
-  return (
-    <ErrorBoundary>
-      <ThemeProvider>
-        <div className="App" style={{ backgroundColor: 'white', minHeight: '100vh', color: 'black' }}>
-          {/* DEBUG BANNER: Shows backend URL at top of every page */}
-          <div style={{background: '#ffdddd', color: '#900', padding: '8px', fontWeight: 'bold', textAlign: 'center', zIndex: 9999}}>
-            DEBUG: REACT_APP_BACKEND_URL = {backendUrl ? backendUrl : 'undefined'}
-          </div>
-          {renderPage()}
-        </div>
-      </ThemeProvider>
-    </ErrorBoundary>
-  );
-}
   const [currentPage, setCurrentPage] = useState('landing');
   const [propertyData, setPropertyData] = useState(null);
   const [uploadedFile, setUploadedFile] = useState(null);
@@ -329,10 +314,15 @@ function App() {
     }
   };
 
+  // DEBUG: Show backend URL visibly
   return (
     <ErrorBoundary>
       <ThemeProvider>
         <div className="App" style={{ backgroundColor: 'white', minHeight: '100vh', color: 'black' }}>
+          {/* DEBUG BANNER: Shows backend URL at top of every page */}
+          <div style={{background: '#ffdddd', color: '#900', padding: '8px', fontWeight: 'bold', textAlign: 'center', zIndex: 9999}}>
+            DEBUG: REACT_APP_BACKEND_URL = {backendUrl ? backendUrl : 'undefined'}
+          </div>
           {renderPage()}
         </div>
       </ThemeProvider>
