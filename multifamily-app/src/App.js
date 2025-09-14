@@ -41,12 +41,11 @@ function App() {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
         // Get user profile from database
-        const { data: profile, error: profileError } = await supabase
+        const { data: profile } = await supabase
           .from('profiles')
           .select('*')
           .eq('id', session.user.id)
           .single();
-
         const userData = {
           id: session.user.id,
           email: session.user.email,
@@ -61,11 +60,15 @@ function App() {
           zipCode: profile?.zip_code || '',
           subscriptionStatus: profile?.subscription_status || 'inactive'
         };
-
         setCurrentUser(userData);
         setIsAuthenticated(true);
+        setIsLoading(false);
+      } else {
+        setIsAuthenticated(false);
+        setCurrentUser(null);
+        setCurrentPage('landing');
+        setIsLoading(false);
       }
-      setIsLoading(false);
     };
 
     getSession();
