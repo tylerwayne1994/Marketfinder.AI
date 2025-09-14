@@ -31,7 +31,8 @@ function App() {
   const [documentData, setDocumentData] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
+    const [isLoading, setIsLoading] = useState(true);
+    const [loadingError, setLoadingError] = useState(null);
 
   // Authentication state management
   useEffect(() => {
@@ -141,7 +142,9 @@ function App() {
     }
   };
 
-  // Show loading screen while checking authentication
+  // Error state for loading/auth
+  // (removed duplicate loadingError declaration)
+
   if (isLoading) {
     return (
       <div style={{
@@ -162,44 +165,54 @@ function App() {
             margin: '0 auto 16px'
           }}></div>
           <p style={{ color: '#666666', fontSize: '1rem' }}>Loading Terra.Ai...</p>
-          <button 
-            onClick={() => {
-              // Instead of clearing storage and reloading, just reset loading state
-              setIsLoading(true);
-              // Optionally, re-trigger the session check
-              (async () => {
-                const { data: { session } } = await supabase.auth.getSession();
-                if (session) {
-                  // Get user profile from database
-                  const { data: profile } = await supabase
-                    .from('profiles')
-                    .select('*')
-                    .eq('id', session.user.id)
-                    .single();
-                  const userData = {
-                    id: session.user.id,
-                    email: session.user.email,
-                    firstName: profile?.first_name || session.user.user_metadata?.firstName || 'User',
-                    lastName: profile?.last_name || session.user.user_metadata?.lastName || '',
-                    company: profile?.company || '',
-                    phone: profile?.phone || '',
-                    investorType: profile?.investor_type || '',
-                    address: profile?.address || '',
-                    city: profile?.city || '',
-                    state: profile?.state || '',
-                    zipCode: profile?.zip_code || '',
-                    subscriptionStatus: profile?.subscription_status || 'inactive'
-                  };
-                  setCurrentUser(userData);
-                  setIsAuthenticated(true);
-                }
-                setIsLoading(false);
-              })();
-            }}
-            style={{ marginTop: 20, padding: '10px 20px', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}
-          >
-            Retry Loading
-          </button>
+          {loadingError && (
+            <>
+              <p style={{ color: 'red', marginTop: 16 }}>{loadingError}</p>
+              <button
+                onClick={async () => {
+                  setIsLoading(true);
+                  setLoadingError(null);
+                  try {
+                    const { data: { session } } = await supabase.auth.getSession();
+                    if (session) {
+                      const { data: profile } = await supabase
+                        .from('profiles')
+                        .select('*')
+                        .eq('id', session.user.id)
+                        .single();
+                      const userData = {
+                        id: session.user.id,
+                        email: session.user.email,
+                        firstName: profile?.first_name || session.user.user_metadata?.firstName || 'User',
+                        lastName: profile?.last_name || session.user.user_metadata?.lastName || '',
+                        company: profile?.company || '',
+                        phone: profile?.phone || '',
+                        investorType: profile?.investor_type || '',
+                        address: profile?.address || '',
+                        city: profile?.city || '',
+                        state: profile?.state || '',
+                        zipCode: profile?.zip_code || '',
+                        subscriptionStatus: profile?.subscription_status || 'inactive'
+                      };
+                      setCurrentUser(userData);
+                      setIsAuthenticated(true);
+                    } else {
+                      setLoadingError('No active session. Please log in.');
+                      setIsAuthenticated(false);
+                      setCurrentUser(null);
+                      setCurrentPage('landing');
+                    }
+                  } catch (err) {
+                    setLoadingError('Error loading authentication. Please try again.');
+                  }
+                  setIsLoading(false);
+                }}
+                style={{ marginTop: 20, padding: '10px 20px', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}
+              >
+                Retry
+              </button>
+            </>
+          )}
         </div>
         <style>
           {`
@@ -211,6 +224,7 @@ function App() {
         </style>
       </div>
     );
+  // removed extra closing brace
   }
 
   const renderPage = () => {
@@ -366,5 +380,4 @@ function App() {
     </ErrorBoundary>
   );
 }
-
 export default App;
