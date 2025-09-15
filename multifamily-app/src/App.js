@@ -373,10 +373,6 @@ function App() {
     <ErrorBoundary>
       <ThemeProvider>
         <div className="App" style={{ backgroundColor: 'white', minHeight: '100vh', color: 'black' }}>
-          {/* DEBUG BANNER: Shows backend URL at top of every page */}
-          <div style={{background: '#ffdddd', color: '#900', padding: '8px', fontWeight: 'bold', textAlign: 'center', zIndex: 9999}}>
-            DEBUG: REACT_APP_BACKEND_URL = {backendUrl ? backendUrl : 'undefined'}
-          </div>
           {renderPage()}
         </div>
       </ThemeProvider>
