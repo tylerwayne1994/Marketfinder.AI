@@ -61,14 +61,14 @@ async def create_checkout_session(request: Request):
         price_id = data.get('priceId')
         
         if not user_id or not price_id:
-            return JSONResponse({'error': 'Missing userId or priceId'}, status_code=400)
-        
+            return JSONResponse({'error': 'Missing userId or priceId'}, status_code=400, headers={"Access-Control-Allow-Origin": "*"})
+
         # Get user profile from Supabase
         result = supabase.table('profiles').select('*').eq('id', user_id).single().execute()
         
         if not result.data:
-            return JSONResponse({'error': 'User not found'}, status_code=404)
-        
+            return JSONResponse({'error': 'User not found'}, status_code=404, headers={"Access-Control-Allow-Origin": "*"})
+
         profile = result.data
         
         # Create Stripe checkout session
