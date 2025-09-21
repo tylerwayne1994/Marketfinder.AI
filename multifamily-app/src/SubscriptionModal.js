@@ -232,7 +232,7 @@ const SubscriptionModal = ({ isOpen, onClose, selectedPlan = 'professional' }) =
         priceId: plan.priceId,
         userId: user.id,
         successUrl: `${window.location.origin}/dashboard?session_id={CHECKOUT_SESSION_ID}`,
-        cancelUrl: `${window.location.origin}/pricing`
+        cancelUrl: `${window.location.origin}/dashboard`
       })
 
       if (error) {
