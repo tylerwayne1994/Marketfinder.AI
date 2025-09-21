@@ -98,9 +98,8 @@ const DashboardPage = ({ setCurrentPage, currentUser }) => {
         return;
       }
 
-      // Fetch usage data from backend
-      const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8000';
-      const response = await fetch(`${backendUrl}/api/dashboard/summary?user_id=${user.id}`);
+      // Fetch usage data from our API proxy to avoid CORS
+      const response = await fetch(`/api/dashboard?user_id=${user.id}&endpoint=summary`);
       const usageSummary = await response.json();
 
       if (!response.ok) {
