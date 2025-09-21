@@ -41,7 +41,8 @@ ALLOWED_UPLOAD_MIMES = ALLOWED_DOC_MIMES | ALLOWED_SHEET_MIMES
 app = FastAPI(title="Property Health Check Backend", version="4.0.0")
 app.add_middleware(
    CORSMiddleware,
-   allow_origins=ALLOWED_ORIGINS if ALLOWED_ORIGINS != ["*"] else ["*"],
+   # Allow ALL origins for development
+   allow_origins=["*"],
    allow_credentials=True,
    allow_methods=["*"],
    allow_headers=["*"],
