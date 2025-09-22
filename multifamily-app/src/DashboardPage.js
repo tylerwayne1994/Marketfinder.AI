@@ -70,8 +70,9 @@ const DashboardPage = ({ setCurrentPage, currentUser }) => {
   const [subscriptionSuccess, setSubscriptionSuccess] = useState(null);
 
   useEffect(() => {
+    if (!currentUser?.id) return;
     fetchDashboardData();
-  }, []);
+  }, [currentUser?.id]);
 
   const fetchDashboardData = async () => {
     try {

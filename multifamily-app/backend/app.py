@@ -63,7 +63,10 @@ app = FastAPI(title="Underwriting Backend", version="9.0.0")
 app.add_middleware(
     CORSMiddleware,
     # Allow ALL origins for development
-    allow_origins=["*"],
+    allow_origins=[
+        "https://marketfinder-pmknfd9kh-tyler-torres-projects.vercel.app",
+        "https://marketfinder.vercel.app"
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
