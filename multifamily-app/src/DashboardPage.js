@@ -61,7 +61,7 @@ const DashboardPage = ({ setCurrentPage, currentUser }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   
-  // New state for subscription management
+    // DashboardPage deleted for rebuild
   const [isUpgrading, setIsUpgrading] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);

@@ -338,4 +338,4 @@ const SubscriptionModal = ({ isOpen, onClose, selectedPlan = 'professional' }) =
   )
 }
 
-export default SubscriptionModal
+// SubscriptionModal deleted for rebuild
