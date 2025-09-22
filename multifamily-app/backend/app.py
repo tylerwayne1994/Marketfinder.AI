@@ -65,7 +65,8 @@ app.add_middleware(
     # Allow ALL origins for development
     allow_origins=[
         "https://marketfinder-pmknfd9kh-tyler-torres-projects.vercel.app",
-        "https://marketfinder.vercel.app"
+        "https://marketfinder.vercel.app",
+        "https://marketfinder-jq3fw2azm-tyler-torres-projects.vercel.app"
     ],
     allow_credentials=True,
     allow_methods=["*"],
