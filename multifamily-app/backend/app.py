@@ -74,6 +74,11 @@ app.add_middleware(
 
 # Include protected routes
 app.include_router(protected_router, prefix="/api")
+# Include Stripe/payment routes
+from stripe_checkout import router as checkout_router
+from stripe_webhook import router as webhook_router
+app.include_router(checkout_router, prefix="/api")
+app.include_router(webhook_router, prefix="/api")
 
 # ---------------- Utils ----------------
 def _to_data_url(file_bytes: bytes, mime: str) -> str:
