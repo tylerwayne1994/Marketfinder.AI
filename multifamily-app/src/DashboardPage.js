@@ -196,8 +196,18 @@ const DashboardPage = ({ setCurrentPage, currentUser }) => {
     try {
       setIsUpgrading(true);
       setSubscriptionError(null);
-      
-      // Use our API proxy to avoid CORS issues
+      // Validate user data before sending request
+      if (!userData || !userData.id || !userData.subscriptionPlan || !PRICING_PLANS[userData.subscriptionPlan]) {
+        setSubscriptionError('User data is missing or invalid. Please refresh and try again.');
+        setIsUpgrading(false);
+        return;
+      }
+      const priceId = PRICING_PLANS[userData.subscriptionPlan].priceId;
+      if (!priceId) {
+        setSubscriptionError('No priceId found for selected plan.');
+        setIsUpgrading(false);
+        return;
+      }
       const response = await fetch(`/api/checkout`, {
         method: 'POST',
         headers: {
@@ -205,23 +215,28 @@ const DashboardPage = ({ setCurrentPage, currentUser }) => {
         },
         body: JSON.stringify({
           userId: userData.id,
-          priceId: PRICING_PLANS[userData.subscriptionPlan].priceId
+          priceId
         })
       });
-
-      const data = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(data.detail || 'Failed to create checkout session');
+      let data = {};
+      try {
+        data = await response.json();
+      } catch (e) {
+        setSubscriptionError('Invalid response from server.');
+        setIsUpgrading(false);
+        return;
       }
-      
+      if (!response.ok) {
+        setSubscriptionError(data.error || data.detail || 'Failed to create checkout session');
+        setIsUpgrading(false);
+        return;
+      }
       if (data.checkout_url) {
         window.location.href = data.checkout_url;
       } else {
-        throw new Error('No checkout URL received');
+        setSubscriptionError('No checkout URL received');
       }
     } catch (error) {
-      console.error('Payment error:', error);
       setSubscriptionError(error.message || 'Failed to start upgrade process');
     } finally {
       setIsUpgrading(false);
@@ -1561,7 +1576,7 @@ const DashboardPage = ({ setCurrentPage, currentUser }) => {
               <div style={{ display: 'flex', gap: '12px' }}>
                 <button
                   onClick={handleCompletePayment}
-                  disabled={isUpgrading}
+                  disabled={isUpgrading || !userData || !userData.id || !userData.subscriptionPlan || !PRICING_PLANS[userData.subscriptionPlan]}
                   style={{
                     padding: '12px 24px',
                     backgroundColor: isUpgrading ? '#6b7280' : '#000000',
