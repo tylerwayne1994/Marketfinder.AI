@@ -42,7 +42,12 @@ if not CLAUDE_API_KEY:
 MISTRAL   = Mistral(api_key=MISTRAL_API_KEY)
 ANTHROPIC = Anthropic(api_key=CLAUDE_API_KEY)
 
-ALLOWED_ORIGINS = [o.strip() for o in (os.getenv("ALLOWED_ORIGINS") or "*").split(",")]
+ALLOWED_ORIGINS = [
+    "http://localhost:5173",
+    "http://localhost:3000",
+    "https://terra-investai.com",
+    "https://marketfinder-ai.vercel.app"
+]
 MAX_BYTES = 50 * 1024 * 1024
 OCR_MODEL = "mistral-ocr-latest"
 
@@ -62,12 +67,7 @@ PARSER_STRATEGY_DEFAULT = (os.getenv("PARSER_STRATEGY") or "claude").strip().low
 app = FastAPI(title="Underwriting Backend", version="9.0.0")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "https://marketfinder-pmknfd9kh-tyler-torres-projects.vercel.app",
-        "https://marketfinder.vercel.app",
-        "https://marketfinder-jq3fw2azm-tyler-torres-projects.vercel.app",
-        "https://marketfinder-pxfqzue85-tyler-torres-projects.vercel.app"
-    ],
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
