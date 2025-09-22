@@ -45,8 +45,7 @@ ANTHROPIC = Anthropic(api_key=CLAUDE_API_KEY)
 ALLOWED_ORIGINS = [
     "http://localhost:5173",
     "http://localhost:3000",
-    "https://terra-investai.com",
-    "https://marketfinder-ai.vercel.app"
+    "https://terra-investai.com"
 ]
 MAX_BYTES = 50 * 1024 * 1024
 OCR_MODEL = "mistral-ocr-latest"
