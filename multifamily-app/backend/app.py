@@ -62,11 +62,11 @@ PARSER_STRATEGY_DEFAULT = (os.getenv("PARSER_STRATEGY") or "claude").strip().low
 app = FastAPI(title="Underwriting Backend", version="9.0.0")
 app.add_middleware(
     CORSMiddleware,
-    # Allow ALL origins for development
     allow_origins=[
         "https://marketfinder-pmknfd9kh-tyler-torres-projects.vercel.app",
         "https://marketfinder.vercel.app",
-        "https://marketfinder-jq3fw2azm-tyler-torres-projects.vercel.app"
+        "https://marketfinder-jq3fw2azm-tyler-torres-projects.vercel.app",
+        "https://marketfinder-pxfqzue85-tyler-torres-projects.vercel.app"
     ],
     allow_credentials=True,
     allow_methods=["*"],
