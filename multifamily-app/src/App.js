@@ -37,6 +37,7 @@ function App() {
   useEffect(() => {
     let isMounted = true;
     let timeoutId = null;
+    let authCompleted = false; // Prevent race conditions
 
     const getSessionWithTimeout = async () => {
       try {
@@ -46,15 +47,16 @@ function App() {
 
         // Set a timeout to prevent infinite loading
         timeoutId = setTimeout(() => {
-          if (isMounted) {
+          if (isMounted && !authCompleted) {
             console.error('⏰ Auth timeout - forcing fallback');
             setLoadingError('Authentication timeout. Please refresh the page.');
             setIsLoading(false);
             setIsAuthenticated(false);
             setCurrentUser(null);
             setCurrentPage('landing');
+            authCompleted = true;
           }
-        }, 10000); // 10 second timeout
+        }, 8000); // Reduced to 8 seconds
 
         // Get session with explicit error handling
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
@@ -76,7 +78,7 @@ function App() {
             .eq('id', session.user.id)
             .single();
 
-          if (!isMounted) return;
+          if (!isMounted || authCompleted) return;
 
           if (profileError && profileError.code !== 'PGRST116') { // PGRST116 is "no rows returned"
             console.error('❌ Profile error:', profileError);
@@ -101,11 +103,13 @@ function App() {
           console.log('✅ User data loaded successfully');
           setCurrentUser(userData);
           setIsAuthenticated(true);
+          authCompleted = true;
         } else {
           console.log('ℹ️ No active session found');
           setIsAuthenticated(false);
           setCurrentUser(null);
           setCurrentPage('landing');
+          authCompleted = true;
         }
 
         // Clear timeout since we completed successfully
@@ -115,16 +119,18 @@ function App() {
         }
 
       } catch (error) {
-        if (!isMounted) return;
+        if (!isMounted || authCompleted) return;
 
         console.error('❌ Auth check failed:', error);
         setLoadingError(`Authentication failed: ${error.message}`);
         setIsAuthenticated(false);
         setCurrentUser(null);
         setCurrentPage('landing');
+        authCompleted = true;
       } finally {
-        if (isMounted) {
+        if (isMounted && !authCompleted) {
           setIsLoading(false);
+          authCompleted = true;
         }
         if (timeoutId) {
           clearTimeout(timeoutId);
@@ -137,17 +143,25 @@ function App() {
     // Listen for auth changes with error handling
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        if (!isMounted) return;
+        if (!isMounted || authCompleted) return;
 
         console.log('🔄 Auth state changed:', event);
 
         try {
           if (event === 'SIGNED_IN' && session) {
+            // Clear timeout since auth succeeded
+            if (timeoutId) {
+              clearTimeout(timeoutId);
+              timeoutId = null;
+            }
+            
             const { data: profile, error: profileError } = await supabase
               .from('profiles')
               .select('*')
               .eq('id', session.user.id)
               .single();
+
+            if (!isMounted || authCompleted) return;
 
             if (profileError && profileError.code !== 'PGRST116') {
               console.error('❌ Profile error on sign in:', profileError);
@@ -170,11 +184,15 @@ function App() {
 
             setCurrentUser(userData);
             setIsAuthenticated(true);
+            setIsLoading(false);
+            authCompleted = true;
           } else if (event === 'SIGNED_OUT') {
             console.log('🚪 User signed out');
             setIsAuthenticated(false);
             setCurrentUser(null);
             setCurrentPage('landing');
+            setIsLoading(false);
+            authCompleted = true;
             
             // Clear any cached data
             setPropertyData(null);
@@ -184,10 +202,14 @@ function App() {
             setDocumentData(null);
           }
         } catch (error) {
+          if (!isMounted || authCompleted) return;
+          
           console.error('❌ Auth state change error:', error);
           setIsAuthenticated(false);
           setCurrentUser(null);
           setCurrentPage('landing');
+          setIsLoading(false);
+          authCompleted = true;
         }
       }
     );
