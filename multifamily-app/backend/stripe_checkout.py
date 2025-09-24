@@ -61,14 +61,14 @@ async def create_checkout_session(request: Request):
         price_id = data.get('priceId')
         
         if not user_id or not price_id:
-            return JSONResponse({'error': 'Missing userId or priceId'}, status_code=400)
-        
+            return JSONResponse({'error': 'Missing userId or priceId'}, status_code=400, headers={"Access-Control-Allow-Origin": "*"})
+
         # Get user profile from Supabase
         result = supabase.table('profiles').select('*').eq('id', user_id).single().execute()
         
         if not result.data:
-            return JSONResponse({'error': 'User not found'}, status_code=404)
-        
+            return JSONResponse({'error': 'User not found'}, status_code=404, headers={"Access-Control-Allow-Origin": "*"})
+
         profile = result.data
         
         # Create Stripe checkout session
@@ -79,8 +79,8 @@ async def create_checkout_session(request: Request):
                 'price': price_id,
                 'quantity': 1,
             }],
-            success_url=f"{os.getenv('FRONTEND_URL', 'http://localhost:3000')}/signup?payment=success&session_id={{CHECKOUT_SESSION_ID}}",
-            cancel_url=f"{os.getenv('FRONTEND_URL', 'http://localhost:3000')}/signup?payment=cancelled",
+            success_url=data.get('successUrl', f"{os.getenv('FRONTEND_URL', 'http://localhost:3000')}/signup?payment=success&session_id={{CHECKOUT_SESSION_ID}}"),
+            cancel_url=data.get('cancelUrl', f"{os.getenv('FRONTEND_URL', 'http://localhost:3000')}/dashboard"),
             customer_email=profile.get('email'),
             metadata={
                 'user_id': user_id,

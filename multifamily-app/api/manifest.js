@@ -1,10 +1,12 @@
 // api/manifest.js
 
 export default async function handler(req, res) {
-  // CORS headers
+  // Set proper CORS headers
   res.setHeader('Access-Control-Allow-Credentials', true);
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Cache-Control', 'public, max-age=0, must-revalidate');
   res.setHeader('Content-Type', 'application/json');
 
   // Return manifest content
