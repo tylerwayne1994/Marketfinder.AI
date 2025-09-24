@@ -215,7 +215,8 @@ const DashboardPage = ({ setCurrentPage, currentUser }) => {
         },
         body: JSON.stringify({
           userId: userData.id,
-          priceId
+          priceId,
+          cancelUrl: window.location.origin + '/dashboard'
         })
       });
       let data = {};

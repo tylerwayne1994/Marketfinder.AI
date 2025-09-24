@@ -80,7 +80,7 @@ async def create_checkout_session(request: Request):
                 'quantity': 1,
             }],
             success_url=data.get('successUrl', f"{os.getenv('FRONTEND_URL', 'http://localhost:3000')}/signup?payment=success&session_id={{CHECKOUT_SESSION_ID}}"),
-            cancel_url=data.get('cancelUrl', f"{os.getenv('FRONTEND_URL', 'http://localhost:3000')}/dashboard"),
+            cancel_url=data.get('cancelUrl', f"{os.getenv('FRONTEND_URL', 'https://terra-investai.com')}/dashboard"),
             customer_email=profile.get('email'),
             metadata={
                 'user_id': user_id,
