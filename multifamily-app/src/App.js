@@ -18,7 +18,6 @@ import SignupPage from './SignupPage';
 import DashboardPage from './DashboardPage';
 import { supabase } from './lib/supabase';
 
-// DEBUG: Show backend URL at top of page for deployment troubleshooting
 const backendUrl = process.env.REACT_APP_BACKEND_URL;
 
 function App() {
@@ -31,58 +30,58 @@ function App() {
   const [documentData, setDocumentData] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
-    const [isLoading, setIsLoading] = useState(true);
-    const [loadingError, setLoadingError] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadingError, setLoadingError] = useState(null);
 
-  // Authentication state management
+  // Authentication state management with timeout and error handling
   useEffect(() => {
-    // Check current auth session
-    const getSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        // Get user profile from database
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', session.user.id)
-          .single();
-        const userData = {
-          id: session.user.id,
-          email: session.user.email,
-          firstName: profile?.first_name || session.user.user_metadata?.firstName || 'User',
-          lastName: profile?.last_name || session.user.user_metadata?.lastName || '',
-          company: profile?.company || '',
-          phone: profile?.phone || '',
-          investorType: profile?.investor_type || '',
-          address: profile?.address || '',
-          city: profile?.city || '',
-          state: profile?.state || '',
-          zipCode: profile?.zip_code || '',
-          subscriptionStatus: profile?.subscription_status || 'inactive'
-        };
-        setCurrentUser(userData);
-        setIsAuthenticated(true);
-        setIsLoading(false);
-      } else {
-        setIsAuthenticated(false);
-        setCurrentUser(null);
-        setCurrentPage('landing');
-        setIsLoading(false);
-      }
-    };
+    let isMounted = true;
+    let timeoutId = null;
 
-    getSession();
+    const getSessionWithTimeout = async () => {
+      try {
+        console.log('🔍 Starting auth check...');
+        setIsLoading(true);
+        setLoadingError(null);
 
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (event === 'SIGNED_IN' && session) {
-          // Get user profile from database
+        // Set a timeout to prevent infinite loading
+        timeoutId = setTimeout(() => {
+          if (isMounted) {
+            console.error('⏰ Auth timeout - forcing fallback');
+            setLoadingError('Authentication timeout. Please refresh the page.');
+            setIsLoading(false);
+            setIsAuthenticated(false);
+            setCurrentUser(null);
+            setCurrentPage('landing');
+          }
+        }, 10000); // 10 second timeout
+
+        // Get session with explicit error handling
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        
+        if (!isMounted) return;
+
+        if (sessionError) {
+          console.error('❌ Session error:', sessionError);
+          throw new Error(`Session error: ${sessionError.message}`);
+        }
+
+        if (session?.user) {
+          console.log('✅ Valid session found, fetching profile...');
+          
+          // Get user profile with timeout
           const { data: profile, error: profileError } = await supabase
             .from('profiles')
             .select('*')
             .eq('id', session.user.id)
             .single();
+
+          if (!isMounted) return;
+
+          if (profileError && profileError.code !== 'PGRST116') { // PGRST116 is "no rows returned"
+            console.error('❌ Profile error:', profileError);
+            // Don't fail completely if profile fetch fails - continue with basic user data
+          }
 
           const userData = {
             id: session.user.id,
@@ -99,9 +98,93 @@ function App() {
             subscriptionStatus: profile?.subscription_status || 'inactive'
           };
 
+          console.log('✅ User data loaded successfully');
           setCurrentUser(userData);
           setIsAuthenticated(true);
-        } else if (event === 'SIGNED_OUT') {
+        } else {
+          console.log('ℹ️ No active session found');
+          setIsAuthenticated(false);
+          setCurrentUser(null);
+          setCurrentPage('landing');
+        }
+
+        // Clear timeout since we completed successfully
+        if (timeoutId) {
+          clearTimeout(timeoutId);
+          timeoutId = null;
+        }
+
+      } catch (error) {
+        if (!isMounted) return;
+
+        console.error('❌ Auth check failed:', error);
+        setLoadingError(`Authentication failed: ${error.message}`);
+        setIsAuthenticated(false);
+        setCurrentUser(null);
+        setCurrentPage('landing');
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+        if (timeoutId) {
+          clearTimeout(timeoutId);
+        }
+      }
+    };
+
+    getSessionWithTimeout();
+
+    // Listen for auth changes with error handling
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (!isMounted) return;
+
+        console.log('🔄 Auth state changed:', event);
+
+        try {
+          if (event === 'SIGNED_IN' && session) {
+            const { data: profile, error: profileError } = await supabase
+              .from('profiles')
+              .select('*')
+              .eq('id', session.user.id)
+              .single();
+
+            if (profileError && profileError.code !== 'PGRST116') {
+              console.error('❌ Profile error on sign in:', profileError);
+            }
+
+            const userData = {
+              id: session.user.id,
+              email: session.user.email,
+              firstName: profile?.first_name || session.user.user_metadata?.firstName || 'User',
+              lastName: profile?.last_name || session.user.user_metadata?.lastName || '',
+              company: profile?.company || '',
+              phone: profile?.phone || '',
+              investorType: profile?.investor_type || '',
+              address: profile?.address || '',
+              city: profile?.city || '',
+              state: profile?.state || '',
+              zipCode: profile?.zip_code || '',
+              subscriptionStatus: profile?.subscription_status || 'inactive'
+            };
+
+            setCurrentUser(userData);
+            setIsAuthenticated(true);
+          } else if (event === 'SIGNED_OUT') {
+            console.log('🚪 User signed out');
+            setIsAuthenticated(false);
+            setCurrentUser(null);
+            setCurrentPage('landing');
+            
+            // Clear any cached data
+            setPropertyData(null);
+            setUploadedFile(null);
+            setExtractedData(null);
+            setUnderwritingResult(null);
+            setDocumentData(null);
+          }
+        } catch (error) {
+          console.error('❌ Auth state change error:', error);
           setIsAuthenticated(false);
           setCurrentUser(null);
           setCurrentPage('landing');
@@ -109,8 +192,16 @@ function App() {
       }
     );
 
-    return () => subscription.unsubscribe();
-  }, []);
+    // Cleanup function
+    return () => {
+      console.log('🧹 Cleaning up auth effect');
+      isMounted = false;
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+      subscription.unsubscribe();
+    };
+  }, []); // Empty dependency array is correct here
 
   const handlePageChange = (page, data = null) => {
     console.log(`🔄 App.js: Navigating to "${page}"`, data ? 'with data' : 'without data');
@@ -135,19 +226,34 @@ function App() {
   };
 
   const handleLogout = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      console.error('Logout error:', error);
-    } else {
+    try {
+      console.log('🚪 Initiating logout...');
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error('Logout error:', error);
+      } else {
+        console.log('✅ Logout successful');
+        setIsAuthenticated(false);
+        setCurrentUser(null);
+        setCurrentPage('landing');
+        
+        // Clear all app state
+        setPropertyData(null);
+        setUploadedFile(null);
+        setExtractedData(null);
+        setUnderwritingResult(null);
+        setDocumentData(null);
+      }
+    } catch (error) {
+      console.error('❌ Logout failed:', error);
+      // Force logout even if API call fails
       setIsAuthenticated(false);
       setCurrentUser(null);
       setCurrentPage('landing');
     }
   };
 
-  // Error state for loading/auth
-  // (removed duplicate loadingError declaration)
-
+  // Show loading screen with better error handling
   if (isLoading) {
     return (
       <div style={{
@@ -168,53 +274,58 @@ function App() {
             margin: '0 auto 16px'
           }}></div>
           <p style={{ color: '#666666', fontSize: '1rem' }}>Loading Terra.Ai...</p>
+          
           {loadingError && (
-            <>
-              <p style={{ color: 'red', marginTop: 16 }}>{loadingError}</p>
-              <button
-                onClick={async () => {
-                  setIsLoading(true);
-                  setLoadingError(null);
-                  try {
-                    const { data: { session } } = await supabase.auth.getSession();
-                    if (session) {
-                      const { data: profile } = await supabase
-                        .from('profiles')
-                        .select('*')
-                        .eq('id', session.user.id)
-                        .single();
-                      const userData = {
-                        id: session.user.id,
-                        email: session.user.email,
-                        firstName: profile?.first_name || session.user.user_metadata?.firstName || 'User',
-                        lastName: profile?.last_name || session.user.user_metadata?.lastName || '',
-                        company: profile?.company || '',
-                        phone: profile?.phone || '',
-                        investorType: profile?.investor_type || '',
-                        address: profile?.address || '',
-                        city: profile?.city || '',
-                        state: profile?.state || '',
-                        zipCode: profile?.zip_code || '',
-                        subscriptionStatus: profile?.subscription_status || 'inactive'
-                      };
-                      setCurrentUser(userData);
-                      setIsAuthenticated(true);
-                    } else {
-                      setLoadingError('No active session. Please log in.');
-                      setIsAuthenticated(false);
-                      setCurrentUser(null);
-                      setCurrentPage('landing');
-                    }
-                  } catch (err) {
-                    setLoadingError('Error loading authentication. Please try again.');
-                  }
-                  setIsLoading(false);
-                }}
-                style={{ marginTop: 20, padding: '10px 20px', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}
-              >
-                Retry
-              </button>
-            </>
+            <div style={{ 
+              marginTop: '24px', 
+              padding: '16px', 
+              backgroundColor: '#fef2f2', 
+              border: '1px solid #ef4444',
+              borderRadius: '8px',
+              maxWidth: '400px',
+              margin: '24px auto 0'
+            }}>
+              <p style={{ color: '#ef4444', marginBottom: '16px', fontSize: '0.875rem' }}>
+                {loadingError}
+              </p>
+              <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+                <button
+                  onClick={() => window.location.reload()}
+                  style={{ 
+                    padding: '8px 16px', 
+                    backgroundColor: '#ef4444', 
+                    color: 'white', 
+                    border: 'none', 
+                    borderRadius: '6px', 
+                    cursor: 'pointer',
+                    fontSize: '0.875rem',
+                    fontWeight: '600'
+                  }}
+                >
+                  Refresh Page
+                </button>
+                <button
+                  onClick={() => {
+                    // Clear all storage and reload
+                    localStorage.clear();
+                    sessionStorage.clear();
+                    window.location.reload();
+                  }}
+                  style={{ 
+                    padding: '8px 16px', 
+                    backgroundColor: '#666666', 
+                    color: 'white', 
+                    border: 'none', 
+                    borderRadius: '6px', 
+                    cursor: 'pointer',
+                    fontSize: '0.875rem',
+                    fontWeight: '600'
+                  }}
+                >
+                  Clear Data & Reload
+                </button>
+              </div>
+            </div>
           )}
         </div>
         <style>
@@ -227,7 +338,6 @@ function App() {
         </style>
       </div>
     );
-  // removed extra closing brace
   }
 
   const renderPage = () => {
@@ -368,7 +478,6 @@ function App() {
     }
   };
 
-  // DEBUG: Show backend URL visibly
   return (
     <ErrorBoundary>
       <ThemeProvider>
@@ -379,4 +488,5 @@ function App() {
     </ErrorBoundary>
   );
 }
+
 export default App;
