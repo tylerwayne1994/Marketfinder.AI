@@ -31,58 +31,30 @@ function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [loadingError, setLoadingError] = useState(null);
 
-  // Authentication state management with timeout and error handling
+  // Single authentication handler - no race conditions
   useEffect(() => {
     let isMounted = true;
-    let timeoutId = null;
-    let authCompleted = false; // Prevent race conditions
 
-    const getSessionWithTimeout = async () => {
+    const handleAuthChange = async (event, session) => {
+      if (!isMounted) return;
+
+      console.log('Auth event:', event, session ? 'with session' : 'no session');
+
       try {
-        console.log('🔍 Starting auth check...');
-        setIsLoading(true);
-        setLoadingError(null);
-
-        // Set a timeout to prevent infinite loading
-        timeoutId = setTimeout(() => {
-          if (isMounted && !authCompleted) {
-            console.error('⏰ Auth timeout - forcing fallback');
-            setLoadingError('Authentication timeout. Please refresh the page.');
-            setIsLoading(false);
-            setIsAuthenticated(false);
-            setCurrentUser(null);
-            setCurrentPage('landing');
-            authCompleted = true;
-          }
-        }, 8000); // Reduced to 8 seconds
-
-        // Get session with explicit error handling
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-        
-        if (!isMounted) return;
-
-        if (sessionError) {
-          console.error('❌ Session error:', sessionError);
-          throw new Error(`Session error: ${sessionError.message}`);
-        }
-
         if (session?.user) {
-          console.log('✅ Valid session found, fetching profile...');
-          
-          // Get user profile with timeout
+          // User is authenticated - fetch profile
           const { data: profile, error: profileError } = await supabase
             .from('profiles')
             .select('*')
             .eq('id', session.user.id)
             .single();
 
-          if (!isMounted || authCompleted) return;
+          if (!isMounted) return;
 
-          if (profileError && profileError.code !== 'PGRST116') { // PGRST116 is "no rows returned"
-            console.error('❌ Profile error:', profileError);
-            // Don't fail completely if profile fetch fails - continue with basic user data
+          // Continue even if profile fetch fails - use basic user data
+          if (profileError && profileError.code !== 'PGRST116') {
+            console.warn('Profile fetch failed:', profileError.message);
           }
 
           const userData = {
@@ -100,133 +72,52 @@ function App() {
             subscriptionStatus: profile?.subscription_status || 'inactive'
           };
 
-          console.log('✅ User data loaded successfully');
           setCurrentUser(userData);
           setIsAuthenticated(true);
-          authCompleted = true;
+          console.log('User authenticated successfully');
         } else {
-          console.log('ℹ️ No active session found');
-          setIsAuthenticated(false);
+          // No session - user is not authenticated
           setCurrentUser(null);
+          setIsAuthenticated(false);
           setCurrentPage('landing');
-          authCompleted = true;
+          
+          // Clear any cached data
+          setPropertyData(null);
+          setUploadedFile(null);
+          setExtractedData(null);
+          setUnderwritingResult(null);
+          setDocumentData(null);
+          
+          console.log('User not authenticated');
         }
-
-        // Clear timeout since we completed successfully
-        if (timeoutId) {
-          clearTimeout(timeoutId);
-          timeoutId = null;
-        }
-
       } catch (error) {
-        if (!isMounted || authCompleted) return;
-
-        console.error('❌ Auth check failed:', error);
-        setLoadingError(`Authentication failed: ${error.message}`);
-        setIsAuthenticated(false);
+        if (!isMounted) return;
+        
+        console.error('Auth handler error:', error);
+        
+        // Fail safely - clear auth state
         setCurrentUser(null);
+        setIsAuthenticated(false);
         setCurrentPage('landing');
-        authCompleted = true;
       } finally {
-        if (isMounted && !authCompleted) {
+        if (isMounted) {
           setIsLoading(false);
-          authCompleted = true;
-        }
-        if (timeoutId) {
-          clearTimeout(timeoutId);
         }
       }
     };
 
-    getSessionWithTimeout();
+    // Set up auth state listener - handles both initial state and changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthChange);
 
-    // Listen for auth changes with error handling
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (!isMounted || authCompleted) return;
-
-        console.log('🔄 Auth state changed:', event);
-
-        try {
-          if (event === 'SIGNED_IN' && session) {
-            // Clear timeout since auth succeeded
-            if (timeoutId) {
-              clearTimeout(timeoutId);
-              timeoutId = null;
-            }
-            
-            const { data: profile, error: profileError } = await supabase
-              .from('profiles')
-              .select('*')
-              .eq('id', session.user.id)
-              .single();
-
-            if (!isMounted || authCompleted) return;
-
-            if (profileError && profileError.code !== 'PGRST116') {
-              console.error('❌ Profile error on sign in:', profileError);
-            }
-
-            const userData = {
-              id: session.user.id,
-              email: session.user.email,
-              firstName: profile?.first_name || session.user.user_metadata?.firstName || 'User',
-              lastName: profile?.last_name || session.user.user_metadata?.lastName || '',
-              company: profile?.company || '',
-              phone: profile?.phone || '',
-              investorType: profile?.investor_type || '',
-              address: profile?.address || '',
-              city: profile?.city || '',
-              state: profile?.state || '',
-              zipCode: profile?.zip_code || '',
-              subscriptionStatus: profile?.subscription_status || 'inactive'
-            };
-
-            setCurrentUser(userData);
-            setIsAuthenticated(true);
-            setIsLoading(false);
-            authCompleted = true;
-          } else if (event === 'SIGNED_OUT') {
-            console.log('🚪 User signed out');
-            setIsAuthenticated(false);
-            setCurrentUser(null);
-            setCurrentPage('landing');
-            setIsLoading(false);
-            authCompleted = true;
-            
-            // Clear any cached data
-            setPropertyData(null);
-            setUploadedFile(null);
-            setExtractedData(null);
-            setUnderwritingResult(null);
-            setDocumentData(null);
-          }
-        } catch (error) {
-          if (!isMounted || authCompleted) return;
-          
-          console.error('❌ Auth state change error:', error);
-          setIsAuthenticated(false);
-          setCurrentUser(null);
-          setCurrentPage('landing');
-          setIsLoading(false);
-          authCompleted = true;
-        }
-      }
-    );
-
-    // Cleanup function
+    // Cleanup
     return () => {
-      console.log('🧹 Cleaning up auth effect');
       isMounted = false;
-      if (timeoutId) {
-        clearTimeout(timeoutId);
-      }
       subscription.unsubscribe();
     };
-  }, []); // Empty dependency array is correct here
+  }, []); // Empty deps - run once on mount
 
   const handlePageChange = (page, data = null) => {
-    console.log(`🔄 App.js: Navigating to "${page}"`, data ? 'with data' : 'without data');
+    console.log(`Navigating to "${page}"`, data ? 'with data' : 'without data');
     if (data) {
       if (data.extracted) setExtractedData(data.extracted);
       if (data.underwriting) setUnderwritingResult(data.underwriting);
@@ -249,33 +140,22 @@ function App() {
 
   const handleLogout = async () => {
     try {
-      console.log('🚪 Initiating logout...');
+      console.log('Initiating logout...');
       const { error } = await supabase.auth.signOut();
       if (error) {
         console.error('Logout error:', error);
-      } else {
-        console.log('✅ Logout successful');
-        setIsAuthenticated(false);
-        setCurrentUser(null);
-        setCurrentPage('landing');
-        
-        // Clear all app state
-        setPropertyData(null);
-        setUploadedFile(null);
-        setExtractedData(null);
-        setUnderwritingResult(null);
-        setDocumentData(null);
       }
+      // Don't manually set state here - let onAuthStateChange handle it
     } catch (error) {
-      console.error('❌ Logout failed:', error);
-      // Force logout even if API call fails
+      console.error('Logout failed:', error);
+      // Force logout on error
       setIsAuthenticated(false);
       setCurrentUser(null);
       setCurrentPage('landing');
     }
   };
 
-  // Show loading screen with better error handling
+  // Simple loading screen - no timeout needed
   if (isLoading) {
     return (
       <div style={{
@@ -296,59 +176,6 @@ function App() {
             margin: '0 auto 16px'
           }}></div>
           <p style={{ color: '#666666', fontSize: '1rem' }}>Loading Terra.Ai...</p>
-          
-          {loadingError && (
-            <div style={{ 
-              marginTop: '24px', 
-              padding: '16px', 
-              backgroundColor: '#fef2f2', 
-              border: '1px solid #ef4444',
-              borderRadius: '8px',
-              maxWidth: '400px',
-              margin: '24px auto 0'
-            }}>
-              <p style={{ color: '#ef4444', marginBottom: '16px', fontSize: '0.875rem' }}>
-                {loadingError}
-              </p>
-              <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
-                <button
-                  onClick={() => window.location.reload()}
-                  style={{ 
-                    padding: '8px 16px', 
-                    backgroundColor: '#ef4444', 
-                    color: 'white', 
-                    border: 'none', 
-                    borderRadius: '6px', 
-                    cursor: 'pointer',
-                    fontSize: '0.875rem',
-                    fontWeight: '600'
-                  }}
-                >
-                  Refresh Page
-                </button>
-                <button
-                  onClick={() => {
-                    // Clear all storage and reload
-                    localStorage.clear();
-                    sessionStorage.clear();
-                    window.location.reload();
-                  }}
-                  style={{ 
-                    padding: '8px 16px', 
-                    backgroundColor: '#666666', 
-                    color: 'white', 
-                    border: 'none', 
-                    borderRadius: '6px', 
-                    cursor: 'pointer',
-                    fontSize: '0.875rem',
-                    fontWeight: '600'
-                  }}
-                >
-                  Clear Data & Reload
-                </button>
-              </div>
-            </div>
-          )}
         </div>
         <style>
           {`
@@ -364,7 +191,7 @@ function App() {
 
   const renderPage = () => {
     try {
-      console.log(`🎯 Rendering page: ${currentPage}`);
+      console.log(`Rendering page: ${currentPage}`);
       switch (currentPage) {
         case 'landing':
           return <LandingPage setCurrentPage={handlePageChange} />;
@@ -486,11 +313,11 @@ function App() {
             </div>
           );
         default:
-          console.error(`❌ Unknown page: ${currentPage}`);
+          console.error(`Unknown page: ${currentPage}`);
           return <LandingPage setCurrentPage={handlePageChange} />;
       }
     } catch (err) {
-      console.error("❌ renderPage() failed:", err);
+      console.error("renderPage() failed:", err);
       return (
         <div style={{ color: 'red', padding: '20px', backgroundColor: 'white', minHeight: '100vh' }}>
           Error: {err.message}
