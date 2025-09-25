@@ -16,6 +16,7 @@ import PFA from './PFA';
 import LoginPage from './LoginPage';
 import SignupPage from './SignupPage';
 import DashboardPage from './DashboardPage';
+import CheckoutReturnPage from './CheckoutReturnPage';
 import { supabase } from './lib/supabase';
 
 const backendUrl = process.env.REACT_APP_BACKEND_URL;
@@ -31,6 +32,22 @@ function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Check URL for page parameter
+  useEffect(() => {
+    // Parse URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const pageParam = urlParams.get('page');
+    
+    // If there's a page parameter in the URL, set the current page
+    if (pageParam) {
+      setCurrentPage(pageParam);
+      
+      // Clean up the URL to remove the parameter
+      const newUrl = window.location.pathname;
+      window.history.replaceState({}, document.title, newUrl);
+    }
+  }, []);
 
   // Single authentication handler - no race conditions
   useEffect(() => {
@@ -215,6 +232,12 @@ function App() {
               setCurrentPage={handlePageChange} 
               currentUser={currentUser}
               onLogout={handleLogout}
+            />
+          );
+        case 'checkout-return':
+          return (
+            <CheckoutReturnPage 
+              setCurrentPage={handlePageChange}
             />
           );
         case 'home':
