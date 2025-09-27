@@ -71,7 +71,7 @@ async def create_checkout_session(request: Request):
 
         profile = result.data
         
-        # Create Stripe checkout session
+        # Create Stripe checkout session - hide the back button
         session = stripe.checkout.Session.create(
             payment_method_types=['card'],
             mode='subscription',
@@ -80,8 +80,10 @@ async def create_checkout_session(request: Request):
                 'quantity': 1,
             }],
             success_url=data.get('successUrl', f"{os.getenv('FRONTEND_URL', 'http://localhost:3000')}/signup?payment=success&session_id={{CHECKOUT_SESSION_ID}}"),
-            cancel_url=f"{os.getenv('FRONTEND_URL', 'https://terra-investai.com')}/return-to-dashboard.html",
+            cancel_url=f"{os.getenv('FRONTEND_URL', 'https://terra-investai.com')}/dashboard",
             customer_email=profile.get('email'),
+            ui_mode="embedded",  # Use embedded mode to hide back button
+            return_url=f"{os.getenv('FRONTEND_URL', 'https://terra-investai.com')}/dashboard",
             metadata={
                 'user_id': user_id,
                 'subscription_plan': profile.get('subscription_plan')
