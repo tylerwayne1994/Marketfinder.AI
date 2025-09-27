@@ -72,18 +72,6 @@ const DashboardPage = ({ setCurrentPage, currentUser }) => {
   useEffect(() => {
     if (!currentUser?.id) return;
     fetchDashboardData();
-
-    // Check for tab parameter in URL
-    const urlParams = new URLSearchParams(window.location.search);
-    const tabParam = urlParams.get('tab');
-    
-    if (tabParam && ['overview', 'subscription', 'account', 'usage', 'support'].includes(tabParam)) {
-      setActiveTab(tabParam);
-      
-      // Clean up the URL to remove the parameter
-      const newUrl = window.location.pathname;
-      window.history.replaceState({}, document.title, newUrl);
-    }
   }, [currentUser?.id]);
 
   const fetchDashboardData = async () => {
@@ -227,8 +215,7 @@ const DashboardPage = ({ setCurrentPage, currentUser }) => {
         },
         body: JSON.stringify({
           userId: userData.id,
-          priceId,
-          cancelUrl: window.location.origin + '/dashboard'
+          priceId
         })
       });
       let data = {};
