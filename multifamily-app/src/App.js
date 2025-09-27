@@ -33,8 +33,14 @@ function App() {
   const [currentUser, setCurrentUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Check URL for page parameter
+  // Check URL for page parameter or path
   useEffect(() => {
+    // Check if the path is /dashboard
+    if (window.location.pathname === '/dashboard') {
+      setCurrentPage('dashboard');
+      return;
+    }
+    
     // Parse URL parameters
     const urlParams = new URLSearchParams(window.location.search);
     const pageParam = urlParams.get('page');
