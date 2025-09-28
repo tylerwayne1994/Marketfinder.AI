@@ -1,22 +1,3 @@
-# Compatibility route for frontend: /api/checkout proxies to /api/create-checkout-session
-from fastapi import Request
-from fastapi.responses import JSONResponse
-
-@app.post("/api/checkout")
-async def proxy_checkout(request: Request):
-    # Forward the request body to /api/create-checkout-session
-    try:
-        data = await request.json()
-        # Call the actual handler from stripe_checkout
-        from stripe_checkout import create_checkout_session
-        response = await create_checkout_session(request)
-        # If response is a FastAPI Response, return as is
-        if isinstance(response, JSONResponse):
-            return response
-        # Otherwise, wrap in JSONResponse
-        return JSONResponse(response)
-    except Exception as e:
-        return JSONResponse({"error": str(e)}, status_code=500)
 # app.py  — Underwriting backend w/ financing modes + comprehensive metrics
 # Python 3.10+  |  uvicorn app:app --host 127.0.0.1 --port 8010 --reload
 
@@ -93,11 +74,6 @@ app.add_middleware(
 
 # Include protected routes
 app.include_router(protected_router, prefix="/api")
-# Include Stripe/payment routes
-from stripe_checkout import router as checkout_router
-from stripe_webhook import router as webhook_router
-app.include_router(checkout_router, prefix="/api")
-app.include_router(webhook_router, prefix="/api")
 
 # ---------------- Utils ----------------
 def _to_data_url(file_bytes: bytes, mime: str) -> str:
@@ -1437,6 +1413,7 @@ async def health_check_verify(
         "ok": True,
         "verification": {"can_run_healthcheck": True, "verified_payload": payload},
         "file_name": file.filename
+   
     }
 
 @app.post("/api/health-check/analyze")

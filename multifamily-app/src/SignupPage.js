@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { supabase } from './lib/supabase';
+import { useAuth } from './context/AuthContext';
 
 const SignUpPage = ({ setCurrentPage }) => {
+  const { signup, loading } = useAuth();
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -13,6 +14,7 @@ const SignUpPage = ({ setCurrentPage }) => {
   const [errors, setErrors] = useState({});
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [error, setError] = useState(null);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -59,24 +61,12 @@ const SignUpPage = ({ setCurrentPage }) => {
       setErrors(newErrors);
       return;
     }
+    setError(null);
     try {
-      const { data, error } = await supabase.auth.signUp({
-        email: formData.email,
-        password: formData.password,
-        options: {
-          data: {
-            firstName: formData.firstName,
-            lastName: formData.lastName,
-          }
-        }
-      });
-      if (error) {
-        setErrors({ general: error.message });
-      } else if (data.user) {
-        setCurrentPage('dashboard');
-      }
+      await signup(formData.email, formData.password, {});
+      setCurrentPage('dashboard');
     } catch (err) {
-      setErrors({ general: 'An unexpected error occurred. Please try again.' });
+      setError(err.message);
     }
   };
 
@@ -107,11 +97,7 @@ const SignUpPage = ({ setCurrentPage }) => {
   );
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      backgroundColor: '#f8f8f8',
-      padding: '40px 20px'
-    }}>
+    <div className="login-bg">
       <div style={{
         maxWidth: '800px',
         margin: '0 auto',
@@ -445,6 +431,8 @@ const SignUpPage = ({ setCurrentPage }) => {
             </button>
           </div>
 
+          {error && <div className="error" style={{ marginTop: '16px', textAlign: 'center' }}>{error}</div>}
+
           <div style={{
             textAlign: 'center',
             marginTop: '24px',
@@ -473,6 +461,46 @@ const SignUpPage = ({ setCurrentPage }) => {
           </div>
         </div>
       </div>
+      <style jsx>{`
+        .login-bg {
+          min-height: 100vh;
+          width: 100vw;
+          background: url('./modern-house.jpg') center center/cover no-repeat;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        .login-form {
+          background: rgba(255,255,255,0.85);
+          padding: 2rem 2.5rem;
+          border-radius: 12px;
+          box-shadow: 0 4px 24px rgba(0,0,0,0.12);
+          display: flex;
+          flex-direction: column;
+          gap: 1rem;
+          min-width: 320px;
+        }
+        .login-form input {
+          padding: 0.75rem;
+          border: 1px solid #ccc;
+          border-radius: 6px;
+          font-size: 1rem;
+        }
+        .login-form button {
+          padding: 0.75rem;
+          background: #222;
+          color: #fff;
+          border: none;
+          border-radius: 6px;
+          font-size: 1rem;
+          cursor: pointer;
+        }
+        .error {
+          color: #c00;
+          font-size: 0.95rem;
+          margin-top: 0.5rem;
+        }
+      `}</style>
     </div>
   );
 };
