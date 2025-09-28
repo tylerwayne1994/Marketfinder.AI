@@ -19,6 +19,10 @@ import DashboardPage from './DashboardPage';
 import CheckoutReturnPage from './CheckoutReturnPage';
 import { supabase } from './lib/supabase';
 
+// Local storage keys
+const AUTH_STATE_KEY = 'terra_auth_state';
+const USER_DATA_KEY = 'terra_user_data';
+
 const backendUrl = process.env.REACT_APP_BACKEND_URL;
 
 function App() {
@@ -33,12 +37,21 @@ function App() {
   const [currentUser, setCurrentUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Check URL for page parameter or path
+  // Check URL for path, hash, or parameters
   useEffect(() => {
-    // Check if the path is /dashboard
+    // Handle direct path navigation
     if (window.location.pathname === '/dashboard') {
       setCurrentPage('dashboard');
       return;
+    }
+    
+    // Handle hash-based routing (for direct navigation from external sites)
+    if (window.location.hash) {
+      const hashPath = window.location.hash.substring(1); // Remove the # character
+      if (hashPath === '/dashboard') {
+        setCurrentPage('dashboard');
+        return;
+      }
     }
     
     // Parse URL parameters
@@ -55,6 +68,41 @@ function App() {
     }
   }, []);
 
+  // Check for saved auth state on initial load
+  useEffect(() => {
+    const checkSavedAuthState = async () => {
+      const savedAuthState = localStorage.getItem(AUTH_STATE_KEY);
+      const savedUserData = localStorage.getItem(USER_DATA_KEY);
+      
+      if (savedAuthState === 'true' && savedUserData) {
+        try {
+          // Verify the session is still valid with Supabase
+          const { data: { user } } = await supabase.auth.getUser();
+          
+          if (user) {
+            // Session is still valid
+            const userData = JSON.parse(savedUserData);
+            setCurrentUser(userData);
+            setIsAuthenticated(true);
+            console.log('Restored authentication from saved state');
+          } else {
+            // Session is invalid - clear saved state
+            localStorage.removeItem(AUTH_STATE_KEY);
+            localStorage.removeItem(USER_DATA_KEY);
+            setCurrentPage('landing');
+          }
+        } catch (error) {
+          console.error('Error checking saved auth state:', error);
+          localStorage.removeItem(AUTH_STATE_KEY);
+          localStorage.removeItem(USER_DATA_KEY);
+        }
+      }
+    };
+    
+    checkSavedAuthState();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Run once on mount, intentionally not including currentPage to prevent loops
+  
   // Single authentication handler - no race conditions
   useEffect(() => {
     let isMounted = true;
@@ -95,11 +143,17 @@ function App() {
             subscriptionStatus: profile?.subscription_status || 'inactive'
           };
 
+          // Save auth state and user data to localStorage
+          localStorage.setItem(AUTH_STATE_KEY, 'true');
+          localStorage.setItem(USER_DATA_KEY, JSON.stringify(userData));
+          
           setCurrentUser(userData);
           setIsAuthenticated(true);
           console.log('User authenticated successfully');
         } else {
           // No session - user is not authenticated
+          localStorage.removeItem(AUTH_STATE_KEY);
+          localStorage.removeItem(USER_DATA_KEY);
           setCurrentUser(null);
           setIsAuthenticated(false);
           setCurrentPage('landing');
