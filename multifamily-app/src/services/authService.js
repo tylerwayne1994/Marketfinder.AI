@@ -1,19 +1,19 @@
 import { supabase } from '../lib/supabase';
 
-export async function signUp({ email, password, ...profile }) {
-  const { user, error } = await supabase.auth.signUp({ email, password });
+export async function signup(email, password, profile = {}) {
+  const { data, error } = await supabase.auth.signUp({ email, password });
   if (error) throw error;
   // Optionally insert profile row after signup
-  if (user && profile) {
-    await supabase.from('profiles').insert([{ id: user.id, ...profile }]);
+  if (data?.user && profile) {
+    await supabase.from('profiles').insert([{ id: data.user.id, ...profile }]);
   }
-  return user;
+  return data?.user;
 }
 
-export async function signIn({ email, password }) {
-  const { user, error } = await supabase.auth.signInWithPassword({ email, password });
+export async function login(email, password) {
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) throw error;
-  return user;
+  return data?.user;
 }
 
 export async function signOut() {
