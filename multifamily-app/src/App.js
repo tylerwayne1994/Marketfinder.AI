@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import ErrorBoundary from './ErrorBoundary';
-import HomePage from './HomePage';
-import { ThemeProvider } from './HomePage';
+import HomePage, { ThemeProvider } from './HomePage';
 import CountyChoroplethMap from './MarketHeatMap';
 import CensusMapViewer from './CensusMapViewer';
 import MarketHighlightsPage from './markethighlightspage';
@@ -14,7 +13,7 @@ import DocumentGenerator from './DocumentGenerator';
 import PropertyScrapePage from './PropertyScrapePage';
 import PFA from './PFA';
 import LoginPage from './LoginPage';
-import SignupPage from './SignupPage';
+import SignupPage from './SignupPage'; // <-- ensure file/path matches
 import DashboardPage from './DashboardPage';
 import CheckoutReturnPage from './CheckoutReturnPage';
 import { supabase } from './lib/supabase';
@@ -23,70 +22,57 @@ import { supabase } from './lib/supabase';
 const AUTH_STATE_KEY = 'terra_auth_state';
 const USER_DATA_KEY = 'terra_user_data';
 
-const backendUrl = process.env.REACT_APP_BACKEND_URL;
-
 function App() {
   const [currentPage, setCurrentPage] = useState('landing');
   const [propertyData, setPropertyData] = useState(null);
   const [uploadedFile, setUploadedFile] = useState(null);
   const [extractedData, setExtractedData] = useState(null);
   const [underwritingResult, setUnderwritingResult] = useState(null);
-  const [viewingProperty, setViewingProperty] = useState(null);
   const [documentData, setDocumentData] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Check URL for path, hash, or parameters
+  // URL-based routing (path/hash/query param)
   useEffect(() => {
-    // Handle direct path navigation
+    // direct path
     if (window.location.pathname === '/dashboard') {
       setCurrentPage('dashboard');
       return;
     }
-    
-    // Handle hash-based routing (for direct navigation from external sites)
+    // hash
     if (window.location.hash) {
-      const hashPath = window.location.hash.substring(1); // Remove the # character
+      const hashPath = window.location.hash.substring(1);
       if (hashPath === '/dashboard') {
         setCurrentPage('dashboard');
         return;
       }
     }
-    
-    // Parse URL parameters
+    // query ?page=
     const urlParams = new URLSearchParams(window.location.search);
     const pageParam = urlParams.get('page');
-    
-    // If there's a page parameter in the URL, set the current page
     if (pageParam) {
       setCurrentPage(pageParam);
-      
-      // Clean up the URL to remove the parameter
       const newUrl = window.location.pathname;
       window.history.replaceState({}, document.title, newUrl);
     }
   }, []);
 
-  // Check for saved auth state on initial load
+  // Restore saved state if Supabase session is still valid
   useEffect(() => {
     const checkSavedAuthState = async () => {
       const savedAuthState = localStorage.getItem(AUTH_STATE_KEY);
       const savedUserData = localStorage.getItem(USER_DATA_KEY);
-      
+
       if (savedAuthState === 'true' && savedUserData) {
         try {
-          // Verify the session is still valid with Supabase
           const { data: { user } } = await supabase.auth.getUser();
-          
           if (user) {
-            // Session is still valid
             const userData = JSON.parse(savedUserData);
             setCurrentUser(userData);
             setIsAuthenticated(true);
             console.log('Restored authentication from saved state');
           } else {
-            // Session is invalid - clear saved state
             localStorage.removeItem(AUTH_STATE_KEY);
             localStorage.removeItem(USER_DATA_KEY);
             setCurrentPage('landing');
@@ -98,23 +84,20 @@ function App() {
         }
       }
     };
-    
     checkSavedAuthState();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Run once on mount, intentionally not including currentPage to prevent loops
-  
-  // Single authentication handler - no race conditions
+  }, []);
+
+  // Single Supabase auth listener
   useEffect(() => {
     let isMounted = true;
 
-    const handleAuthChange = async (event, session) => {
+    const handleAuthChange = async (_event, session) => {
       if (!isMounted) return;
-
-      console.log('Auth event:', event, session ? 'with session' : 'no session');
+      console.log('Auth event:', _event, session ? 'with session' : 'no session');
 
       try {
         if (session?.user) {
-          // User is authenticated - fetch profile
+          // Try to fetch profile (non-fatal if missing)
           const { data: profile, error: profileError } = await supabase
             .from('profiles')
             .select('*')
@@ -123,7 +106,6 @@ function App() {
 
           if (!isMounted) return;
 
-          // Continue even if profile fetch fails - use basic user data
           if (profileError && profileError.code !== 'PGRST116') {
             console.warn('Profile fetch failed:', profileError.message);
           }
@@ -140,58 +122,50 @@ function App() {
             city: profile?.city || '',
             state: profile?.state || '',
             zipCode: profile?.zip_code || '',
-            subscriptionStatus: profile?.subscription_status || 'inactive'
+            subscriptionStatus: profile?.subscription_status || 'inactive',
           };
 
-          // Save auth state and user data to localStorage
           localStorage.setItem(AUTH_STATE_KEY, 'true');
           localStorage.setItem(USER_DATA_KEY, JSON.stringify(userData));
-          
+
           setCurrentUser(userData);
           setIsAuthenticated(true);
           console.log('User authenticated successfully');
         } else {
-          // No session - user is not authenticated
+          // Signed out / no session
           localStorage.removeItem(AUTH_STATE_KEY);
           localStorage.removeItem(USER_DATA_KEY);
           setCurrentUser(null);
           setIsAuthenticated(false);
           setCurrentPage('landing');
-          
-          // Clear any cached data
+
+          // Clear cached page data
           setPropertyData(null);
           setUploadedFile(null);
           setExtractedData(null);
           setUnderwritingResult(null);
           setDocumentData(null);
-          
+
           console.log('User not authenticated');
         }
       } catch (error) {
         if (!isMounted) return;
-        
         console.error('Auth handler error:', error);
-        
-        // Fail safely - clear auth state
         setCurrentUser(null);
         setIsAuthenticated(false);
         setCurrentPage('landing');
       } finally {
-        if (isMounted) {
-          setIsLoading(false);
-        }
+        if (isMounted) setIsLoading(false);
       }
     };
 
-    // Set up auth state listener - handles both initial state and changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthChange);
 
-    // Cleanup
     return () => {
       isMounted = false;
       subscription.unsubscribe();
     };
-  }, []); // Empty deps - run once on mount
+  }, []);
 
   const handlePageChange = (page, data = null) => {
     console.log(`Navigating to "${page}"`, data ? 'with data' : 'without data');
@@ -206,33 +180,30 @@ function App() {
 
   const handleFileUpload = (file) => {
     setUploadedFile(file);
-    if (file) {
-      console.log('File uploaded:', file.name, file.type, file.size);
-    } else {
+    if (!file) {
       console.log('File cleared');
       setExtractedData(null);
       setUnderwritingResult(null);
+      return;
     }
+    console.log('File uploaded:', file.name, file.type, file.size);
   };
 
   const handleLogout = async () => {
     try {
       console.log('Initiating logout...');
       const { error } = await supabase.auth.signOut();
-      if (error) {
-        console.error('Logout error:', error);
-      }
-      // Don't manually set state here - let onAuthStateChange handle it
+      if (error) console.error('Logout error:', error);
+      // State will be reset by onAuthStateChange
     } catch (error) {
       console.error('Logout failed:', error);
-      // Force logout on error
       setIsAuthenticated(false);
       setCurrentUser(null);
       setCurrentPage('landing');
     }
   };
 
-  // Simple loading screen - no timeout needed
+  // Initial loading screen
   if (isLoading) {
     return (
       <div style={{
@@ -251,7 +222,7 @@ function App() {
             borderRadius: '50%',
             animation: 'spin 1s linear infinite',
             margin: '0 auto 16px'
-          }}></div>
+          }} />
           <p style={{ color: '#666666', fontSize: '1rem' }}>Loading Terra.Ai...</p>
         </div>
         <style>
@@ -272,45 +243,54 @@ function App() {
       switch (currentPage) {
         case 'landing':
           return <LandingPage setCurrentPage={handlePageChange} />;
+
         case 'login':
           return (
-            <LoginPage 
-              setCurrentPage={handlePageChange} 
-              setIsAuthenticated={setIsAuthenticated} 
-              setCurrentUser={setCurrentUser} 
-            />
-          );
-        case 'signup':
-          return (
-            <SignupPage 
+            <LoginPage
               setCurrentPage={handlePageChange}
+              setIsAuthenticated={setIsAuthenticated}
+              setCurrentUser={setCurrentUser}
             />
           );
+
+        case 'signup':
+          return <SignupPage setCurrentPage={handlePageChange} />;
+
         case 'dashboard':
+          // Guard: if not authenticated, show login
+          if (!isAuthenticated || !currentUser) {
+            return (
+              <LoginPage
+                setCurrentPage={handlePageChange}
+                setIsAuthenticated={setIsAuthenticated}
+                setCurrentUser={setCurrentUser}
+              />
+            );
+          }
           return (
-            <DashboardPage 
-              setCurrentPage={handlePageChange} 
+            <DashboardPage
+              setCurrentPage={handlePageChange}
               currentUser={currentUser}
               onLogout={handleLogout}
             />
           );
+
         case 'checkout-return':
-          return (
-            <CheckoutReturnPage 
-              setCurrentPage={handlePageChange}
-            />
-          );
+          return <CheckoutReturnPage setCurrentPage={handlePageChange} />;
+
         case 'home':
           return (
-            <HomePage 
-              setCurrentPage={handlePageChange} 
+            <HomePage
+              setCurrentPage={handlePageChange}
               isAuthenticated={isAuthenticated}
               currentUser={currentUser}
               onLogout={handleLogout}
             />
           );
+
         case 'underwrite':
           return <UnderwritePage setCurrentPage={handlePageChange} />;
+
         case 'upload':
           return (
             <UploadPage
@@ -325,6 +305,7 @@ function App() {
               setUnderwritingResult={setUnderwritingResult}
             />
           );
+
         case 'manual':
           return (
             <ManualUnderwritePage
@@ -335,8 +316,10 @@ function App() {
               setUnderwritingResult={setUnderwritingResult}
             />
           );
+
         case 'pfa':
           return <PFA setCurrentPage={handlePageChange} />;
+
         case 'financing':
           return (
             <div style={{ padding: '48px', minHeight: '100vh', backgroundColor: 'white', color: 'black', textAlign: 'center' }}>
@@ -357,20 +340,27 @@ function App() {
               </div>
             </div>
           );
+
         case 'marketHeatMap':
         case 'heatMapSelector':
           return <CountyChoroplethMap setCurrentPage={handlePageChange} />;
+
         case 'censusMapViewer':
           return <CensusMapViewer setCurrentPage={handlePageChange} />;
+
         case 'marketHighlights':
           return <MarketHighlightsPage setCurrentPage={handlePageChange} />;
+
         case 'market-analysis':
           return <MarketAnalysisPage setCurrentPage={handlePageChange} />;
+
         case 'documentGenerator':
           return <DocumentGenerator setCurrentPage={handlePageChange} />;
+
         case 'propertyScrape':
         case 'propertyScraper':
           return <PropertyScrapePage setCurrentPage={handlePageChange} />;
+
         case 'settings':
           return (
             <div style={{ padding: '48px', minHeight: '100vh', backgroundColor: 'white', color: 'black', textAlign: 'center' }}>
@@ -379,6 +369,7 @@ function App() {
               <button onClick={() => handlePageChange('home')} style={{ marginTop: '20px', padding: '10px 20px', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}>Back to Home</button>
             </div>
           );
+
         case 'docsigner':
           return (
             <div style={{ padding: '48px', minHeight: '100vh', backgroundColor: 'white', color: 'black', textAlign: 'center' }}>
@@ -395,16 +386,19 @@ function App() {
               <button onClick={() => handlePageChange('home')} style={{ marginTop: '20px', padding: '10px 20px', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}>Back to Home</button>
             </div>
           );
+
         default:
           console.error(`Unknown page: ${currentPage}`);
           return <LandingPage setCurrentPage={handlePageChange} />;
       }
     } catch (err) {
-      console.error("renderPage() failed:", err);
+      console.error('renderPage() failed:', err);
       return (
         <div style={{ color: 'red', padding: '20px', backgroundColor: 'white', minHeight: '100vh' }}>
           Error: {err.message}
-          <button onClick={() => handlePageChange('landing')} style={{ marginLeft: '20px', padding: '10px 20px', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}>Back to Landing</button>
+          <button onClick={() => handlePageChange('landing')} style={{ marginLeft: '20px', padding: '10px 20px', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}>
+            Back to Landing
+          </button>
         </div>
       );
     }

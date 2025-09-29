@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
-import { useAuth } from './context/AuthContext';
+import { supabase } from './lib/supabase';
 
 const SignUpPage = ({ setCurrentPage }) => {
-  const { signup, loading } = useAuth();
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -15,58 +14,96 @@ const SignUpPage = ({ setCurrentPage }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [needsEmailConfirm, setNeedsEmailConfirm] = useState(false);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value
-    }));
-    if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: '' }));
-    }
+    setFormData(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
+    if (errors[name]) setErrors(prev => ({ ...prev, [name]: '' }));
   };
 
   const validateForm = () => {
     const newErrors = {};
-   
     if (!formData.firstName.trim()) newErrors.firstName = 'First name is required';
     if (!formData.lastName.trim()) newErrors.lastName = 'Last name is required';
-   
-    if (!formData.email.trim()) {
-      newErrors.email = 'Email is required';
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = 'Email is invalid';
-    }
-   
-    if (!formData.password) {
-      newErrors.password = 'Password is required';
-    } else if (formData.password.length < 8) {
-      newErrors.password = 'Password must be at least 8 characters';
-    } else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(formData.password)) {
+
+    if (!formData.email.trim()) newErrors.email = 'Email is required';
+    else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = 'Email is invalid';
+
+    if (!formData.password) newErrors.password = 'Password is required';
+    else if (formData.password.length < 8) newErrors.password = 'Password must be at least 8 characters';
+    else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(formData.password))
       newErrors.password = 'Password must contain uppercase, lowercase, and number';
-    }
-   
-    if (formData.password !== formData.confirmPassword) {
+
+    if (formData.password !== formData.confirmPassword)
       newErrors.confirmPassword = 'Passwords do not match';
-    }
-   
+
     return newErrors;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     const newErrors = validateForm();
-    if (Object.keys(newErrors).length > 0) {
+    if (Object.keys(newErrors).length) {
       setErrors(newErrors);
       return;
     }
+
     setError(null);
+    setIsLoading(true);
+    setNeedsEmailConfirm(false);
+
     try {
-      await signup(formData.email, formData.password, {});
-      setCurrentPage('dashboard');
+      const { data, error } = await supabase.auth.signUp({
+        email: formData.email,
+        password: formData.password,
+        options: {
+          data: {
+            firstName: formData.firstName,
+            lastName: formData.lastName,
+          },
+        },
+      });
+
+      if (error) {
+        setError(error.message);
+        return;
+      }
+
+      // If email confirmations are enabled in Supabase, there won't be a session yet.
+      const user = data?.user ?? null;
+      const hasSession = !!data?.session;
+
+      if (!user) {
+        setError('Signup failed. No user returned.');
+        return;
+      }
+
+      // Optional: create/update a profile row AFTER the account exists.
+      // This is safe to ignore if you don’t have a 'profiles' table yet.
+      // try {
+      //   await supabase.from('profiles').upsert({
+      //     id: user.id,
+      //     first_name: formData.firstName,
+      //     last_name: formData.lastName,
+      //     email: formData.email,
+      //   });
+      // } catch (_) {}
+
+      if (hasSession) {
+        // Session exists immediately (email confirm disabled) → go to dashboard.
+        setCurrentPage?.('dashboard');
+      } else {
+        // Most setups: email confirm is required.
+        setNeedsEmailConfirm(true);
+        // Keep user on this page with a clear message + link to login
+        // so App’s onAuthStateChange can take over after confirmation.
+      }
     } catch (err) {
-      setError(err.message);
+      setError(err?.message || 'An unexpected error occurred. Please try again.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -84,7 +121,6 @@ const SignUpPage = ({ setCurrentPage }) => {
         const y2 = 50 + length * Math.sin(radian);
         const x3 = 50 + 20 * Math.cos(radian + 0.15);
         const y3 = 50 + 20 * Math.sin(radian + 0.15);
-       
         return (
           <path
             key={i}
@@ -113,22 +149,13 @@ const SignUpPage = ({ setCurrentPage }) => {
           alignItems: 'center',
           justifyContent: 'space-between'
         }}>
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '12px'
-          }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <TerraLogo />
-            <h1 style={{
-              fontSize: '1.75rem',
-              fontWeight: '700',
-              color: '#000000',
-              margin: 0
-            }}>
+            <h1 style={{ fontSize: '1.75rem', fontWeight: '700', color: '#000000', margin: 0 }}>
               Create Your Terra.Ai Account
             </h1>
           </div>
-         
+
           <button
             onClick={() => setCurrentPage('landing')}
             style={{
@@ -144,323 +171,227 @@ const SignUpPage = ({ setCurrentPage }) => {
               fontSize: '0.875rem',
               transition: 'all 0.2s ease'
             }}
-            onMouseEnter={(e) => {
-              e.target.style.backgroundColor = '#f5f5f5';
-            }}
-            onMouseLeave={(e) => {
-              e.target.style.backgroundColor = 'transparent';
-            }}
           >
             Back
           </button>
         </div>
 
         <div style={{ padding: '32px' }}>
-          <div style={{ marginBottom: '32px' }}>
-            <h2 style={{
-              fontSize: '1.25rem',
-              fontWeight: '600',
-              marginBottom: '20px',
-              color: '#000000'
-            }}>
-              Personal Information
-            </h2>
-           
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: '1fr 1fr',
-              gap: '20px',
-              marginBottom: '20px'
-            }}>
-              <div>
-                <label style={{
-                  display: 'block',
-                  fontSize: '0.875rem',
-                  fontWeight: '500',
-                  marginBottom: '6px',
-                  color: '#333333'
-                }}>
-                  First Name *
-                </label>
-                <input
-                  type="text"
-                  name="firstName"
-                  value={formData.firstName}
-                  onChange={handleChange}
-                  style={{
-                    width: '100%',
-                    padding: '10px 12px',
-                    border: errors.firstName ? '2px solid #ef4444' : '1px solid #e5e5e5',
-                    borderRadius: '8px',
-                    fontSize: '0.875rem',
-                    transition: 'border-color 0.2s ease',
-                    outline: 'none'
-                  }}
-                  onFocus={(e) => {
-                    if (!errors.firstName) e.target.style.borderColor = '#000000';
-                  }}
-                  onBlur={(e) => {
-                    if (!errors.firstName) e.target.style.borderColor = '#e5e5e5';
-                  }}
-                />
-                {errors.firstName && (
-                  <span style={{ color: '#ef4444', fontSize: '0.75rem', marginTop: '4px', display: 'block' }}>
-                    {errors.firstName}
-                  </span>
-                )}
-              </div>
-             
-              <div>
-                <label style={{
-                  display: 'block',
-                  fontSize: '0.875rem',
-                  fontWeight: '500',
-                  marginBottom: '6px',
-                  color: '#333333'
-                }}>
-                  Last Name *
-                </label>
-                <input
-                  type="text"
-                  name="lastName"
-                  value={formData.lastName}
-                  onChange={handleChange}
-                  style={{
-                    width: '100%',
-                    padding: '10px 12px',
-                    border: errors.lastName ? '2px solid #ef4444' : '1px solid #e5e5e5',
-                    borderRadius: '8px',
-                    fontSize: '0.875rem',
-                    transition: 'border-color 0.2s ease',
-                    outline: 'none'
-                  }}
-                  onFocus={(e) => {
-                    if (!errors.lastName) e.target.style.borderColor = '#000000';
-                  }}
-                  onBlur={(e) => {
-                    if (!errors.lastName) e.target.style.borderColor = '#e5e5e5';
-                  }}
-                />
-                {errors.lastName && (
-                  <span style={{ color: '#ef4444', fontSize: '0.75rem', marginTop: '4px', display: 'block' }}>
-                    {errors.lastName}
-                  </span>
-                )}
-              </div>
-            </div>
-
-            <div style={{ marginBottom: '20px' }}>
-              <label style={{
-                display: 'block',
-                fontSize: '0.875rem',
-                fontWeight: '500',
-                marginBottom: '6px',
-                color: '#333333'
-              }}>
-                Email Address *
-              </label>
-              <input
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                style={{
-                  width: '100%',
-                  padding: '10px 12px',
-                  border: errors.email ? '2px solid #ef4444' : '1px solid #e5e5e5',
-                  borderRadius: '8px',
-                  fontSize: '0.875rem',
-                  transition: 'border-color 0.2s ease',
-                  outline: 'none'
-                }}
-                onFocus={(e) => {
-                  if (!errors.email) e.target.style.borderColor = '#000000';
-                }}
-                onBlur={(e) => {
-                  if (!errors.email) e.target.style.borderColor = '#e5e5e5';
-                }}
-              />
-              {errors.email && (
-                <span style={{ color: '#ef4444', fontSize: '0.75rem', marginTop: '4px', display: 'block' }}>
-                  {errors.email}
-                </span>
-              )}
-            </div>
-
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: '1fr 1fr',
-              gap: '20px',
-              marginBottom: '20px'
-            }}>
-              <div style={{ position: 'relative' }}>
-                <label style={{
-                  display: 'block',
-                  fontSize: '0.875rem',
-                  fontWeight: '500',
-                  marginBottom: '6px',
-                  color: '#333333'
-                }}>
-                  Password *
-                </label>
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  name="password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  style={{
-                    width: '100%',
-                    padding: '10px 40px 10px 12px',
-                    border: errors.password ? '2px solid #ef4444' : '1px solid #e5e5e5',
-                    borderRadius: '8px',
-                    fontSize: '0.875rem',
-                    transition: 'border-color 0.2s ease',
-                    outline: 'none'
-                  }}
-                  onFocus={(e) => {
-                    if (!errors.password) e.target.style.borderColor = '#000000';
-                  }}
-                  onBlur={(e) => {
-                    if (!errors.password) e.target.style.borderColor = '#e5e5e5';
-                  }}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  style={{
-                    position: 'absolute',
-                    right: '12px',
-                    top: '32px',
-                    backgroundColor: 'transparent',
-                    border: 'none',
-                    cursor: 'pointer',
-                    padding: '4px',
-                    color: '#666666'
-                  }}
-                >
-                  {showPassword ? 'Hide' : 'Show'}
-                </button>
-                {errors.password && (
-                  <span style={{ color: '#ef4444', fontSize: '0.75rem', marginTop: '4px', display: 'block' }}>
-                    {errors.password}
-                  </span>
-                )}
-              </div>
-             
-              <div style={{ position: 'relative' }}>
-                <label style={{
-                  display: 'block',
-                  fontSize: '0.875rem',
-                  fontWeight: '500',
-                  marginBottom: '6px',
-                  color: '#333333'
-                }}>
-                  Confirm Password *
-                </label>
-                <input
-                  type={showConfirmPassword ? 'text' : 'password'}
-                  name="confirmPassword"
-                  value={formData.confirmPassword}
-                  onChange={handleChange}
-                  style={{
-                    width: '100%',
-                    padding: '10px 40px 10px 12px',
-                    border: errors.confirmPassword ? '2px solid #ef4444' : '1px solid #e5e5e5',
-                    borderRadius: '8px',
-                    fontSize: '0.875rem',
-                    transition: 'border-color 0.2s ease',
-                    outline: 'none'
-                  }}
-                  onFocus={(e) => {
-                    if (!errors.confirmPassword) e.target.style.borderColor = '#000000';
-                  }}
-                  onBlur={(e) => {
-                    if (!errors.confirmPassword) e.target.style.borderColor = '#e5e5e5';
-                  }}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  style={{
-                    position: 'absolute',
-                    right: '12px',
-                    top: '32px',
-                    backgroundColor: 'transparent',
-                    border: 'none',
-                    cursor: 'pointer',
-                    padding: '4px',
-                    color: '#666666'
-                  }}
-                >
-                  {showConfirmPassword ? 'Hide' : 'Show'}
-                </button>
-                {errors.confirmPassword && (
-                  <span style={{ color: '#ef4444', fontSize: '0.75rem', marginTop: '4px', display: 'block' }}>
-                    {errors.confirmPassword}
-                  </span>
-                )}
-              </div>
-            </div>
-          </div>
-
-          <div style={{ display: 'flex', gap: '16px', justifyContent: 'space-between' }}>
-            <button
-              onClick={handleSubmit}
-              style={{
-                flex: 1,
-                backgroundColor: '#000000',
-                color: 'white',
-                padding: '14px 32px',
-                borderRadius: '8px',
-                border: 'none',
-                fontSize: '1rem',
-                fontWeight: '600',
-                cursor: 'pointer',
-                transition: 'all 0.2s ease'
-              }}
-              onMouseEnter={(e) => {
-                e.target.style.backgroundColor = '#333333';
-                e.target.style.transform = 'translateY(-2px)';
-              }}
-              onMouseLeave={(e) => {
-                e.target.style.backgroundColor = '#000000';
-                e.target.style.transform = 'translateY(0)';
-              }}
-            >
-              Sign Up
-            </button>
-          </div>
-
-          {error && <div className="error" style={{ marginTop: '16px', textAlign: 'center' }}>{error}</div>}
-
-          <div style={{
-            textAlign: 'center',
-            marginTop: '24px',
-            paddingTop: '24px',
-            borderTop: '1px solid #e5e5e5'
-          }}>
-            <span style={{
-              fontSize: '0.875rem',
-              color: '#666666'
-            }}>
-              Already have an account? {' '}
+          {needsEmailConfirm ? (
+            <div style={{ textAlign: 'center', padding: '24px' }}>
+              <h3 style={{ marginBottom: 8 }}>Confirm your email</h3>
+              <p style={{ color: '#555', marginBottom: 16 }}>
+                We sent a verification link to <strong>{formData.email}</strong>. Click it to activate your account,
+                then log in.
+              </p>
               <button
                 onClick={() => setCurrentPage('login')}
-                style={{
-                  color: '#000000',
-                  textDecoration: 'underline',
-                  cursor: 'pointer',
-                  background: 'none',
-                  border: 'none',
-                  fontSize: '0.875rem'
-                }}
+                style={{ padding: '10px 20px', border: 'none', borderRadius: 8, background: '#000', color: '#fff', cursor: 'pointer' }}
               >
-                Log in here
+                Go to Login
               </button>
-            </span>
-          </div>
+            </div>
+          ) : (
+            <>
+              <div style={{ marginBottom: '32px' }}>
+                <h2 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '20px', color: '#000000' }}>
+                  Personal Information
+                </h2>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '6px', color: '#333333' }}>
+                      First Name *
+                    </label>
+                    <input
+                      type="text"
+                      name="firstName"
+                      value={formData.firstName}
+                      onChange={handleChange}
+                      style={{
+                        width: '100%',
+                        padding: '10px 12px',
+                        border: errors.firstName ? '2px solid #ef4444' : '1px solid #e5e5e5',
+                        borderRadius: '8px',
+                        fontSize: '0.875rem',
+                        outline: 'none'
+                      }}
+                    />
+                    {errors.firstName && <span style={{ color: '#ef4444', fontSize: '0.75rem' }}>{errors.firstName}</span>}
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '6px', color: '#333333' }}>
+                      Last Name *
+                    </label>
+                    <input
+                      type="text"
+                      name="lastName"
+                      value={formData.lastName}
+                      onChange={handleChange}
+                      style={{
+                        width: '100%',
+                        padding: '10px 12px',
+                        border: errors.lastName ? '2px solid #ef4444' : '1px solid #e5e5e5',
+                        borderRadius: '8px',
+                        fontSize: '0.875rem',
+                        outline: 'none'
+                      }}
+                    />
+                    {errors.lastName && <span style={{ color: '#ef4444', fontSize: '0.75rem' }}>{errors.lastName}</span>}
+                  </div>
+                </div>
+
+                <div style={{ marginBottom: '20px' }}>
+                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '6px', color: '#333333' }}>
+                    Email Address *
+                  </label>
+                  <input
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    style={{
+                      width: '100%',
+                      padding: '10px 12px',
+                      border: errors.email ? '2px solid #ef4444' : '1px solid #e5e5e5',
+                      borderRadius: '8px',
+                      fontSize: '0.875rem',
+                      outline: 'none'
+                    }}
+                  />
+                  {errors.email && <span style={{ color: '#ef4444', fontSize: '0.75rem' }}>{errors.email}</span>}
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
+                  <div style={{ position: 'relative' }}>
+                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '6px', color: '#333333' }}>
+                      Password *
+                    </label>
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      name="password"
+                      value={formData.password}
+                      onChange={handleChange}
+                      style={{
+                        width: '100%',
+                        padding: '10px 40px 10px 12px',
+                        border: errors.password ? '2px solid #ef4444' : '1px solid #e5e5e5',
+                        borderRadius: '8px',
+                        fontSize: '0.875rem',
+                        outline: 'none'
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      style={{
+                        position: 'absolute',
+                        right: '12px',
+                        top: '32px',
+                        backgroundColor: 'transparent',
+                        border: 'none',
+                        cursor: 'pointer',
+                        padding: '4px',
+                        color: '#666666'
+                      }}
+                    >
+                      {showPassword ? 'Hide' : 'Show'}
+                    </button>
+                    {errors.password && <span style={{ color: '#ef4444', fontSize: '0.75rem' }}>{errors.password}</span>}
+                  </div>
+
+                  <div style={{ position: 'relative' }}>
+                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '6px', color: '#333333' }}>
+                      Confirm Password *
+                    </label>
+                    <input
+                      type={showConfirmPassword ? 'text' : 'password'}
+                      name="confirmPassword"
+                      value={formData.confirmPassword}
+                      onChange={handleChange}
+                      style={{
+                        width: '100%',
+                        padding: '10px 40px 10px 12px',
+                        border: errors.confirmPassword ? '2px solid #ef4444' : '1px solid #e5e5e5',
+                        borderRadius: '8px',
+                        fontSize: '0.875rem',
+                        outline: 'none'
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      style={{
+                        position: 'absolute',
+                        right: '12px',
+                        top: '32px',
+                        backgroundColor: 'transparent',
+                        border: 'none',
+                        cursor: 'pointer',
+                        padding: '4px',
+                        color: '#666666'
+                      }}
+                    >
+                      {showConfirmPassword ? 'Hide' : 'Show'}
+                    </button>
+                    {errors.confirmPassword && <span style={{ color: '#ef4444', fontSize: '0.75rem' }}>{errors.confirmPassword}</span>}
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '16px', justifyContent: 'space-between' }}>
+                <button
+                  onClick={handleSubmit}
+                  disabled={isLoading}
+                  style={{
+                    flex: 1,
+                    backgroundColor: '#000000',
+                    color: 'white',
+                    padding: '14px 32px',
+                    borderRadius: '8px',
+                    border: 'none',
+                    fontSize: '1rem',
+                    fontWeight: '600',
+                    cursor: isLoading ? 'not-allowed' : 'pointer',
+                    transition: 'all 0.2s ease',
+                    opacity: isLoading ? 0.6 : 1
+                  }}
+                >
+                  {isLoading ? 'Creating account...' : 'Sign Up'}
+                </button>
+              </div>
+
+              {error && <div className="error" style={{ marginTop: '16px', textAlign: 'center', color: '#c00' }}>{error}</div>}
+
+              <div style={{
+                textAlign: 'center',
+                marginTop: '24px',
+                paddingTop: '24px',
+                borderTop: '1px solid #e5e5e5'
+              }}>
+                <span style={{ fontSize: '0.875rem', color: '#666666' }}>
+                  Already have an account?{' '}
+                  <button
+                    onClick={() => setCurrentPage('login')}
+                    style={{
+                      color: '#000000',
+                      textDecoration: 'underline',
+                      cursor: 'pointer',
+                      background: 'none',
+                      border: 'none',
+                      fontSize: '0.875rem'
+                    }}
+                  >
+                    Log in here
+                  </button>
+                </span>
+              </div>
+            </>
+          )}
         </div>
       </div>
+
       <style jsx>{`
         .login-bg {
           min-height: 100vh;
@@ -469,31 +400,6 @@ const SignUpPage = ({ setCurrentPage }) => {
           display: flex;
           align-items: center;
           justify-content: center;
-        }
-        .login-form {
-          background: rgba(255,255,255,0.85);
-          padding: 2rem 2.5rem;
-          border-radius: 12px;
-          box-shadow: 0 4px 24px rgba(0,0,0,0.12);
-          display: flex;
-          flex-direction: column;
-          gap: 1rem;
-          min-width: 320px;
-        }
-        .login-form input {
-          padding: 0.75rem;
-          border: 1px solid #ccc;
-          border-radius: 6px;
-          font-size: 1rem;
-        }
-        .login-form button {
-          padding: 0.75rem;
-          background: #222;
-          color: #fff;
-          border: none;
-          border-radius: 6px;
-          font-size: 1rem;
-          cursor: pointer;
         }
         .error {
           color: #c00;
