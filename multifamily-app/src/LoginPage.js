@@ -44,9 +44,7 @@ const LoginPage = ({ setCurrentPage, setIsAuthenticated, setCurrentUser }) => {
         return;
       }
 
-      // data.user is set when sign-in succeeds
       if (data?.user) {
-        // Let App own the global auth state (matches your App.js)
         setIsAuthenticated?.(true);
         setCurrentUser?.(data.user);
         setCurrentPage?.('dashboard');
@@ -86,217 +84,245 @@ const LoginPage = ({ setCurrentPage, setIsAuthenticated, setCurrentUser }) => {
   );
 
   return (
-    <div className="login-bg">
-      <div style={{
-        maxWidth: '1200px',
-        margin: '0 auto',
-        backgroundColor: 'white',
-        borderRadius: '12px',
-        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
-        overflow: 'hidden',
-        display: 'flex'
-      }}>
-        {/* Left content - 75% */}
-        <div style={{
-          width: '75%',
+    <div
+      style={{
+        display: 'flex',
+        minHeight: '100vh',
+        width: '100vw',
+        backgroundColor: '#f6f6f6',
+      }}
+    >
+      {/* LEFT — 75%: Login form */}
+      <div
+        style={{
+          flex: 3,                 // 75%
           display: 'flex',
-          flexDirection: 'column'
-        }}>
-          <div style={{
-            padding: '32px',
-            borderBottom: '1px solid #e5e5e5',
-            display: 'flex',
           alignItems: 'center',
-          justifyContent: 'space-between'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <TerraLogo />
-            <h1 style={{ fontSize: '1.75rem', fontWeight: '700', color: '#000000', margin: 0 }}>
-              Welcome Back
-            </h1>
-          </div>
-
-          <button
-            onClick={() => setCurrentPage('landing')}
+          justifyContent: 'center',
+          padding: '24px',
+        }}
+      >
+        <div
+          style={{
+            width: '100%',
+            maxWidth: '800px',
+            backgroundColor: 'white',
+            borderRadius: '12px',
+            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
+            overflow: 'hidden',
+          }}
+        >
+          {/* Header */}
+          <div
             style={{
+              padding: '32px',
+              borderBottom: '1px solid #e5e5e5',
               display: 'flex',
               alignItems: 'center',
-              gap: '6px',
-              padding: '8px 16px',
-              backgroundColor: 'transparent',
-              border: '1px solid #e5e5e5',
-              borderRadius: '8px',
-              cursor: 'pointer',
-              color: '#666666',
-              fontSize: '0.875rem',
-              transition: 'all 0.2s ease'
+              justifyContent: 'space-between',
             }}
           >
-            Back
-          </button>
-        </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <TerraLogo />
+              <h1 style={{ fontSize: '1.75rem', fontWeight: '700', color: '#000000', margin: 0 }}>
+                Welcome Back
+              </h1>
+            </div>
 
-        <div style={{ padding: '32px' }}>
-          <form onSubmit={handleSubmit}>
-            <div style={{ marginBottom: '20px' }}>
-              <label style={{
-                display: 'block',
+            <button
+              onClick={() => setCurrentPage('landing')}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '8px 16px',
+                backgroundColor: 'transparent',
+                border: '1px solid #e5e5e5',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                color: '#666666',
                 fontSize: '0.875rem',
-                fontWeight: '500',
-                marginBottom: '6px',
-                color: '#333333'
-              }}>
-                Email Address *
-              </label>
-              <input
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                style={{
-                  width: '100%',
-                  padding: '10px 12px',
-                  border: errors.email ? '2px solid #ef4444' : '1px solid #e5e5e5',
-                  borderRadius: '8px',
-                  fontSize: '0.875rem',
-                  outline: 'none'
-                }}
-              />
-              {errors.email && (
-                <span style={{ color: '#ef4444', fontSize: '0.75rem', marginTop: '4px', display: 'block' }}>
-                  {errors.email}
-                </span>
-              )}
-            </div>
-
-            <div style={{ position: 'relative', marginBottom: '20px' }}>
-              <label style={{
-                display: 'block',
-                fontSize: '0.875rem',
-                fontWeight: '500',
-                marginBottom: '6px',
-                color: '#333333'
-              }}>
-                Password *
-              </label>
-              <input
-                type={showPassword ? 'text' : 'password'}
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-                style={{
-                  width: '100%',
-                  padding: '10px 40px 10px 12px',
-                  border: errors.password ? '2px solid #ef4444' : '1px solid #e5e5e5',
-                  borderRadius: '8px',
-                  fontSize: '0.875rem',
-                  outline: 'none'
-                }}
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                style={{
-                  position: 'absolute',
-                  right: '12px',
-                  top: '32px',
-                  backgroundColor: 'transparent',
-                  border: 'none',
-                  cursor: 'pointer',
-                  padding: '4px',
-                  color: '#666666'
-                }}
-              >
-                {showPassword ? 'Hide' : 'Show'}
-              </button>
-              {errors.password && (
-                <span style={{ color: '#ef4444', fontSize: '0.75rem', marginTop: '4px', display: 'block' }}>
-                  {errors.password}
-                </span>
-              )}
-            </div>
-
-            <div style={{ display: 'flex', gap: '16px', justifyContent: 'space-between' }}>
-              <button
-                type="submit"
-                disabled={isLoading}
-                style={{
-                  flex: 1,
-                  backgroundColor: '#000000',
-                  color: 'white',
-                  padding: '14px 32px',
-                  borderRadius: '8px',
-                  border: 'none',
-                  fontSize: '1rem',
-                  fontWeight: '600',
-                  cursor: isLoading ? 'not-allowed' : 'pointer',
-                  transition: 'all 0.2s ease',
-                  opacity: isLoading ? 0.6 : 1
-                }}
-              >
-                {isLoading ? 'Logging in...' : 'Login'}
-              </button>
-            </div>
-
-            {error && <div className="error" style={{ marginTop: '16px', textAlign: 'center', color: '#c00' }}>{error}</div>}
-          </form>
-
-          <div style={{
-            textAlign: 'center',
-            marginTop: '24px',
-            paddingTop: '24px',
-            borderTop: '1px solid #e5e5e5'
-          }}>
-            <span style={{ fontSize: '0.875rem', color: '#666666' }}>
-              Don't have an account?{' '}
-              <button
-                onClick={() => setCurrentPage('signup')}
-                style={{
-                  color: '#000000',
-                  textDecoration: 'underline',
-                  cursor: 'pointer',
-                  background: 'none',
-                  border: 'none',
-                  fontSize: '0.875rem'
-                }}
-              >
-                Sign up here
-              </button>
-            </span>
+                transition: 'all 0.2s ease',
+              }}
+            >
+              Back
+            </button>
           </div>
-        </div>
-        
-        {/* Right section - 25% width with the image */}
-        <div style={{
-          width: '25%',
-          position: 'relative',
-          overflow: 'hidden',
-          borderTopRightRadius: '12px',
-          borderBottomRightRadius: '12px'
-        }}>
-          <img 
-            src={propertyImage}
-            alt="Property visual" 
-            style={{
-              position: 'absolute',
-              right: '0',
-              height: '100%',
-              width: 'auto',
-              objectFit: 'cover',
-              objectPosition: 'center right'
-            }}
-          />
+
+          {/* Form */}
+          <div style={{ padding: '32px' }}>
+            <form onSubmit={handleSubmit}>
+              <div style={{ marginBottom: '20px' }}>
+                <label
+                  style={{
+                    display: 'block',
+                    fontSize: '0.875rem',
+                    fontWeight: '500',
+                    marginBottom: '6px',
+                    color: '#333333',
+                  }}
+                >
+                  Email Address *
+                </label>
+                <input
+                  type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  style={{
+                    width: '100%',
+                    padding: '10px 12px',
+                    border: errors.email ? '2px solid #ef4444' : '1px solid #e5e5e5',
+                    borderRadius: '8px',
+                    fontSize: '0.875rem',
+                    outline: 'none',
+                  }}
+                />
+                {errors.email && (
+                  <span
+                    style={{ color: '#ef4444', fontSize: '0.75rem', marginTop: '4px', display: 'block' }}
+                  >
+                    {errors.email}
+                  </span>
+                )}
+              </div>
+
+              <div style={{ position: 'relative', marginBottom: '20px' }}>
+                <label
+                  style={{
+                    display: 'block',
+                    fontSize: '0.875rem',
+                    fontWeight: '500',
+                    marginBottom: '6px',
+                    color: '#333333',
+                  }}
+                >
+                  Password *
+                </label>
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  name="password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  style={{
+                    width: '100%',
+                    padding: '10px 40px 10px 12px',
+                    border: errors.password ? '2px solid #ef4444' : '1px solid #e5e5e5',
+                    borderRadius: '8px',
+                    fontSize: '0.875rem',
+                    outline: 'none',
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  style={{
+                    position: 'absolute',
+                    right: '12px',
+                    top: '32px',
+                    backgroundColor: 'transparent',
+                    border: 'none',
+                    cursor: 'pointer',
+                    padding: '4px',
+                    color: '#666666',
+                  }}
+                >
+                  {showPassword ? 'Hide' : 'Show'}
+                </button>
+                {errors.password && (
+                  <span
+                    style={{ color: '#ef4444', fontSize: '0.75rem', marginTop: '4px', display: 'block' }}
+                  >
+                    {errors.password}
+                  </span>
+                )}
+              </div>
+
+              <div style={{ display: 'flex', gap: '16px', justifyContent: 'space-between' }}>
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  style={{
+                    flex: 1,
+                    backgroundColor: '#000000',
+                    color: 'white',
+                    padding: '14px 32px',
+                    borderRadius: '8px',
+                    border: 'none',
+                    fontSize: '1rem',
+                    fontWeight: '600',
+                    cursor: isLoading ? 'not-allowed' : 'pointer',
+                    transition: 'all 0.2s ease',
+                    opacity: isLoading ? 0.6 : 1,
+                  }}
+                >
+                  {isLoading ? 'Logging in...' : 'Login'}
+                </button>
+              </div>
+
+              {error && (
+                <div className="error" style={{ marginTop: '16px', textAlign: 'center', color: '#c00' }}>
+                  {error}
+                </div>
+              )}
+            </form>
+
+            <div
+              style={{
+                textAlign: 'center',
+                marginTop: '24px',
+                paddingTop: '24px',
+                borderTop: '1px solid #e5e5e5',
+              }}
+            >
+              <span style={{ fontSize: '0.875rem', color: '#666666' }}>
+                Don't have an account?{' '}
+                <button
+                  onClick={() => setCurrentPage('signup')}
+                  style={{
+                    color: '#000000',
+                    textDecoration: 'underline',
+                    cursor: 'pointer',
+                    background: 'none',
+                    border: 'none',
+                    fontSize: '0.875rem',
+                  }}
+                >
+                  Sign up here
+                </button>
+              </span>
+            </div>
+          </div>
         </div>
       </div>
 
-      <style jsx>{`
-        .login-bg {
-          min-height: 100vh;
-          width: 100vw;
-          background: url('./modern-house.jpg') center center/cover no-repeat;
-          display: flex;
-          align-items: center;
-          justify-content: center;
+      {/* RIGHT — 25%: Image */}
+      <div
+        className="login-right-image"
+        style={{
+          flex: 1,                 // 25%
+          position: 'relative',
+          minHeight: '100vh',
+          overflow: 'hidden',
+        }}
+      >
+        <img
+          src={propertyImage}
+          alt="Property"
+          style={{
+            position: 'absolute',
+            inset: 0,
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+          }}
+        />
+      </div>
+
+      {/* Simple responsive rule: hide right image on narrow screens */}
+      <style>{`
+        @media (max-width: 900px) {
+          .login-right-image { display: none; }
         }
       `}</style>
     </div>
