@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { supabase } from './lib/supabase';
+import propertyImage from './IMG_0108 (4).jpg';
 
 const LoginPage = ({ setCurrentPage, setIsAuthenticated, setCurrentUser }) => {
   const [formData, setFormData] = useState({ email: '', password: '' });
@@ -87,17 +88,24 @@ const LoginPage = ({ setCurrentPage, setIsAuthenticated, setCurrentUser }) => {
   return (
     <div className="login-bg">
       <div style={{
-        maxWidth: '800px',
+        maxWidth: '1200px',
         margin: '0 auto',
         backgroundColor: 'white',
         borderRadius: '12px',
         boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
-        overflow: 'hidden'
+        overflow: 'hidden',
+        display: 'flex'
       }}>
+        {/* Left content - 75% */}
         <div style={{
-          padding: '32px',
-          borderBottom: '1px solid #e5e5e5',
+          width: '75%',
           display: 'flex',
+          flexDirection: 'column'
+        }}>
+          <div style={{
+            padding: '32px',
+            borderBottom: '1px solid #e5e5e5',
+            display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between'
         }}>
@@ -256,6 +264,28 @@ const LoginPage = ({ setCurrentPage, setIsAuthenticated, setCurrentUser }) => {
               </button>
             </span>
           </div>
+        </div>
+        
+        {/* Right section - 25% width with the image */}
+        <div style={{
+          width: '25%',
+          position: 'relative',
+          overflow: 'hidden',
+          borderTopRightRadius: '12px',
+          borderBottomRightRadius: '12px'
+        }}>
+          <img 
+            src={propertyImage}
+            alt="Property visual" 
+            style={{
+              position: 'absolute',
+              right: '0',
+              height: '100%',
+              width: 'auto',
+              objectFit: 'cover',
+              objectPosition: 'center right'
+            }}
+          />
         </div>
       </div>
 
