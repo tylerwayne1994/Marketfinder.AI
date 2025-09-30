@@ -30,6 +30,8 @@ import {
 } from 'lucide-react';
 import { supabase } from './lib/supabase';
 
+const BACKEND_URL = (process.env.REACT_APP_BACKEND_URL || '').replace(/\/+$/, '') || 'http://localhost:8000';
+
 const PRICING_PLANS = {
   starter: {
     id: 'starter',
@@ -75,41 +77,46 @@ const DashboardPage = ({ setCurrentPage, currentUser }) => {
   }, [currentUser?.id]);
 
   const fetchDashboardData = async () => {
+    let raw;
     try {
       setLoading(true);
       setError(null);
-      
+      const { data: { session } } = await supabase.auth.getSession();
+      const headers = {
+        'Content-Type': 'application/json',
+        ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {})
+      };
       const { data: { user } } = await supabase.auth.getUser();
-      
       if (!user) {
         setError('No authenticated user found');
         return;
       }
-
       // Fetch user profile
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', user.id)
         .single();
-
       if (profileError) {
         console.error('Error fetching profile:', profileError);
         setError('Error loading user profile');
         return;
       }
-
       // Fetch usage data from backend
-      const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8000';
-      const response = await fetch(`${backendUrl}/api/dashboard/summary?user_id=${user.id}`);
-      const usageSummary = await response.json();
-
+      const response = await fetch(`${BACKEND_URL}/api/dashboard/summary?user_id=${user.id}`, { headers });
+      let usageSummary;
+      try {
+        raw = await response.text();
+        usageSummary = raw ? JSON.parse(raw) : {};
+      } catch {
+        usageSummary = {};
+      }
       if (!response.ok) {
-        console.error('Error fetching usage summary:', usageSummary.error);
-        setError('Error loading usage data');
+        const msg = usageSummary.error || usageSummary.detail || raw || `HTTP ${response.status}`;
+        console.error('usage summary raw:', raw);
+        setError(msg);
         return;
       }
-
       // Set user data
       const userDataObj = {
         id: user.id,
@@ -196,7 +203,6 @@ const DashboardPage = ({ setCurrentPage, currentUser }) => {
     try {
       setIsUpgrading(true);
       setSubscriptionError(null);
-      // Validate user data before sending request
       if (!userData || !userData.id || !userData.subscriptionPlan || !PRICING_PLANS[userData.subscriptionPlan]) {
         setSubscriptionError('User data is missing or invalid. Please refresh and try again.');
         setIsUpgrading(false);
@@ -208,26 +214,25 @@ const DashboardPage = ({ setCurrentPage, currentUser }) => {
         setIsUpgrading(false);
         return;
       }
-      const response = await fetch(`/api/checkout`, {
+      const { data: { session } } = await supabase.auth.getSession();
+      const headers = {
+        'Content-Type': 'application/json',
+        ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {})
+      };
+      const response = await fetch(`${BACKEND_URL}/api/checkout`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          userId: userData.id,
-          priceId
-        })
+        headers,
+        body: JSON.stringify({ userId: userData.id, priceId })
       });
-      let data = {};
+      let raw, data;
       try {
-        data = await response.json();
-      } catch (e) {
-        setSubscriptionError('Invalid response from server.');
-        setIsUpgrading(false);
-        return;
+        raw = await response.text();
+        data = raw ? JSON.parse(raw) : {};
+      } catch {
+        data = {};
       }
       if (!response.ok) {
-        setSubscriptionError(data.error || data.detail || 'Failed to create checkout session');
+        setSubscriptionError(data.error || data.detail || raw || 'Failed to create checkout session');
         setIsUpgrading(false);
         return;
       }
@@ -247,35 +252,32 @@ const DashboardPage = ({ setCurrentPage, currentUser }) => {
     try {
       setIsCancelling(true);
       setSubscriptionError(null);
-      
-  const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8000';
-  const response = await fetch(`${backendUrl}/api/cancel-subscription`, {
+      const { data: { session } } = await supabase.auth.getSession();
+      const headers = {
+        'Content-Type': 'application/json',
+        ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {})
+      };
+      const response = await fetch(`${BACKEND_URL}/api/cancel-subscription`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          subscriptionId: userData.subscriptionId
-        })
+        headers,
+        body: JSON.stringify({ subscriptionId: userData.subscriptionId })
       });
-
-      const data = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(data.detail || 'Failed to cancel subscription');
+      let raw, data;
+      try {
+        raw = await response.text();
+        data = raw ? JSON.parse(raw) : {};
+      } catch {
+        data = {};
       }
-      
+      if (!response.ok) {
+        throw new Error(data.detail || raw || 'Failed to cancel subscription');
+      }
       setSubscriptionSuccess(data.message);
       setShowCancelConfirm(false);
-      
-      // Refresh dashboard data to show updated status
       await fetchDashboardData();
-      
-      // Clear success message after 5 seconds
       setTimeout(() => setSubscriptionSuccess(null), 5000);
-      
     } catch (error) {
-      console.error('Cancel subscription error:', error);
+      console.error('Cancel subscription error:', error.message);
       setSubscriptionError(error.message || 'Failed to cancel subscription');
     } finally {
       setIsCancelling(false);
@@ -286,34 +288,31 @@ const DashboardPage = ({ setCurrentPage, currentUser }) => {
     try {
       setIsReactivating(true);
       setSubscriptionError(null);
-      
-  const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8000';
-  const response = await fetch(`${backendUrl}/api/reactivate-subscription`, {
+      const { data: { session } } = await supabase.auth.getSession();
+      const headers = {
+        'Content-Type': 'application/json',
+        ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {})
+      };
+      const response = await fetch(`${BACKEND_URL}/api/reactivate-subscription`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          subscriptionId: userData.subscriptionId
-        })
+        headers,
+        body: JSON.stringify({ subscriptionId: userData.subscriptionId })
       });
-
-      const data = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(data.detail || 'Failed to reactivate subscription');
+      let raw, data;
+      try {
+        raw = await response.text();
+        data = raw ? JSON.parse(raw) : {};
+      } catch {
+        data = {};
       }
-      
+      if (!response.ok) {
+        throw new Error(data.detail || raw || 'Failed to reactivate subscription');
+      }
       setSubscriptionSuccess(data.message);
-      
-      // Refresh dashboard data to show updated status
       await fetchDashboardData();
-      
-      // Clear success message after 5 seconds
       setTimeout(() => setSubscriptionSuccess(null), 5000);
-      
     } catch (error) {
-      console.error('Reactivate subscription error:', error);
+      console.error('Reactivate subscription error:', error.message);
       setSubscriptionError(error.message || 'Failed to reactivate subscription');
     } finally {
       setIsReactivating(false);
