@@ -126,7 +126,8 @@ const DashboardPage = ({ setCurrentPage, currentUser }) => {
         phone: profile.phone || 'Not provided',
         company: profile.company || 'Not provided',
         investorType: profile.investor_type || 'Individual Investor',
-        address: profile.address || 'Not provided',
+        address: profile.address1 || profile.address || 'Not provided',
+        address2: profile.address2 || '',
         city: profile.city || 'Not provided',
         state: profile.state || '',
         zipCode: profile.zip_code || '',
@@ -1369,19 +1370,81 @@ const DashboardPage = ({ setCurrentPage, currentUser }) => {
                   <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', color: '#666666', marginBottom: '8px' }}>
                     Address
                   </label>
-                  <input
-                    type="text"
-                    value={`${userData?.address || ''}, ${userData?.city || ''}, ${userData?.state || ''} ${userData?.zipCode || ''}`.replace(/^, |, , |, $/, '')}
-                    readOnly
-                    style={{
-                      width: '100%',
-                      padding: '10px 12px',
-                      border: '1px solid #e5e5e5',
-                      borderRadius: '8px',
-                      fontSize: '0.875rem',
-                      backgroundColor: '#f8f8f8'
-                    }}
-                  />
+                  <div style={{ marginBottom: '10px' }}>
+                    <input
+                      type="text"
+                      value={userData?.address || ''}
+                      readOnly
+                      placeholder="Street Address"
+                      style={{
+                        width: '100%',
+                        padding: '10px 12px',
+                        border: '1px solid #e5e5e5',
+                        borderRadius: '8px',
+                        fontSize: '0.875rem',
+                        backgroundColor: '#f8f8f8',
+                        marginBottom: '8px'
+                      }}
+                    />
+                    <input
+                      type="text"
+                      value={userData?.address2 || ''}
+                      readOnly
+                      placeholder="Apt, Suite, Unit, etc. (optional)"
+                      style={{
+                        width: '100%',
+                        padding: '10px 12px',
+                        border: '1px solid #e5e5e5',
+                        borderRadius: '8px',
+                        fontSize: '0.875rem',
+                        backgroundColor: '#f8f8f8'
+                      }}
+                    />
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: '8px' }}>
+                    <input
+                      type="text"
+                      value={userData?.city || ''}
+                      readOnly
+                      placeholder="City"
+                      style={{
+                        width: '100%',
+                        padding: '10px 12px',
+                        border: '1px solid #e5e5e5',
+                        borderRadius: '8px',
+                        fontSize: '0.875rem',
+                        backgroundColor: '#f8f8f8'
+                      }}
+                    />
+                    <input
+                      type="text"
+                      value={userData?.state || ''}
+                      readOnly
+                      placeholder="State"
+                      style={{
+                        width: '100%',
+                        padding: '10px 12px',
+                        border: '1px solid #e5e5e5',
+                        borderRadius: '8px',
+                        fontSize: '0.875rem',
+                        backgroundColor: '#f8f8f8'
+                      }}
+                    />
+                    <input
+                      type="text"
+                      value={userData?.zipCode || ''}
+                      readOnly
+                      placeholder="Zip"
+                      style={{
+                        width: '100%',
+                        padding: '10px 12px',
+                        border: '1px solid #e5e5e5',
+                        borderRadius: '8px',
+                        fontSize: '0.875rem',
+                        backgroundColor: '#f8f8f8'
+                      }}
+                    />
+                  </div>
                 </div>
               </div>
 
