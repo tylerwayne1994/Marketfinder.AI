@@ -102,8 +102,8 @@ const DashboardPage = ({ setCurrentPage, currentUser }) => {
         setError('Error loading user profile');
         return;
       }
-      // Fetch usage data from backend
-      const response = await fetch(`${BACKEND_URL}/api/dashboard/summary?user_id=${user.id}`, { headers });
+      // Fetch usage data from backend using proxy
+      const response = await fetch(`/api/proxy?endpoint=/api/dashboard/summary&user_id=${user.id}`, { headers });
       let usageSummary;
       try {
         raw = await response.text();
@@ -219,7 +219,7 @@ const DashboardPage = ({ setCurrentPage, currentUser }) => {
         'Content-Type': 'application/json',
         ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {})
       };
-      const response = await fetch(`${BACKEND_URL}/api/checkout`, {
+      const response = await fetch(`/api/proxy?endpoint=/api/checkout`, {
         method: 'POST',
         headers,
         body: JSON.stringify({ userId: userData.id, priceId })
@@ -257,7 +257,7 @@ const DashboardPage = ({ setCurrentPage, currentUser }) => {
         'Content-Type': 'application/json',
         ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {})
       };
-      const response = await fetch(`${BACKEND_URL}/api/cancel-subscription`, {
+      const response = await fetch(`/api/proxy?endpoint=/api/cancel-subscription`, {
         method: 'POST',
         headers,
         body: JSON.stringify({ subscriptionId: userData.subscriptionId })
@@ -293,7 +293,7 @@ const DashboardPage = ({ setCurrentPage, currentUser }) => {
         'Content-Type': 'application/json',
         ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {})
       };
-      const response = await fetch(`${BACKEND_URL}/api/reactivate-subscription`, {
+      const response = await fetch(`/api/proxy?endpoint=/api/reactivate-subscription`, {
         method: 'POST',
         headers,
         body: JSON.stringify({ subscriptionId: userData.subscriptionId })
