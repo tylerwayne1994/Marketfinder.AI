@@ -68,7 +68,15 @@ function App() {
         try {
           const { data: { user } } = await supabase.auth.getUser();
           if (user) {
-            const userData = JSON.parse(savedUserData);
+            let userData;
+            try {
+              userData = JSON.parse(savedUserData);
+            } catch (e) {
+              localStorage.removeItem(AUTH_STATE_KEY);
+              localStorage.removeItem(USER_DATA_KEY);
+              setCurrentPage('landing');
+              return;
+            }
             setCurrentUser(userData);
             setIsAuthenticated(true);
             console.log('Restored authentication from saved state');
@@ -81,7 +89,10 @@ function App() {
           console.error('Error checking saved auth state:', error);
           localStorage.removeItem(AUTH_STATE_KEY);
           localStorage.removeItem(USER_DATA_KEY);
+          setCurrentPage('landing');
         }
+      } else {
+        setCurrentPage('landing');
       }
     };
     checkSavedAuthState();
