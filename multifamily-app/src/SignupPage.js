@@ -8,6 +8,10 @@ const SignUpPage = ({ setCurrentPage }) => {
     email: '',
     password: '',
     confirmPassword: '',
+    phone: '',
+    company: '',
+    investorType: 'Individual Investor',
+    address: '',
   });
 
   const [errors, setErrors] = useState({});
@@ -27,18 +31,16 @@ const SignUpPage = ({ setCurrentPage }) => {
     const newErrors = {};
     if (!formData.firstName.trim()) newErrors.firstName = 'First name is required';
     if (!formData.lastName.trim()) newErrors.lastName = 'Last name is required';
-
     if (!formData.email.trim()) newErrors.email = 'Email is required';
     else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = 'Email is invalid';
-
     if (!formData.password) newErrors.password = 'Password is required';
     else if (formData.password.length < 8) newErrors.password = 'Password must be at least 8 characters';
     else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(formData.password))
       newErrors.password = 'Password must contain uppercase, lowercase, and number';
-
     if (formData.password !== formData.confirmPassword)
       newErrors.confirmPassword = 'Passwords do not match';
-
+    if (!formData.investorType) newErrors.investorType = 'Investor type is required';
+    // Phone, company, address are optional
     return newErrors;
   };
 
@@ -62,6 +64,10 @@ const SignUpPage = ({ setCurrentPage }) => {
           data: {
             firstName: formData.firstName,
             lastName: formData.lastName,
+            phone: formData.phone,
+            company: formData.company,
+            investorType: formData.investorType,
+            address: formData.address,
           },
         },
       });
@@ -336,6 +342,92 @@ const SignUpPage = ({ setCurrentPage }) => {
                       {showConfirmPassword ? 'Hide' : 'Show'}
                     </button>
                     {errors.confirmPassword && <span style={{ color: '#ef4444', fontSize: '0.75rem' }}>{errors.confirmPassword}</span>}
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '6px', color: '#333333' }}>
+                      Phone
+                    </label>
+                    <input
+                      type="text"
+                      name="phone"
+                      value={formData.phone}
+                      onChange={handleChange}
+                      style={{
+                        width: '100%',
+                        padding: '10px 12px',
+                        border: '1px solid #e5e5e5',
+                        borderRadius: '8px',
+                        fontSize: '0.875rem',
+                        outline: 'none'
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '6px', color: '#333333' }}>
+                      Company
+                    </label>
+                    <input
+                      type="text"
+                      name="company"
+                      value={formData.company}
+                      onChange={handleChange}
+                      style={{
+                        width: '100%',
+                        padding: '10px 12px',
+                        border: '1px solid #e5e5e5',
+                        borderRadius: '8px',
+                        fontSize: '0.875rem',
+                        outline: 'none'
+                      }}
+                    />
+                  </div>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '6px', color: '#333333' }}>
+                      Investor Type *
+                    </label>
+                    <select
+                      name="investorType"
+                      value={formData.investorType}
+                      onChange={handleChange}
+                      style={{
+                        width: '100%',
+                        padding: '10px 12px',
+                        border: errors.investorType ? '2px solid #ef4444' : '1px solid #e5e5e5',
+                        borderRadius: '8px',
+                        fontSize: '0.875rem',
+                        outline: 'none'
+                      }}
+                    >
+                      <option value="Individual Investor">Individual Investor</option>
+                      <option value="Institutional Investor">Institutional Investor</option>
+                      <option value="Broker">Broker</option>
+                      <option value="Other">Other</option>
+                    </select>
+                    {errors.investorType && <span style={{ color: '#ef4444', fontSize: '0.75rem' }}>{errors.investorType}</span>}
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '6px', color: '#333333' }}>
+                      Address
+                    </label>
+                    <input
+                      type="text"
+                      name="address"
+                      value={formData.address}
+                      onChange={handleChange}
+                      style={{
+                        width: '100%',
+                        padding: '10px 12px',
+                        border: '1px solid #e5e5e5',
+                        borderRadius: '8px',
+                        fontSize: '0.875rem',
+                        outline: 'none'
+                      }}
+                    />
                   </div>
                 </div>
               </div>
