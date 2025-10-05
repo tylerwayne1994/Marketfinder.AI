@@ -1,8 +1,4 @@
 {
-  "buildCommand": "npm run build",
-  "installCommand": "npm install",
-  "outputDirectory": "build",
-  "framework": "create-react-app",
   "headers": [
     {
       "source": "/index.html",
