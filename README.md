@@ -1,1 +1,0 @@
-# Marketfinder.AI
