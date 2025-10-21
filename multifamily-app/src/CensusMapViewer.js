@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
-  MapPin, TrendingUp, DollarSign, Home, Users,
+  MapPin, TrendingUp, DollarSign, Home, Users, Building2,
   Filter, Info, ArrowLeft, Activity, MessageSquare, ArrowUpDown
 } from "lucide-react";
 import Papa from "papaparse";
@@ -8,6 +8,8 @@ import Papa from "papaparse";
 /* ===== Paths ===== */
 const FMR_PATH = "/FY26_FMRs - FY26_FMRs.csv";
 const MIGRATION_PATH = "/migration_with_clean_zipcodes.csv";
+const PERMITS_2024_PATH = "/co2408y.txt";
+const PERMITS_2025_PATH = "/co2508y.txt";
 
 /* ===== Utils ===== */
 const isNum = (v) => v !== null && v !== undefined && !Number.isNaN(v);
@@ -133,6 +135,74 @@ const metricsDef = {
     dataSource: "HUD FY26 FMRs (county)",
     calculation: "Direct from HUD FY26 CSV",
     colorScale: DOLLAR
+  },
+  multifamilyPermits: {
+    name: "Multifamily Construction (5+ Units)",
+    shortName: "MF Permits",
+    icon: Building2,
+    description: "New 5+ unit construction permits issued (Aug 2025)",
+    dataSource: "Census Building Permits Survey 2025",
+    calculation: "Direct from 5+ units column",
+    colorScale: [
+      [-Infinity, 0, "#e5e7eb", "No Activity"],
+      [0, 10, "#fef3c7", "1-10 units"],
+      [10, 50, "#fde047", "10-50 units"],
+      [50, 100, "#facc15", "50-100 units"],
+      [100, 250, "#eab308", "100-250 units"],
+      [250, 500, "#ca8a04", "250-500 units"],
+      [500, Infinity, "#a16207", "500+ units 🔥"]
+    ].map(([min,max,color,label])=>({min,max,color,label}))
+  },
+  permitGrowth: {
+    name: "Construction Growth (YoY)",
+    shortName: "Permit Growth",
+    icon: TrendingUp,
+    description: "Year-over-year change in total permits (Aug 2024 → Aug 2025)",
+    dataSource: "Census Building Permits (2024 vs 2025)",
+    calculation: "((2025 units - 2024 units) / 2024 units) × 100",
+    colorScale: [
+      [-Infinity, -50, "#7f1d1d", "Heavy Decline"],
+      [-50, -20, "#dc2626", "Sharp Decline"],
+      [-20, -10, "#f59e0b", "Decline"],
+      [-10, 0, "#fbbf24", "Slight Decline"],
+      [0, 10, "#84cc16", "Slight Growth"],
+      [10, 25, "#22c55e", "Moderate Growth"],
+      [25, 50, "#16a34a", "Strong Growth"],
+      [50, Infinity, "#166534", "Explosive 🚀"]
+    ].map(([min,max,color,label])=>({min,max,color,label}))
+  },
+  developmentIntensity: {
+    name: "Development Intensity",
+    shortName: "Dev Intensity",
+    icon: Activity,
+    description: "Permits per 1,000 residents (higher = more active market)",
+    dataSource: "Building Permits ÷ Population",
+    calculation: "(total permits 2025 / population) × 1000",
+    colorScale: [
+      [-Infinity, 1, "#e5e7eb", "< 1‰ (Stagnant)"],
+      [1, 3, "#fde047", "1-3‰"],
+      [3, 5, "#facc15", "3-5‰"],
+      [5, 8, "#eab308", "5-8‰"],
+      [8, 12, "#84cc16", "8-12‰"],
+      [12, 20, "#22c55e", "12-20‰ (Active)"],
+      [20, Infinity, "#16a34a", "> 20‰ (Boom)"]
+    ].map(([min,max,color,label])=>({min,max,color,label}))
+  },
+  multifamilyShare: {
+    name: "Multifamily Market Share",
+    shortName: "MF Share",
+    icon: Building2,
+    description: "5+ unit permits as % of total construction",
+    dataSource: "Building Permits (5+ units / total)",
+    calculation: "(5+ unit permits / total permits) × 100",
+    colorScale: [
+      [-Infinity, 5, "#e5e7eb", "< 5% (SF Dom.)"],
+      [5, 15, "#fde047", "5-15%"],
+      [15, 30, "#facc15", "15-30%"],
+      [30, 50, "#eab308", "30-50%"],
+      [50, 70, "#84cc16", "50-70%"],
+      [70, Infinity, "#16a34a", "> 70% (MF Heavy)"]
+    ].map(([min,max,color,label])=>({min,max,color,label}))
   }
 };
 
@@ -161,9 +231,40 @@ const loadCSV = async (url, type) => {
   const res = await fetch(url);
   if (!res.ok) throw new Error(`${type} HTTP ${res.status}`);
   const txt = await res.text();
-  const parsed = Papa.parse(txt, { header:true, skipEmptyLines:true, dynamicTyping:true });
+  
+  // Building permit files have 2 header rows + blank line, use row 2 as headers
+  const isPermitFile = type === "permits2024" || type === "permits2025";
+  
+  if (isPermitFile) {
+    // Split into lines and use line 2 (index 1) as headers
+    const lines = txt.split('\n');
+    const headers = lines[1]; // "Date,State,County,Code,Code,Name,Bldgs,Units,Value..."
+    const dataLines = lines.slice(3); // Skip header rows and blank line
+    const permitCSV = headers + '\n' + dataLines.join('\n');
+    
+    const parsed = Papa.parse(permitCSV, { 
+      header: true, 
+      skipEmptyLines: true, 
+      dynamicTyping: true
+    });
+    
+    console.log(`[${type}] Column names:`, parsed.meta?.fields);
+    console.log(`[${type}] First data row:`, parsed.data[0]);
+    console.log(`[${type}] Total rows:`, parsed.data.length);
+    
+    return { type, data: parsed.data, fields: parsed.meta?.fields || [] };
+  }
+  
+  // Normal CSV processing for other files
+  const parsed = Papa.parse(txt, { 
+    header: true, 
+    skipEmptyLines: true, 
+    dynamicTyping: true
+  });
+  
   const isCensusData = type !== "fmr26" && type !== "migration";
   const data = isCensusData ? parsed.data.slice(1) : parsed.data; // Census first row = metadata
+  
   return { type, data, fields: parsed.meta?.fields || [] };
 };
 
@@ -177,7 +278,7 @@ const CountyChoroplethMap = ({ setCurrentPage }) => {
   const [geoJsonData, setGeoJsonData] = useState(null);
 
   const [chatMessages, setChatMessages] = useState([
-    { text: "IRS Migration + HUD FMR + Census data loaded. Ask about **any metric**: growth, unemployment, affordability, RTP, vacancy, appreciation, migration — or FMR (e.g., 'cheapest 3BR FMR in TX < 1500' or 'highest migration inflow in FL').", sender: "bot", timestamp: new Date() }
+    { text: "IRS Migration + HUD FMR + Census + **Building Permits** loaded! Ask about: growth, unemployment, affordability, RTP, vacancy, appreciation, migration, **multifamily construction**, **permit growth**, **development intensity** — e.g., 'highest multifamily permits in TX' or 'fastest permit growth < 50%'", sender: "bot", timestamp: new Date() }
   ]);
   const [chatInput, setChatInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
@@ -199,10 +300,14 @@ const CountyChoroplethMap = ({ setCurrentPage }) => {
     else if (k==="housingStock") val = c.vacancyRate;
     else if (k==="migration") val = c.migrationRate;
     else if (k==="fmr") val = c[`fmr_${bedroom}`];
+    else if (k==="multifamilyPermits") val = c.multifamilyUnits2025;
+    else if (k==="permitGrowth") val = c.permitGrowth;
+    else if (k==="developmentIntensity") val = c.developmentIntensity;
+    else if (k==="multifamilyShare") val = c.multifamilyShare;
     
-    // Debug migration values
-    if (k === "migration" && c.fips && (c.fips.startsWith("01") || Math.random() < 0.01)) {
-      console.log(`Migration debug - FIPS: ${c.fips}, migrationRate: ${c.migrationRate}, val: ${val}`);
+    // Debug multifamily share values
+    if (k === "multifamilyShare" && c.fips && Math.random() < 0.01) {
+      console.log(`MF Share debug - FIPS: ${c.fips}, multifamilyShare: ${c.multifamilyShare}, multifamilyUnits2025: ${c.multifamilyUnits2025}, totalUnits2025: ${c.totalUnits2025}, val: ${val}`);
     }
     
     return val;
@@ -210,10 +315,14 @@ const CountyChoroplethMap = ({ setCurrentPage }) => {
 
   const colorFor = (v, k) => !isNum(v) ? "#e5e7eb" : (metrics[k].colorScale.find(r => v>=r.min && v<r.max)?.color || metrics[k].colorScale.at(-1).color);
   const fmt = (v, k) => !isNum(v) ? "No data" : 
-    (k==="fmr" ? `${Math.round(v).toLocaleString()}` : 
+    (k==="fmr" ? `$${Math.round(v).toLocaleString()}` : 
      k==="affordability" ? `${Math.round(v)}%` : 
      k==="housingStock" ? `${v.toFixed(1)}% vacancy` : 
      k==="migration" ? `${v > 0 ? '+' : ''}${v.toFixed(1)}‰` :
+     k==="multifamilyPermits" ? `${Math.round(v).toLocaleString()} units` :
+     k==="permitGrowth" ? `${v > 0 ? '+' : ''}${v.toFixed(1)}%` :
+     k==="developmentIntensity" ? `${v.toFixed(1)}‰` :
+     k==="multifamilyShare" ? `${v.toFixed(0)}%` :
      `${v.toFixed(1)}%`);
   const featFips = (f) => f.id || f.properties?.FIPS || f.properties?.fips;
 
@@ -317,6 +426,207 @@ const CountyChoroplethMap = ({ setCurrentPage }) => {
     return migrationData;
   };
 
+  /* ===== Process Building Permits ===== */
+  const processPermits = (rows2024, rows2025) => {
+    const permitData = {};
+    let processed = 0, skipped = 0;
+
+    // Process 2024 data
+    rows2024.forEach((row, idx) => {
+      // Column names from row 2: Date, State, County, Code, Code, Name, Bldgs, Units, Value...
+      // PapaParse will rename duplicates: State, County, Code, Code.1, Name, etc.
+      const stateFips = row.State;
+      const countyFips = row.County;
+      
+      if (!stateFips || !countyFips) {
+        if (idx < 3) {
+          console.log(`Skipping 2024 row ${idx}:`, {
+            stateFips, 
+            countyFips,
+            availableKeys: Object.keys(row),
+            sample: row
+          });
+        }
+        skipped++;
+        return;
+      }
+
+      const fips5 = String(stateFips).padStart(2, "0") + String(countyFips).padStart(3, "0");
+
+      if (fips5 === "00000" || fips5.length !== 5) {
+        skipped++;
+        return;
+      }
+
+      // The column pattern: Bldgs, Units, Value repeats for each unit type
+      // After Date,State,County,Code,Code_1,Name comes:
+      // Bldgs, Units, Value (1-unit)
+      // Bldgs_1, Units_1, Value_1 (2-units)
+      // Bldgs_2, Units_2, Value_2 (3-4 units)
+      // Bldgs_3, Units_3, Value_3 (5+ units)
+      const oneUnit = clean(row.Units);
+      const twoUnits = clean(row.Units_1);
+      const threeUnits = clean(row.Units_2);
+      const fiveUnits = clean(row.Units_3);
+
+      permitData[fips5] = {
+        fips: fips5,
+        countyName: row.Name,
+        
+        // 2024 totals
+        totalUnits2024: (oneUnit || 0) + (twoUnits || 0) + (threeUnits || 0) + (fiveUnits || 0),
+        
+        // Multifamily (5+ units)
+        multifamilyUnits2024: fiveUnits || 0,
+        multifamilyBuildings2024: clean(row.Bldgs_3) || 0,
+        multifamilyValue2024: clean(row.Value_3) || 0,
+        
+        // Single-family
+        singleFamilyUnits2024: oneUnit || 0
+      };
+      
+      // Log first successful parse
+      if (processed === 0) {
+        console.log("First 2024 permit row parsed:", {
+          fips: fips5,
+          county: permitData[fips5].countyName,
+          total: permitData[fips5].totalUnits2024,
+          mf: permitData[fips5].multifamilyUnits2024
+        });
+      }
+      processed++;
+    });
+
+    console.log(`[Permits 2024] processed=${processed}, skipped=${skipped}`);
+    processed = 0;
+    skipped = 0;
+
+    // Process 2025 data
+    rows2025.forEach((row, idx) => {
+      const stateFips = row.State;
+      const countyFips = row.County;
+      
+      if (!stateFips || !countyFips) {
+        if (idx < 3) console.log(`Skipping 2025 row ${idx} - missing FIPS:`, row);
+        skipped++;
+        return;
+      }
+
+      const fips5 = String(stateFips).padStart(2, "0") + String(countyFips).padStart(3, "0");
+
+      if (fips5 === "00000" || fips5.length !== 5) {
+        skipped++;
+        return;
+      }
+
+      if (!permitData[fips5]) {
+        permitData[fips5] = {
+          fips: fips5,
+          countyName: row.Name
+        };
+      }
+
+      // Get unit counts using the same column pattern
+      const oneUnit = clean(row.Units);
+      const twoUnits = clean(row.Units_1);
+      const threeUnits = clean(row.Units_2);
+      const fiveUnits = clean(row.Units_3);
+
+      // 2025 totals
+      permitData[fips5].totalUnits2025 = (oneUnit || 0) + (twoUnits || 0) + (threeUnits || 0) + (fiveUnits || 0);
+      
+      // Multifamily (5+ units)
+      permitData[fips5].multifamilyUnits2025 = fiveUnits || 0;
+      permitData[fips5].multifamilyBuildings2025 = clean(row.Bldgs_3) || 0;
+      permitData[fips5].multifamilyValue2025 = clean(row.Value_3) || 0;
+      
+      // Single-family
+      permitData[fips5].singleFamilyUnits2025 = oneUnit || 0;
+
+      // Log first successful parse
+      if (processed === 0) {
+        console.log("First 2025 permit row parsed:", {
+          fips: fips5,
+          county: permitData[fips5].countyName,
+          total: permitData[fips5].totalUnits2025,
+          mf: permitData[fips5].multifamilyUnits2025
+        });
+      }
+      processed++;
+    });
+
+    console.log(`[Permits 2025] processed=${processed}, skipped=${skipped}`);
+
+    // Calculate derived metrics
+    let withGrowth = 0, withShare = 0;
+    Object.values(permitData).forEach(c => {
+      // Permit growth (YoY)
+      if (c.totalUnits2024 && c.totalUnits2024 > 0 && c.totalUnits2025 != null) {
+        c.permitGrowth = ((c.totalUnits2025 - c.totalUnits2024) / c.totalUnits2024) * 100;
+        withGrowth++;
+      }
+      
+      // Multifamily growth
+      if (c.multifamilyUnits2024 && c.multifamilyUnits2024 > 0 && c.multifamilyUnits2025 != null) {
+        c.multifamilyGrowth = ((c.multifamilyUnits2025 - c.multifamilyUnits2024) / c.multifamilyUnits2024) * 100;
+      }
+      
+      // Multifamily market share (check >= 0 since 0 is valid)
+      if (c.totalUnits2025 > 0 && c.multifamilyUnits2025 != null && c.multifamilyUnits2025 >= 0) {
+        c.multifamilyShare = (c.multifamilyUnits2025 / c.totalUnits2025) * 100;
+        withShare++;
+      }
+    });
+
+    console.log(`[Permits Metrics] counties=${Object.keys(permitData).length}, withGrowth=${withGrowth}, withShare=${withShare}`);
+    
+    // Log sample with market share data
+    const sampleWithShare = Object.values(permitData).find(c => c.multifamilyShare && c.multifamilyShare > 0);
+    if (sampleWithShare) {
+      console.log("Sample county WITH market share:", {
+        fips: sampleWithShare.fips,
+        county: sampleWithShare.countyName,
+        mf2025: sampleWithShare.multifamilyUnits2025,
+        total2025: sampleWithShare.totalUnits2025,
+        mfShare: sampleWithShare.multifamilyShare?.toFixed(1) + '%'
+      });
+    }
+    
+    // Log sample with zero market share
+    const sampleZeroShare = Object.values(permitData).find(c => c.totalUnits2025 > 0 && c.multifamilyUnits2025 === 0);
+    if (sampleZeroShare) {
+      console.log("Sample county with ZERO market share (all single-family):", {
+        fips: sampleZeroShare.fips,
+        county: sampleZeroShare.countyName,
+        mf2025: sampleZeroShare.multifamilyUnits2025,
+        total2025: sampleZeroShare.totalUnits2025,
+        mfShare: sampleZeroShare.multifamilyShare
+      });
+    }
+    
+    // Log sample with data
+    const sample = Object.values(permitData).find(c => c.multifamilyUnits2025 && c.multifamilyUnits2025 > 10);
+    if (sample) {
+      console.log("Sample permit data with MF units:", {
+        fips: sample.fips,
+        county: sample.countyName,
+        mf2024: sample.multifamilyUnits2024,
+        mf2025: sample.multifamilyUnits2025,
+        total2025: sample.totalUnits2025,
+        growth: sample.permitGrowth?.toFixed(1),
+        mfShare: sample.multifamilyShare?.toFixed(1)
+      });
+    } else {
+      console.warn("No permit data found with multifamily units > 10");
+      // Log first 3 records to debug
+      Object.values(permitData).slice(0, 3).forEach(c => {
+        console.log("Sample data:", c);
+      });
+    }
+
+    return permitData;
+  };
+
   /* ===== Merge FY26 FMR ===== */
   const mergeFMR = (counties, rows) => {
     let merged=0, created=0, bad=0;
@@ -371,6 +681,44 @@ const CountyChoroplethMap = ({ setCurrentPage }) => {
     return counties;
   };
 
+  /* ===== Merge Building Permits ===== */
+  const mergePermits = (counties, permitData) => {
+    let merged = 0, created = 0;
+    Object.values(permitData).forEach(permData => {
+      if (!counties[permData.fips]) {
+        counties[permData.fips] = {
+          fips: permData.fips,
+          fullName: permData.countyName ? `${permData.countyName}` : `FIPS ${permData.fips}`
+        };
+        created++;
+      }
+      
+      // Merge all permit fields
+      counties[permData.fips].totalUnits2024 = permData.totalUnits2024;
+      counties[permData.fips].totalUnits2025 = permData.totalUnits2025;
+      counties[permData.fips].multifamilyUnits2024 = permData.multifamilyUnits2024;
+      counties[permData.fips].multifamilyUnits2025 = permData.multifamilyUnits2025;
+      counties[permData.fips].multifamilyBuildings2024 = permData.multifamilyBuildings2024;
+      counties[permData.fips].multifamilyBuildings2025 = permData.multifamilyBuildings2025;
+      counties[permData.fips].multifamilyValue2024 = permData.multifamilyValue2024;
+      counties[permData.fips].multifamilyValue2025 = permData.multifamilyValue2025;
+      counties[permData.fips].singleFamilyUnits2024 = permData.singleFamilyUnits2024;
+      counties[permData.fips].singleFamilyUnits2025 = permData.singleFamilyUnits2025;
+      counties[permData.fips].permitGrowth = permData.permitGrowth;
+      counties[permData.fips].multifamilyGrowth = permData.multifamilyGrowth;
+      counties[permData.fips].multifamilyShare = permData.multifamilyShare;
+      
+      // Calculate development intensity (per 1000 residents)
+      if (counties[permData.fips].totalPopulation && counties[permData.fips].totalPopulation > 0 && permData.totalUnits2025) {
+        counties[permData.fips].developmentIntensity = (permData.totalUnits2025 / counties[permData.fips].totalPopulation) * 1000;
+      }
+      
+      merged++;
+    });
+    console.log(`[Building Permits] merged=${merged}, created=${created}`);
+    return counties;
+  };
+
   /* ===== Load all ===== */
   const loadAll = async () => {
     try {
@@ -395,6 +743,21 @@ const CountyChoroplethMap = ({ setCurrentPage }) => {
       if (!migrationRows?.length) throw new Error("Migration CSV empty");
       const migrationData = processMigration(migrationRows);
       counties = mergeMigration(counties, migrationData);
+
+      // Load building permits
+      try {
+        const { data: permits2024 } = await loadCSV(PERMITS_2024_PATH, "permits2024");
+        const { data: permits2025 } = await loadCSV(PERMITS_2025_PATH, "permits2025");
+        
+        if (permits2024?.length && permits2025?.length) {
+          const permitData = processPermits(permits2024, permits2025);
+          counties = mergePermits(counties, permitData);
+        } else {
+          console.warn("Building permit data missing - continuing without it");
+        }
+      } catch (permitError) {
+        console.warn("Failed to load building permits:", permitError);
+      }
 
       const gj = await (await fetch("https://raw.githubusercontent.com/plotly/datasets/master/geojson-counties-fips.json")).json();
       setGeoJsonData(gj);
@@ -495,6 +858,39 @@ const CountyChoroplethMap = ({ setCurrentPage }) => {
               </div>
               <div style="margin-top:6px"><span style="color:#6b7280">Population (2021):</span> <strong>${c.population2021?.toLocaleString() || 'N/A'}</strong></div>
             </div>`;
+          
+          const permitTable = `
+            <table style="width:100%;border-collapse:collapse;font-size:.8rem;margin-top:8px">
+              <thead>
+                <tr>
+                  <th style="text-align:left;border-bottom:1px solid #e5e7eb;padding:4px 0">Unit Type</th>
+                  <th style="text-align:right;border-bottom:1px solid #e5e7eb;padding:4px 0">Aug 2024</th>
+                  <th style="text-align:right;border-bottom:1px solid #e5e7eb;padding:4px 0">Aug 2025</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style="padding:4px 0">1-unit (SF)</td>
+                  <td style="padding:4px 0;text-align:right">${isNum(c.singleFamilyUnits2024) ? c.singleFamilyUnits2024.toLocaleString() : '—'}</td>
+                  <td style="padding:4px 0;text-align:right">${isNum(c.singleFamilyUnits2025) ? c.singleFamilyUnits2025.toLocaleString() : '—'}</td>
+                </tr>
+                <tr>
+                  <td style="padding:4px 0">5+ units (MF)</td>
+                  <td style="padding:4px 0;text-align:right">${isNum(c.multifamilyUnits2024) ? c.multifamilyUnits2024.toLocaleString() : '—'}</td>
+                  <td style="padding:4px 0;text-align:right;font-weight:bold">${isNum(c.multifamilyUnits2025) ? c.multifamilyUnits2025.toLocaleString() : '—'}</td>
+                </tr>
+                <tr style="border-top:1px solid #e5e7eb;font-weight:600">
+                  <td style="padding:4px 0">Total Units</td>
+                  <td style="padding:4px 0;text-align:right">${isNum(c.totalUnits2024) ? c.totalUnits2024.toLocaleString() : '—'}</td>
+                  <td style="padding:4px 0;text-align:right">${isNum(c.totalUnits2025) ? c.totalUnits2025.toLocaleString() : '—'}</td>
+                </tr>
+              </tbody>
+            </table>
+            <div style="margin-top:8px;font-size:.75rem;color:#6b7280">
+              <div><strong>YoY Growth:</strong> ${isNum(c.permitGrowth) ? (c.permitGrowth > 0 ? '+' : '') + c.permitGrowth.toFixed(1) + '%' : 'N/A'}</div>
+              <div><strong>MF Market Share:</strong> ${isNum(c.multifamilyShare) ? c.multifamilyShare.toFixed(1) + '%' : 'N/A'}</div>
+              ${c.developmentIntensity ? `<div><strong>Dev Intensity:</strong> ${c.developmentIntensity.toFixed(1)}‰</div>` : ''}
+            </div>`;
 
           const popup = `
             <div style="background:white;border:1px solid #e5e7eb;border-radius:12px;box-shadow:0 10px 15px -3px rgba(0,0,0,.1);min-width:280px;max-width:340px">
@@ -511,7 +907,8 @@ const CountyChoroplethMap = ({ setCurrentPage }) => {
               </div>
               <div style="padding:14px 18px">
                 ${selectedMetric==="fmr" ? fmrTable : 
-                  selectedMetric==="migration" ? migrationTable : `
+                  selectedMetric==="migration" ? migrationTable :
+                  selectedMetric==="multifamilyPermits" || selectedMetric==="permitGrowth" || selectedMetric==="developmentIntensity" || selectedMetric==="multifamilyShare" ? permitTable : `
                   <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:.8rem">
                     <div><div style="color:#6b7280">Median Income</div><div style="font-weight:600">${c.medianHouseholdIncome?.toLocaleString()||"N/A"}</div></div>
                     <div><div style="color:#6b7280">Unemployment</div><div style="font-weight:600">${isNum(c.unemploymentRate)?c.unemploymentRate.toFixed(1)+"%":"N/A"}</div></div>
@@ -565,6 +962,10 @@ const CountyChoroplethMap = ({ setCurrentPage }) => {
         ["housingStock", /\bvacancy|inventory|stock\b/],
         ["appreciation", /\bappreciation|price growth|value growth|invest\b/],
         ["migration", /\bmigrat|moving|inflow|outflow|people mov\b/],
+        ["multifamilyPermits", /\bmultifamily permit|mf permit|5\+ unit|apartment construction|multi-unit\b/],
+        ["permitGrowth", /\bpermit growth|construction growth|building growth|yoy permit\b/],
+        ["developmentIntensity", /\bdevelopment intensity|permit.*per capita|construction.*per capita|building boom\b/],
+        ["multifamilyShare", /\bmultifamily share|mf share|apartment share|multi-unit.*percent\b/],
       ];
       let which = isFMR ? "fmr" : isMigration ? "migration" : null;
       if (!which) {
@@ -705,7 +1106,7 @@ const CountyChoroplethMap = ({ setCurrentPage }) => {
           <div style={{padding:12,borderTop:"1px solid #e5e7eb",background:"white"}}>
             <div style={{display:"flex",gap:8}}>
               <input value={chatInput} onChange={(e)=>setChatInput(e.target.value)} onKeyDown={(e)=>e.key==="Enter"&&handleChatSend()}
-                placeholder={`Try: 'cheapest 3BR FMR in TX < 1500' or 'highest migration inflow in CA'`} style={{flex:1,padding:"8px 12px",border:"1px solid #d1d5db",borderRadius:6}}/>
+                placeholder={`Try: 'highest multifamily permits in TX' or 'fastest permit growth in FL' or 'top development intensity'`} style={{flex:1,padding:"8px 12px",border:"1px solid #d1d5db",borderRadius:6}}/>
               <button onClick={handleChatSend} style={{padding:"8px 12px",background:"#667eea",color:"#fff",border:"none",borderRadius:6,fontWeight:700,cursor:"pointer"}}>Send</button>
             </div>
           </div>

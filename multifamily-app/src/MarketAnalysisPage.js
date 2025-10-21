@@ -1,7 +1,7 @@
 // src/MarketAnalysisPage.js
 import React, { useState, useEffect, useRef } from 'react';
 import Papa from 'papaparse';
-import { BarChart3, Search, Home, ArrowLeft, MapPin, Building, TrendingUp, Download } from 'lucide-react';
+import { Search, Home, ArrowLeft, MapPin, Building, TrendingUp, Download } from 'lucide-react';
 
 /* ---- one-time spinner keyframes ---- */
 if (typeof document !== 'undefined') {
@@ -163,6 +163,29 @@ const loadCSV = async (url) => {
   const text = await res.text();
   return Papa.parse(text, { header: true, dynamicTyping: false, skipEmptyLines: true }).data;
 };
+
+// Special loader for building permits (tab-delimited with 2 header rows)
+const loadPermitsCSV = async (url) => {
+  const u = absUrl(url);
+  const res = await fetch(u);
+  if (!res.ok) throw new Error(`${u}: ${res.status}`);
+  const text = await res.text();
+  
+  // Split into lines and use line 2 (index 1) as headers  
+  const lines = text.split('\n');
+  const headers = lines[1]; // "Date,State,County,Code,Code,Name,Bldgs,Units,Value..."
+  const dataLines = lines.slice(3); // Skip header rows and blank line
+  const permitCSV = headers + '\n' + dataLines.join('\n');
+  
+  const parsed = Papa.parse(permitCSV, { 
+    header: true, 
+    skipEmptyLines: true, 
+    dynamicTyping: true
+  });
+  
+  return parsed.data;
+};
+
 const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 
 /* -------- responsive width hook -------- */
@@ -488,51 +511,159 @@ function scoreMarket(row, ranges) {
 /* ---------------- charts ---------------- */
 const BarChart = ({ data, dataKey, title, color = '#06b6d4', width = 700, height = 320, slim = true }) => {
   const entries = Object.entries(data.liveRentStats || {}).filter(([, v]) => (v[dataKey] || 0) > 0);
+  
   if (entries.length === 0) return (
-    <div style={{ color:'#9ca3af', background:'#fff', border:'1px solid #e5e7eb', borderRadius:20, padding:24 }}>
-      No rent data available
+    <div style={{ 
+      background: '#ffffff', 
+      border: '2px dashed #e5e7eb', 
+      borderRadius: 16, 
+      padding: 32, 
+      textAlign: 'center',
+      boxShadow: '0 2px 4px rgba(0,0,0,.06)'
+    }}>
+      <div style={{ color: '#64748b', fontSize: '1rem', fontWeight: 500 }}>
+        📊 No rent data available
+      </div>
     </div>
   );
+  
   const maxValue = Math.max(...entries.map(([, v]) => v[dataKey]));
-  const gap = slim ? 10 : 20;
-  const pad = 50;
+  const gap = 20;
+  const pad = 60;
   const barsArea = Math.max(0, width - pad * 2);
-  const barWidth = Math.max(6, Math.min(36, (barsArea / entries.length) - gap)); // slim bars
+  const barWidth = Math.max(50, Math.min(80, (barsArea / entries.length) - gap));
+  
+  // Mashvisor-style color palette
+  const colors = ['#0ea5e9', '#0891b2', '#0e7490', '#155e75', '#164e63', '#083344', '#0c4a6e'];
 
   return (
-    <div style={{ background:'#fff', border:'1px solid #e5e7eb', borderRadius:20, padding:24, boxShadow:'0 2px 4px rgba(0,0,0,0.06)' }}>
-      <h3 style={{ fontSize:'1.25rem', fontWeight:600, color:'#333', marginBottom:24, display:'flex', alignItems:'center', gap:8 }}>
-        <BarChart3 size={20} style={{ color:'#06b6d4' }} /> {title}
-      </h3>
+    <div style={{ 
+      background: '#ffffff', 
+      border: '1px solid #e5e7eb', 
+      borderRadius: 16, 
+      padding: 24, 
+      boxShadow: '0 2px 4px rgba(0,0,0,.06)'
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+        <h3 style={{ 
+          fontSize: '1.125rem', 
+          fontWeight: 600, 
+          color: '#0f172a', 
+          display: 'flex', 
+          alignItems: 'center', 
+          gap: 10,
+          margin: 0
+        }}>
+          <div style={{
+            background: '#0ea5e9',
+            borderRadius: '50%',
+            width: 32,
+            height: 32,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: '0.875rem'
+          }}>
+            📊
+          </div>
+          {title}
+        </h3>
+        <div style={{
+          background: '#fef3c7',
+          color: '#92400e',
+          padding: '6px 12px',
+          borderRadius: 8,
+          fontSize: '0.75rem',
+          fontWeight: 600
+        }}>
+          📈 Live Data
+        </div>
+      </div>
+      
       <div style={{ overflowX:'auto' }}>
         <svg width={width} height={height + 60} style={{ minWidth:'100%' }}>
-          {[0, 0.25, 0.5, 0.75, 1].map((ratio) => (
-            <g key={ratio}>
-              <line x1={pad} y1={height * (1 - ratio)} x2={width - pad} y2={height * (1 - ratio)} stroke="#e5e7eb" strokeWidth={1} />
-              <text x={pad - 10} y={height * (1 - ratio) + 5} fill="#64748b" fontSize="12" textAnchor="end">
-                {formatCurrency(maxValue * ratio)}
-              </text>
-            </g>
-          ))}
+          {/* Grid lines */}
+          {[0, 0.25, 0.5, 0.75, 1].map((ratio, idx) => {
+            const y = height * (1 - ratio);
+            return (
+              <g key={idx}>
+                <line 
+                  x1={pad} 
+                  y1={y} 
+                  x2={width - pad} 
+                  y2={y} 
+                  stroke="#f1f5f9" 
+                  strokeWidth="1.5"
+                />
+                <text 
+                  x={pad - 10} 
+                  y={y + 4} 
+                  fill="#64748b" 
+                  fontSize="12" 
+                  textAnchor="end"
+                  fontWeight="500"
+                >
+                  {formatCurrency(maxValue * ratio)}
+                </text>
+              </g>
+            );
+          })}
+          
+          {/* Bars */}
           {entries.map(([bed, val], i) => {
             const value = val[dataKey] || 0;
             const barHeight = maxValue > 0 ? (value / maxValue) * height : 0;
             const x = pad + i * (barWidth + gap);
+            const bedLabel = String(bed).toLowerCase() === '0' || String(bed).toLowerCase() === 'studio' ? 'Studio' : `${bed} BD`;
+            const barColor = colors[i % colors.length];
+            
             return (
               <g key={i}>
-                <defs>
-                  <linearGradient id={`gradient-${i}`} x1="0%" y1="0%" x2="0%" y2="100%">
-                    <stop offset="0%" style={{ stopColor: color, stopOpacity: 1 }} />
-                    <stop offset="100%" style={{ stopColor: color, stopOpacity: 0.65 }} />
-                  </linearGradient>
-                </defs>
-                <rect x={x} y={height - barHeight} width={barWidth} height={barHeight} fill={`url(#gradient-${i})`} rx="6"
-                      style={{ filter:'drop-shadow(0 4px 6px rgba(0,0,0,0.08))' }} />
-                <text x={x + barWidth / 2} y={height + 20} textAnchor="middle" fill="#334155" fontSize="12" fontWeight="600">
-                  {String(bed).toLowerCase() === '0' || String(bed).toLowerCase() === 'studio' ? 'Studio' : `${bed} BD`}
-                </text>
-                <text x={x + barWidth / 2} y={height - barHeight - 8} textAnchor="middle" fill="#334155" fontSize="12" fontWeight="700">
+                {/* Main bar with rounded top */}
+                <rect 
+                  x={x} 
+                  y={height - barHeight} 
+                  width={barWidth} 
+                  height={barHeight} 
+                  fill={barColor} 
+                  rx="6"
+                  ry="6"
+                />
+                
+                {/* Value label on top */}
+                <text 
+                  x={x + barWidth / 2} 
+                  y={height - barHeight - 8} 
+                  textAnchor="middle" 
+                  fill="#0f172a" 
+                  fontSize="14" 
+                  fontWeight="700"
+                >
                   {formatCurrency(value)}
+                </text>
+                
+                {/* Category label below */}
+                <text 
+                  x={x + barWidth / 2} 
+                  y={height + 20} 
+                  textAnchor="middle" 
+                  fill="#64748b" 
+                  fontSize="13" 
+                  fontWeight="500"
+                >
+                  {bedLabel}
+                </text>
+                
+                {/* Listing count */}
+                <text 
+                  x={x + barWidth / 2} 
+                  y={height + 38} 
+                  textAnchor="middle" 
+                  fill="#94a3b8" 
+                  fontSize="11" 
+                  fontWeight="500"
+                >
+                  {val.count || 0} {val.count === 1 ? 'listing' : 'listings'}
                 </text>
               </g>
             );
@@ -556,7 +687,7 @@ const DonutChart = ({ data, title, width = 360, height = 360, totalListings }) =
   const outerRadius = Math.min(width, height) / 2 - 20;
   const innerRadius = outerRadius * 0.6;
   let currentAngle = -90;
-  const colors = ['#06b6d4','#10b981','#f59e0b','#8b5cf6','#ef4444','#f97316','#14b8a6','#0ea5e9'];
+  const colors = ['#06b6d4','#10b981','#f59e0b','#0ea5e9','#ef4444','#f97316','#14b8a6','#3b82f6'];
 
   return (
     <div style={{ background:'#fff', border:'1px solid #e5e7eb', borderRadius:20, padding:24, boxShadow:'0 2px 4px rgba(0,0,0,0.06)' }}>
@@ -606,40 +737,219 @@ const DonutChart = ({ data, title, width = 360, height = 360, totalListings }) =
 const LineChart = ({ points, title, width = 700, height = 280 }) => {
   const valid = points.filter(p => p.y != null && !isNaN(p.y));
   if (valid.length < 2) {
-    return <div style={{ color:'#9ca3af', background:'#fff', border:'1px solid #e5e7eb', borderRadius:20, padding:24 }}>Not enough population history to plot</div>;
+    return (
+      <div style={{ 
+        background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)', 
+        border: '2px dashed #cbd5e1', 
+        borderRadius: 24, 
+        padding: 32, 
+        textAlign: 'center',
+        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
+      }}>
+        <div style={{ color: '#64748b', fontSize: '1.1rem', fontWeight: 500 }}>
+          📊 Not enough population history to plot
+        </div>
+      </div>
+    );
   }
-  const pad = { left: 60, right: 24, top: 20, bottom: 34 };
+  
+  const pad = { left: 70, right: 30, top: 30, bottom: 50 };
   const ys = valid.map(p => Number(p.y));
   const minY = Math.min(...ys);
   const maxY = Math.max(...ys);
+  const isGrowth = ys[ys.length - 1] > ys[0];
+  
   const scaleX = (i) => pad.left + (i / (valid.length - 1)) * (width - pad.left - pad.right);
   const scaleY = (y) => pad.top + (1 - (y - minY) / Math.max(1, (maxY - minY))) * (height - pad.top - pad.bottom);
-  const d = valid.map((p, i) => `${i === 0 ? 'M' : 'L'} ${scaleX(i)} ${scaleY(p.y)}`).join(' ');
+  
+  // Create curved path using quadratic bezier curves
+  let pathD = '';
+  if (valid.length === 2) {
+    const x1 = scaleX(0), y1 = scaleY(valid[0].y);
+    const x2 = scaleX(1), y2 = scaleY(valid[1].y);
+    const midX = (x1 + x2) / 2;
+    const curveOffset = isGrowth ? -20 : 20; // Convex for growth, concave for decline
+    const midY = (y1 + y2) / 2 + curveOffset;
+    pathD = `M ${x1} ${y1} Q ${midX} ${midY} ${x2} ${y2}`;
+  } else {
+    // For more than 2 points, create smooth curves between each segment
+    pathD = valid.map((p, i) => {
+      const x = scaleX(i), y = scaleY(p.y);
+      if (i === 0) return `M ${x} ${y}`;
+      
+      const prevX = scaleX(i - 1), prevY = scaleY(valid[i - 1].y);
+      const controlX = (prevX + x) / 2;
+      const curveOffset = isGrowth ? -15 : 15;
+      const controlY = (prevY + y) / 2 + curveOffset;
+      return `Q ${controlX} ${controlY} ${x} ${y}`;
+    }).join(' ');
+  }
+  
   return (
-    <div style={{ background:'#fff', border:'1px solid #e5e7eb', borderRadius:20, padding:24, boxShadow:'0 2px 4px rgba(0,0,0,0.06)' }}>
-      <h3 style={{ fontSize:'1.25rem', fontWeight:600, color:'#333', marginBottom:16, display:'flex', alignItems:'center', gap:8 }}>
-        <TrendingUp size={20} style={{ color:'#06b6d4' }} /> {title}
+    <div style={{ 
+      background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)', 
+      border: '1px solid #e2e8f0', 
+      borderRadius: 24, 
+      padding: 32, 
+      boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+      position: 'relative',
+      overflow: 'hidden'
+    }}>
+      <div style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        height: '4px',
+        background: isGrowth 
+          ? 'linear-gradient(90deg, #10b981, #06b6d4)' 
+          : 'linear-gradient(90deg, #f59e0b, #ef4444)'
+      }} />
+      
+      <h3 style={{ 
+        fontSize: '1.5rem', 
+        fontWeight: 700, 
+        color: '#1e293b', 
+        marginBottom: 24, 
+        display: 'flex', 
+        alignItems: 'center', 
+        gap: 12 
+      }}>
+        <div style={{
+          background: isGrowth 
+            ? 'linear-gradient(135deg, #10b981, #06b6d4)' 
+            : 'linear-gradient(135deg, #f59e0b, #ef4444)',
+          borderRadius: '50%',
+          padding: 8,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}>
+          <TrendingUp size={20} style={{ color: '#fff' }} />
+        </div>
+        {title}
+        <div style={{
+          background: isGrowth ? '#dcfce7' : '#fef3c7',
+          color: isGrowth ? '#166534' : '#92400e',
+          padding: '4px 12px',
+          borderRadius: 12,
+          fontSize: '0.8rem',
+          fontWeight: 600,
+          marginLeft: 'auto'
+        }}>
+          {isGrowth ? '📈 Growing' : '📉 Declining'}
+        </div>
       </h3>
+      
       <svg width={width} height={height}>
+        <defs>
+          <linearGradient id="lineGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" style={{ 
+              stopColor: isGrowth ? '#10b981' : '#f59e0b', 
+              stopOpacity: 1 
+            }} />
+            <stop offset="100%" style={{ 
+              stopColor: isGrowth ? '#06b6d4' : '#ef4444', 
+              stopOpacity: 1 
+            }} />
+          </linearGradient>
+          <linearGradient id="areaGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" style={{ 
+              stopColor: isGrowth ? '#10b981' : '#f59e0b', 
+              stopOpacity: 0.3 
+            }} />
+            <stop offset="100%" style={{ 
+              stopColor: isGrowth ? '#06b6d4' : '#ef4444', 
+              stopOpacity: 0.05 
+            }} />
+          </linearGradient>
+        </defs>
+        
+        {/* Grid lines */}
         {[0, 0.25, 0.5, 0.75, 1].map((r, idx) => {
           const y = pad.top + r * (height - pad.top - pad.bottom);
           return (
             <g key={idx}>
-              <line x1={pad.left} y1={y} x2={width - pad.right} y2={y} stroke="#e5e7eb" strokeWidth="1" />
-              <text x={pad.left - 10} y={y + 4} fontSize="12" fill="#64748b" textAnchor="end">
+              <line 
+                x1={pad.left} 
+                y1={y} 
+                x2={width - pad.right} 
+                y2={y} 
+                stroke="#f1f5f9" 
+                strokeWidth="1" 
+                strokeDasharray="4,4"
+              />
+              <text 
+                x={pad.left - 15} 
+                y={y + 5} 
+                fontSize="13" 
+                fill="#64748b" 
+                textAnchor="end"
+                fontWeight="500"
+              >
                 {fmt(minY + (1 - r) * (maxY - minY))}
               </text>
             </g>
           );
         })}
+        
+        {/* X-axis labels */}
         {valid.map((p, i) => (
-          <text key={i} x={scaleX(i)} y={height - 10} fontSize="12" fill="#64748b" textAnchor="middle">{p.xLabel}</text>
+          <text 
+            key={i} 
+            x={scaleX(i)} 
+            y={height - 15} 
+            fontSize="14" 
+            fill="#475569" 
+            textAnchor="middle"
+            fontWeight="600"
+          >
+            {p.xLabel}
+          </text>
         ))}
-        <path d={d} fill="none" stroke="#06b6d4" strokeWidth="3" />
+        
+        {/* Area fill */}
+        <path 
+          d={`${pathD} L ${scaleX(valid.length - 1)} ${height - pad.bottom} L ${pad.left} ${height - pad.bottom} Z`}
+          fill="url(#areaGradient)"
+        />
+        
+        {/* Main curved line */}
+        <path 
+          d={pathD} 
+          fill="none" 
+          stroke="url(#lineGradient)" 
+          strokeWidth="4"
+          style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.1))' }}
+        />
+        
+        {/* Data points */}
         {valid.map((p, i) => (
           <g key={i}>
-            <circle cx={scaleX(i)} cy={scaleY(p.y)} r="4" fill="#06b6d4" />
-            <text x={scaleX(i)} y={scaleY(p.y) - 8} textAnchor="middle" fontSize="12" fill="#334155" fontWeight="700">
+            <circle 
+              cx={scaleX(i)} 
+              cy={scaleY(p.y)} 
+              r="7" 
+              fill="#fff" 
+              stroke={isGrowth ? '#10b981' : '#f59e0b'}
+              strokeWidth="3"
+              style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.15))' }}
+            />
+            <circle 
+              cx={scaleX(i)} 
+              cy={scaleY(p.y)} 
+              r="3" 
+              fill={isGrowth ? '#10b981' : '#f59e0b'}
+            />
+            <text 
+              x={scaleX(i)} 
+              y={scaleY(p.y) - 18} 
+              textAnchor="middle" 
+              fontSize="13" 
+              fill="#1e293b" 
+              fontWeight="700"
+              style={{ textShadow: '0 1px 2px rgba(255,255,255,0.8)' }}
+            >
               {fmt(p.y)}
             </text>
           </g>
@@ -651,38 +961,138 @@ const LineChart = ({ points, title, width = 700, height = 280 }) => {
 
 const FMRChart = ({ fmrs, title, width = 700, height = 280 }) => {
   const keys = ['fmr_0br','fmr_1br','fmr_2br','fmr_3br','fmr_4br'];
-  const labels = ['Studio','1 BR','2 BR','3 BR','4 BR'];
+  const labels = ['Studio','1 BD','2 BD','3 BD','4 BD'];
   const vals = keys.map(k => cleanValue(fmrs?.[k]));
   const pairs = labels.map((lab, i) => ({ lab, val: vals[i] })).filter(p => p.val != null && !isNaN(p.val));
+  
   if (!pairs.length) {
-    return <div style={{ color:'#9ca3af', background:'#fff', border:'1px solid #e5e7eb', borderRadius:20, padding:24 }}>No FMR data available</div>;
+    return (
+      <div style={{ 
+        background: '#ffffff', 
+        border: '2px dashed #e5e7eb', 
+        borderRadius: 16, 
+        padding: 32, 
+        textAlign: 'center',
+        boxShadow: '0 2px 4px rgba(0,0,0,.06)'
+      }}>
+        <div style={{ color: '#64748b', fontSize: '1rem', fontWeight: 500 }}>
+          📊 No FMR data available
+        </div>
+      </div>
+    );
   }
-  const pad = 50; const gap = 16;
+  
+  const pad = 60; 
+  const gap = 20;
   const maxValue = Math.max(...pairs.map(p => p.val));
-  const barWidth = Math.max(22, Math.min(40, (width - pad*2 - gap*(pairs.length-1)) / pairs.length));
+  const barWidth = Math.max(50, Math.min(80, (width - pad*2 - gap*(pairs.length-1)) / pairs.length));
+  
   return (
-    <div style={{ background:'#fff', border:'1px solid #e5e7eb', borderRadius:20, padding:24, boxShadow:'0 2px 4px rgba(0,0,0,0.06)' }}>
-      <h3 style={{ fontSize:'1.25rem', fontWeight:600, color:'#333', marginBottom:16, display:'flex', alignItems:'center', gap:8 }}>
-        <BarChart3 size={20} style={{ color:'#06b6d4' }} /> {title}
-      </h3>
-      <svg width={width} height={height + 40}>
-        {[0, 0.25, 0.5, 0.75, 1].map((ratio) => (
-          <g key={ratio}>
-            <line x1={pad} y1={height * (1 - ratio)} x2={width - pad} y2={height * (1 - ratio)} stroke="#e5e7eb" strokeWidth={1} />
-            <text x={pad - 10} y={height * (1 - ratio) + 5} fill="#64748b" fontSize="12" textAnchor="end">
-              {formatCurrency(maxValue * ratio)}
-            </text>
-          </g>
-        ))}
+    <div style={{ 
+      background: '#ffffff', 
+      border: '1px solid #e5e7eb', 
+      borderRadius: 16, 
+      padding: 24, 
+      boxShadow: '0 2px 4px rgba(0,0,0,.06)'
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+        <h3 style={{ 
+          fontSize: '1.125rem', 
+          fontWeight: 600, 
+          color: '#0f172a', 
+          display: 'flex', 
+          alignItems: 'center', 
+          gap: 10,
+          margin: 0
+        }}>
+          <div style={{
+            background: '#0ea5e9',
+            borderRadius: '50%',
+            width: 32,
+            height: 32,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: '0.875rem'
+          }}>
+            📊
+          </div>
+          {title}
+        </h3>
+      </div>
+      
+      <svg width={width} height={height + 50}>
+        {/* Grid lines */}
+        {[0, 0.25, 0.5, 0.75, 1].map((ratio, idx) => {
+          const y = height * (1 - ratio);
+          return (
+            <g key={idx}>
+              <line 
+                x1={pad} 
+                y1={y} 
+                x2={width - pad} 
+                y2={y} 
+                stroke="#f1f5f9" 
+                strokeWidth="1.5"
+              />
+              <text 
+                x={pad - 10} 
+                y={y + 4} 
+                fill="#64748b" 
+                fontSize="12" 
+                textAnchor="end"
+                fontWeight="500"
+              >
+                {formatCurrency(maxValue * ratio)}
+              </text>
+            </g>
+          );
+        })}
+        
+        {/* Bars */}
         {pairs.map((p, i) => {
           const h = (p.val / maxValue) * height;
           const x = pad + i * (barWidth + gap);
+          
+          // Color palette matching Mashvisor
+          const colors = ['#0ea5e9', '#0891b2', '#0e7490', '#155e75', '#164e63'];
+          const barColor = colors[i % colors.length];
+          
           return (
             <g key={i}>
-              <rect x={x} y={height - h} width={barWidth} height={h} fill="#06b6d4" rx="6" />
-              <text x={x + barWidth / 2} y={height + 18} textAnchor="middle" fill="#334155" fontSize="12" fontWeight="600">{p.lab}</text>
-              <text x={x + barWidth / 2} y={height - h - 8} textAnchor="middle" fill="#334155" fontSize="12" fontWeight="700">
+              {/* Main bar with rounded top */}
+              <rect 
+                x={x} 
+                y={height - h} 
+                width={barWidth} 
+                height={h} 
+                fill={barColor} 
+                rx="6"
+                ry="6"
+              />
+              
+              {/* Value label on top of bar */}
+              <text 
+                x={x + barWidth / 2} 
+                y={height - h - 8} 
+                textAnchor="middle" 
+                fill="#0f172a" 
+                fontSize="14" 
+                fontWeight="700"
+              >
                 {formatCurrency(p.val)}
+              </text>
+              
+              {/* Category label below */}
+              <text 
+                x={x + barWidth / 2} 
+                y={height + 20} 
+                textAnchor="middle" 
+                fill="#64748b" 
+                fontSize="13" 
+                fontWeight="500"
+              >
+                {p.lab}
               </text>
             </g>
           );
@@ -712,6 +1122,8 @@ const DENSITY_CSV = '/zcta_density.csv';
 const RENTER_OWNER_CSV = '/zip_renter_owner_stats_with_counts.csv';
 const ZHVI_CSV = '/Zip_zhvi_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv';
 const ZHVF_GROWTH_CSV = '/Zip_zhvf_growth_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv';
+const PERMITS_2024_CSV = '/co2408y.txt';
+const PERMITS_2025_CSV = '/co2508y.txt';
 
 /* ---------------- main page ---------------- */
 const MarketAnalysisPage = ({ setCurrentPage }) => {
@@ -726,7 +1138,36 @@ const MarketAnalysisPage = ({ setCurrentPage }) => {
   const [results, setResults] = useState({});
   const [ranges, setRanges] = useState(null);
 
+  // Cap Rate calculation state
+  const [expenseRatio, setExpenseRatio] = useState(0.35); // Default 35%
+  const [capRate, setCapRate] = useState(null);
+  const [noi, setNoi] = useState(null);
+
   const [chartsRef, chartsWidth] = useContainerWidth(620);
+  // Helper to calculate Cap Rate and NOI
+  useEffect(() => {
+    if (!results || Object.keys(results).length === 0) {
+      setCapRate(null);
+      setNoi(null);
+      return;
+    }
+    // Use FMR 2BR if available, else medianGrossRent
+    const grossRent = results.fmr_2br || results.medianGrossRent || 0;
+    // Annualize rent
+    const annualIncome = grossRent * 12;
+    // Estimate expenses
+    const expenses = annualIncome * expenseRatio;
+    // NOI
+    const netOperatingIncome = annualIncome - expenses;
+    setNoi(netOperatingIncome);
+    // Use ZHVI as property value if available, else fallback to medianHouseholdIncome * 4 (rough proxy)
+    const propertyValue = results.zhvi || (results.medianHouseholdIncome ? results.medianHouseholdIncome * 4 : null);
+    if (propertyValue && propertyValue > 0) {
+      setCapRate(((netOperatingIncome / propertyValue) * 100).toFixed(2));
+    } else {
+      setCapRate(null);
+    }
+  }, [results, expenseRatio]);
 
   useEffect(() => {
     let cancelled = false;
@@ -738,7 +1179,8 @@ const MarketAnalysisPage = ({ setCurrentPage }) => {
         const [
           masterRows, landlordRows, fmrRows,
           dp03, dp04, density, renterOwner,
-          zhviRows, zhvfGrowthRows
+          zhviRows, zhvfGrowthRows,
+          permits2024, permits2025
         ] = await Promise.all([
           loadCSV(MASTER_CSV),
           loadCSV(LANDLORD_CSV).catch(() => []),
@@ -748,7 +1190,9 @@ const MarketAnalysisPage = ({ setCurrentPage }) => {
           loadCSV(DENSITY_CSV),
           loadCSV(RENTER_OWNER_CSV),
           loadCSV(ZHVI_CSV).catch(() => []),
-          loadCSV(ZHVF_GROWTH_CSV).catch(() => [])
+          loadCSV(ZHVF_GROWTH_CSV).catch(() => []),
+          loadPermitsCSV(PERMITS_2024_CSV).catch(() => []),
+          loadPermitsCSV(PERMITS_2025_CSV).catch(() => [])
         ]);
 
         // Debug: Log column names to understand the CSV structure
@@ -886,6 +1330,54 @@ const MarketAnalysisPage = ({ setCurrentPage }) => {
           };
         }
 
+        // Building Permits data by county (2024 and 2025)
+        const permitsByCounty = {};
+        for (const r of permits2024 || []) {
+          const stateFips = r.State;
+          const countyFips = r.County;
+          if (!stateFips || !countyFips) continue;
+          
+          const fips = String(stateFips).padStart(2, "0") + String(countyFips).padStart(3, "0");
+          
+          permitsByCounty[fips] = {
+            countyName: r.Name,
+            units2024_1unit: cleanValue(r.Units) || 0,
+            units2024_2units: cleanValue(r.Units_1) || 0,
+            units2024_34units: cleanValue(r.Units_2) || 0,
+            units2024_5plus: cleanValue(r.Units_3) || 0,
+            totalUnits2024: (cleanValue(r.Units) || 0) + (cleanValue(r.Units_1) || 0) + 
+                           (cleanValue(r.Units_2) || 0) + (cleanValue(r.Units_3) || 0)
+          };
+        }
+        
+        for (const r of permits2025 || []) {
+          const stateFips = r.State;
+          const countyFips = r.County;
+          if (!stateFips || !countyFips) continue;
+          
+          const fips = String(stateFips).padStart(2, "0") + String(countyFips).padStart(3, "0");
+          
+          if (!permitsByCounty[fips]) {
+            permitsByCounty[fips] = { countyName: r.Name };
+          }
+          
+          permitsByCounty[fips].units2025_1unit = cleanValue(r.Units) || 0;
+          permitsByCounty[fips].units2025_2units = cleanValue(r.Units_1) || 0;
+          permitsByCounty[fips].units2025_34units = cleanValue(r.Units_2) || 0;
+          permitsByCounty[fips].units2025_5plus = cleanValue(r.Units_3) || 0;
+          permitsByCounty[fips].totalUnits2025 = (cleanValue(r.Units) || 0) + (cleanValue(r.Units_1) || 0) + 
+                                                  (cleanValue(r.Units_2) || 0) + (cleanValue(r.Units_3) || 0);
+          
+          // Calculate YoY growth
+          if (permitsByCounty[fips].totalUnits2024 && permitsByCounty[fips].totalUnits2024 > 0) {
+            permitsByCounty[fips].permitGrowth = 
+              ((permitsByCounty[fips].totalUnits2025 - permitsByCounty[fips].totalUnits2024) / 
+               permitsByCounty[fips].totalUnits2024) * 100;
+          }
+        }
+
+        console.log('[Permits] Processed counties:', Object.keys(permitsByCounty).length);
+
         // Merge master with fallbacks
         const zips = {};
         const cityIdx = {};
@@ -915,6 +1407,11 @@ const MarketAnalysisPage = ({ setCurrentPage }) => {
           const rent_to_income = (mhi && mgr) ? (mgr * 12) / mhi : null;
           const ls = landlordByState[state] || null;
 
+          // Link permits data via county FIPS from FMR data
+          const fmrData = fmrByZip[zip] || {};
+          const countyFipsForZip = fmrData.county_fips;
+          const permitsForCounty = countyFipsForZip ? permitsByCounty[countyFipsForZip] : null;
+
           zips[zip] = {
             zip, city, state,
             medianHouseholdIncome: mhi,
@@ -938,7 +1435,7 @@ const MarketAnalysisPage = ({ setCurrentPage }) => {
             landlord_friendly_note: ls?.note ?? null,
             eviction_score: ls?.evictionScore ?? null,
             rent_control_score: ls?.rentControlScore ?? null,
-            ...(fmrByZip[zip] || {}),
+            ...(fmrData),
             zhvi: cleanValue(r.zhvi) ?? zhviByZip[zip]?.currentValue ?? null,
             zhvf_1y: cleanValue(r.zhvf_1y) ?? zhvfByZip[zip]?.forecast_1y ?? null,
             zhvi_5y_growth_pct: cleanValue(r.zhvi_5y_growth_pct),
@@ -946,6 +1443,18 @@ const MarketAnalysisPage = ({ setCurrentPage }) => {
             zhvf_forecast_3m: zhvfByZip[zip]?.forecast_3m ?? null,
             zhvf_forecast_12m: zhvfByZip[zip]?.forecast_12m ?? null,
             rent_to_income,
+            // Add building permits data from county-level data
+            units2024_1unit: permitsForCounty?.units2024_1unit ?? null,
+            units2024_2units: permitsForCounty?.units2024_2units ?? null,
+            units2024_34units: permitsForCounty?.units2024_34units ?? null,
+            units2024_5plus: permitsForCounty?.units2024_5plus ?? null,
+            totalUnits2024: permitsForCounty?.totalUnits2024 ?? null,
+            units2025_1unit: permitsForCounty?.units2025_1unit ?? null,
+            units2025_2units: permitsForCounty?.units2025_2units ?? null,
+            units2025_34units: permitsForCounty?.units2025_34units ?? null,
+            units2025_5plus: permitsForCounty?.units2025_5plus ?? null,
+            totalUnits2025: permitsForCounty?.totalUnits2025 ?? null,
+            permitGrowth: permitsForCounty?.permitGrowth ?? null,
           };
 
           if (!cityIdx[cityKey]) cityIdx[cityKey] = [];
@@ -1101,6 +1610,18 @@ const MarketAnalysisPage = ({ setCurrentPage }) => {
         zhvf_1y: agg('zhvf_1y', false),
         zhvf_forecast_3m: agg('zhvf_forecast_3m', false),
         zhvf_forecast_12m: agg('zhvf_forecast_12m', false),
+        // Building permits (county-level data, same for all ZIPs in same county)
+        units2024_1unit: agg('units2024_1unit', false),
+        units2024_2units: agg('units2024_2units', false),
+        units2024_34units: agg('units2024_34units', false),
+        units2024_5plus: agg('units2024_5plus', false),
+        totalUnits2024: agg('totalUnits2024', false),
+        units2025_1unit: agg('units2025_1unit', false),
+        units2025_2units: agg('units2025_2units', false),
+        units2025_34units: agg('units2025_34units', false),
+        units2025_5plus: agg('units2025_5plus', false),
+        totalUnits2025: agg('totalUnits2025', false),
+        permitGrowth: agg('permitGrowth', false),
       };
     }
 
@@ -1153,8 +1674,37 @@ const MarketAnalysisPage = ({ setCurrentPage }) => {
   }
 
   return (
-    <div id="market-analysis-content" style={{ minHeight:'100vh', background:'#ffffff', color:'#333', padding:40 }}>
-      <div style={{ maxWidth:1400, margin:'0 auto' }}>
+    <div id="market-analysis-content" style={{ 
+      minHeight:'100vh', 
+      background: 'linear-gradient(135deg, #0ea5e9 0%, #06b6d4 25%, #10b981 50%, #14b8a6 75%, #0284c7 100%)',
+      backgroundSize: '400% 400%',
+      animation: 'gradientShift 15s ease infinite',
+      color:'#333', 
+      padding: 40,
+      position: 'relative'
+    }}>
+      {/* Animated background overlay */}
+      <div style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        background: 'rgba(255, 255, 255, 0.95)',
+        backdropFilter: 'blur(20px)'
+      }} />
+      
+      <style>
+        {`
+          @keyframes gradientShift {
+            0% { background-position: 0% 50% }
+            50% { background-position: 100% 50% }
+            100% { background-position: 0% 50% }
+          }
+        `}
+      </style>
+      
+      <div style={{ maxWidth:1400, margin:'0 auto', position: 'relative', zIndex: 1 }}>
         <div style={{ marginBottom: 32 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
             <button
@@ -1203,20 +1753,70 @@ const MarketAnalysisPage = ({ setCurrentPage }) => {
             )}
           </div>
 
-          <div style={{ textAlign:'center' }}>
-            <h1 style={{ fontSize:'3rem', fontWeight:'bold', marginBottom:16, color:'#333' }}>Market Analysis</h1>
-            <p style={{ color:'#666', fontSize:'1.125rem', maxWidth:600, margin:'0 auto' }}>
-              Enter a ZIP code or city to analyze the market.
+          <div style={{ textAlign:'center', marginBottom: 40 }}>
+            <div style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 16,
+              marginBottom: 16
+            }}>
+              <div style={{
+                background: '#0ea5e9',
+                borderRadius: '50%',
+                width: 60,
+                height: 60,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '1.75rem'
+              }}>
+                📊
+              </div>
+              <h1 style={{ 
+                fontSize:'3rem', 
+                fontWeight: 700, 
+                color: '#0ea5e9',
+                marginBottom: 0,
+                letterSpacing: '-0.5px'
+              }}>
+                Market Analysis
+              </h1>
+            </div>
+            <p style={{ 
+              color:'#64748b', 
+              fontSize:'1.125rem', 
+              maxWidth: 700, 
+              margin:'0 auto',
+              fontWeight: 400,
+              lineHeight: 1.6
+            }}>
+              🎯 Discover investment opportunities with our comprehensive market intelligence platform
             </p>
           </div>
         </div>
 
         {/* search */}
-        <div style={{ background:'#fff', border:'1px solid #e5e7eb', borderRadius:20, padding:32, marginBottom:32, boxShadow:'0 2px 4px rgba(0,0,0,.06)' }}>
-          <div style={{ maxWidth:800, margin:'0 auto' }}>
-            <div style={{ display:'flex', gap:16, alignItems:'center' }}>
-              <div style={{ position:'relative', flex:1 }}>
-                <MapPin size={20} style={{ position:'absolute', left:16, top:'50%', transform:'translateY(-50%)', color:'#666' }} />
+        <div style={{ 
+          background: '#ffffff', 
+          border: '1px solid #e5e7eb', 
+          borderRadius: 16, 
+          padding: 24, 
+          marginBottom: 40, 
+          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
+        }}>
+          <div style={{ maxWidth: 900, margin: '0 auto' }}>
+            <div style={{ display: 'flex', gap: 12, alignItems: 'stretch' }}>
+              <div style={{ position: 'relative', flex: 1 }}>
+                <div style={{
+                  position: 'absolute',
+                  left: 20,
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  color: '#0ea5e9',
+                  zIndex: 2
+                }}>
+                  <MapPin size={20} />
+                </div>
                 <input
                   name="location"
                   value={formData.location}
@@ -1224,22 +1824,71 @@ const MarketAnalysisPage = ({ setCurrentPage }) => {
                   onKeyPress={(e) => e.key === 'Enter' && handleSubmit(e)}
                   placeholder="Enter ZIP code or city (e.g., 92054, Oceanside)"
                   style={{
-                    width:'100%', paddingLeft:48, paddingRight:16, paddingTop:16, paddingBottom:16,
-                    background:'#f9fafb', border:'1px solid #e5e7eb', borderRadius:12, color:'#333', fontSize:16, outline:'none'
+                    width: '100%', 
+                    paddingLeft: 50, 
+                    paddingRight: 20, 
+                    paddingTop: 16, 
+                    paddingBottom: 16,
+                    background: '#f8fafc', 
+                    border: '2px solid #e5e7eb', 
+                    borderRadius: 12, 
+                    color: '#1e293b', 
+                    fontSize: 16, 
+                    fontWeight: 400,
+                    outline: 'none',
+                    transition: 'all 0.2s ease'
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = '#0ea5e9';
+                    e.target.style.background = '#ffffff';
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = '#e5e7eb';
+                    e.target.style.background = '#f8fafc';
                   }}
                 />
               </div>
-              <button onClick={handleSubmit} style={{
-                padding:'16px 32px', background:'linear-gradient(135deg,#06b6d4,#3b82f6)', color:'#fff',
-                border:'none', borderRadius:12, cursor:'pointer', fontSize:16, fontWeight:600,
-                display:'flex', alignItems:'center', gap:8, boxShadow:'0 2px 4px rgba(0,0,0,.1)'
-              }}>
-                <Search size={20} /> Analyze Market
+              <button 
+                onClick={handleSubmit} 
+                style={{
+                  padding: '16px 32px', 
+                  background: '#0ea5e9', 
+                  color: '#fff',
+                  border: 'none', 
+                  borderRadius: 12, 
+                  cursor: 'pointer', 
+                  fontSize: 16, 
+                  fontWeight: 600,
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: 8, 
+                  transition: 'all 0.2s ease',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.5px'
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.background = '#0284c7';
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.background = '#0ea5e9';
+                }}
+              >
+                <Search size={18} /> Analyze Market
               </button>
             </div>
             {error && (
-              <div style={{ marginTop:16, padding:16, background:'#fee2e2', border:'1px solid #fecaca', borderRadius:8, color:'#dc2626' }}>
-                {error}
+              <div style={{ 
+                marginTop: 20, 
+                padding: 20, 
+                background: 'linear-gradient(135deg, #fee2e2, #fecaca)', 
+                border: '1px solid #f87171', 
+                borderRadius: 16, 
+                color: '#dc2626',
+                fontSize: '1rem',
+                fontWeight: 500,
+                textAlign: 'center'
+              }}>
+                ⚠️ {error}
               </div>
             )}
           </div>
@@ -1264,56 +1913,207 @@ const MarketAnalysisPage = ({ setCurrentPage }) => {
                 <div style={{ color:'#64748b', marginTop:4 }}>From renter/owner dataset (fallback to occupied/ACS if missing)</div>
               </div>
 
-              {/* Detailed Breakdown */}
+              {/* Building Permits */}
+              {(results.totalUnits2024 != null || results.totalUnits2025 != null) && (
+                <div style={{ background:'#fff', border:'1px solid #e5e7eb', borderRadius:20, padding:24, boxShadow:'0 2px 4px rgba(0,0,0,.06)' }}>
+                  <h3 style={{ fontSize:'1.25rem', fontWeight:600, color:'#333', marginBottom:16 }}>Building Permits</h3>
+                  <div style={{ fontSize:'0.875rem', color:'#64748b', marginBottom:16 }}>County-level data (Aug 2024 & Aug 2025)</div>
+                  
+                  <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16 }}>
+                    {/* 2024 Column */}
+                    {results.totalUnits2024 != null && (
+                      <div style={{ padding:16, background:'#f8fafc', borderRadius:12 }}>
+                        <div style={{ fontSize:'0.75rem', fontWeight:600, color:'#64748b', textTransform:'uppercase', marginBottom:8 }}>2024</div>
+                        <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+                          <div style={{ display:'flex', justifyContent:'space-between', fontSize:'0.875rem' }}>
+                            <span style={{ color:'#64748b' }}>1-Unit (SF)</span>
+                            <span style={{ fontWeight:600, color:'#0f172a' }}>{fmt(results.units2024_1unit)}</span>
+                          </div>
+                          <div style={{ display:'flex', justifyContent:'space-between', fontSize:'0.875rem' }}>
+                            <span style={{ color:'#64748b' }}>2-Units</span>
+                            <span style={{ fontWeight:600, color:'#0f172a' }}>{fmt(results.units2024_2units)}</span>
+                          </div>
+                          <div style={{ display:'flex', justifyContent:'space-between', fontSize:'0.875rem' }}>
+                            <span style={{ color:'#64748b' }}>3-4 Units</span>
+                            <span style={{ fontWeight:600, color:'#0f172a' }}>{fmt(results.units2024_34units)}</span>
+                          </div>
+                          <div style={{ display:'flex', justifyContent:'space-between', fontSize:'0.875rem' }}>
+                            <span style={{ color:'#64748b' }}>5+ Units (MF)</span>
+                            <span style={{ fontWeight:600, color:'#0f172a' }}>{fmt(results.units2024_5plus)}</span>
+                          </div>
+                          <div style={{ borderTop:'1px solid #e2e8f0', paddingTop:8, marginTop:4 }}>
+                            <div style={{ display:'flex', justifyContent:'space-between', fontSize:'0.875rem' }}>
+                              <span style={{ fontWeight:600, color:'#0f172a' }}>Total</span>
+                              <span style={{ fontWeight:700, color:'#0f172a' }}>{fmt(results.totalUnits2024)}</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* 2025 Column */}
+                    {results.totalUnits2025 != null && (
+                      <div style={{ padding:16, background:'#f0fdf4', borderRadius:12, border:'1px solid #86efac' }}>
+                        <div style={{ fontSize:'0.75rem', fontWeight:600, color:'#16a34a', textTransform:'uppercase', marginBottom:8 }}>2025</div>
+                        <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+                          <div style={{ display:'flex', justifyContent:'space-between', fontSize:'0.875rem' }}>
+                            <span style={{ color:'#64748b' }}>1-Unit (SF)</span>
+                            <span style={{ fontWeight:600, color:'#0f172a' }}>{fmt(results.units2025_1unit)}</span>
+                          </div>
+                          <div style={{ display:'flex', justifyContent:'space-between', fontSize:'0.875rem' }}>
+                            <span style={{ color:'#64748b' }}>2-Units</span>
+                            <span style={{ fontWeight:600, color:'#0f172a' }}>{fmt(results.units2025_2units)}</span>
+                          </div>
+                          <div style={{ display:'flex', justifyContent:'space-between', fontSize:'0.875rem' }}>
+                            <span style={{ color:'#64748b' }}>3-4 Units</span>
+                            <span style={{ fontWeight:600, color:'#0f172a' }}>{fmt(results.units2025_34units)}</span>
+                          </div>
+                          <div style={{ display:'flex', justifyContent:'space-between', fontSize:'0.875rem' }}>
+                            <span style={{ color:'#64748b' }}>5+ Units (MF)</span>
+                            <span style={{ fontWeight:600, color:'#0f172a' }}>{fmt(results.units2025_5plus)}</span>
+                          </div>
+                          <div style={{ borderTop:'1px solid #bbf7d0', paddingTop:8, marginTop:4 }}>
+                            <div style={{ display:'flex', justifyContent:'space-between', fontSize:'0.875rem' }}>
+                              <span style={{ fontWeight:600, color:'#0f172a' }}>Total</span>
+                              <span style={{ fontWeight:700, color:'#16a34a' }}>{fmt(results.totalUnits2025)}</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* YoY Growth Badge */}
+                  {results.permitGrowth != null && (
+                    <div style={{ marginTop:16, padding:12, background:'#eff6ff', borderRadius:8, textAlign:'center' }}>
+                      <span style={{ fontSize:'0.75rem', color:'#64748b', marginRight:8 }}>YoY Growth:</span>
+                      <span style={{ 
+                        fontSize:'1rem', 
+                        fontWeight:700, 
+                        color: results.permitGrowth >= 0 ? '#16a34a' : '#dc2626' 
+                      }}>
+                        {results.permitGrowth >= 0 ? '↑' : '↓'} {Math.abs(results.permitGrowth).toFixed(1)}%
+                      </span>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Population & Demographics */}
               <div style={{ background:'#fff', border:'1px solid #e5e7eb', borderRadius:20, padding:24, boxShadow:'0 2px 4px rgba(0,0,0,.06)' }}>
-                <h3 style={{ fontSize:'1.5rem', fontWeight:600, color:'#333', marginBottom:16 }}>Detailed Breakdown</h3>
-                <div style={{ overflowX:'auto' }}>
-                  <table style={{ width:'100%', borderCollapse:'collapse' }}>
-                    <thead>
-                      <tr>
-                        <th style={{ padding:12, textAlign:'left', borderBottom:'1px solid #e5e7eb', color:'#64748b' }}>Metric</th>
-                        <th style={{ padding:12, textAlign:'right', borderBottom:'1px solid #e5e7eb', color:'#64748b' }}>Value</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {[
-                        ['Location', results.zip || (results.city ? `${results.city}, ${results.state}` : '—')],
-                        ['Population', fmt(results.population)],
-                        ['Population (prev)', fmt(results.population_2017)],
-                        ['Pop. Change', results.population_change_pct_17_23 != null ? formatPercent(results.population_change_pct_17_23) : 'N/A'],
-                        ['Density', results.density_sqmi ? `${Number(results.density_sqmi).toFixed(1)}/sq mi` : 'N/A'],
-                        ['Household Income', formatCurrency(results.medianHouseholdIncome)],
-                        ['Employment Rate', formatPercent(results.employmentRate)],
-                        ['Median Rent (ACS)', formatCurrency(results.medianGrossRent)],
-                        ['Total Housing Units', fmt(results.totalHousingUnits)],
-                        ['Vacant Units', fmt(results.vacantUnits)],
-                        ['Occupied Units', fmt(results.occupiedUnits)],
-                        ['Vacancy Rate', formatPercent(results.vacancyRate)],
-                        ['Total Units', fmt(results.total_units)],
-                        ['Owner Units', fmt(results.owner_units)],
-                        ['Renter Units', fmt(results.renter_units)],
-                        ['Owner %', formatPercent(results.pct_owner)],
-                        ['Renter %', formatPercent(results.pct_renter)],
-                        ['Home Value (ZHVI)', results.zhvi != null ? formatCurrency(results.zhvi) : 'N/A'],
-                        ['5yr Value Growth', results.zhvi_5y_growth_pct != null ? formatPercent(results.zhvi_5y_growth_pct) : 'N/A'],
-                        ['1yr Value Growth', results.zhvi_1y_growth_pct != null ? formatPercent(results.zhvi_1y_growth_pct) : 'N/A'],
-                        ['1yr Forecast', results.zhvf_1y != null ? formatPercent(results.zhvf_1y) : 'N/A'],
-                        ['3m Forecast', results.zhvf_forecast_3m != null ? formatPercent(results.zhvf_forecast_3m) : 'N/A'],
-                        ['12m Forecast', results.zhvf_forecast_12m != null ? formatPercent(results.zhvf_forecast_12m) : 'N/A'],
-                        ['FMR 2BR', results.fmr_2br != null ? formatCurrency(results.fmr_2br) : 'N/A'],
-                        ['Landlord-Friendly', results.landlord_friendly_score != null
-                          ? `${(Number(results.landlord_friendly_score) > 1 ? Number(results.landlord_friendly_score).toFixed(1) : (Number(results.landlord_friendly_score)*5).toFixed(1))}/5${results.landlord_friendly_note ? ` (${results.landlord_friendly_note})` : ''}`
-                          : 'N/A'],
-                      ].map(([k, v]) => (
-                        <tr key={k}>
-                          <td style={{ padding:12, borderBottom:'1px solid #e5e7eb', color:'#0f172a' }}>{k}</td>
-                          <td style={{ padding:12, textAlign:'right', borderBottom:'1px solid #e5e7eb', color:'#0f172a' }}>{v}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                <h3 style={{ fontSize:'1.25rem', fontWeight:600, color:'#0f172a', marginBottom:16 }}>Population & Demographics</h3>
+                <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16 }}>
+                  <div>
+                    <div style={{ fontSize:'0.75rem', color:'#64748b', marginBottom:4, textTransform:'uppercase' }}>Population</div>
+                    <div style={{ fontSize:'1.5rem', fontWeight:700, color:'#0f172a' }}>{fmt(results.population)}</div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize:'0.75rem', color:'#64748b', marginBottom:4, textTransform:'uppercase' }}>Pop. Change (5yr)</div>
+                    <div style={{ fontSize:'1.5rem', fontWeight:700, color: results.population_change_pct_17_23 >= 0 ? '#10b981' : '#ef4444' }}>
+                      {results.population_change_pct_17_23 != null ? formatPercent(results.population_change_pct_17_23) : 'N/A'}
+                    </div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize:'0.75rem', color:'#64748b', marginBottom:4, textTransform:'uppercase' }}>Density</div>
+                    <div style={{ fontSize:'1rem', fontWeight:600, color:'#0f172a' }}>
+                      {results.density_sqmi ? `${Number(results.density_sqmi).toFixed(1)}/sq mi` : 'N/A'}
+                    </div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize:'0.75rem', color:'#64748b', marginBottom:4, textTransform:'uppercase' }}>Median Income</div>
+                    <div style={{ fontSize:'1rem', fontWeight:600, color:'#0f172a' }}>{formatCurrency(results.medianHouseholdIncome)}</div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize:'0.75rem', color:'#64748b', marginBottom:4, textTransform:'uppercase' }}>Employment Rate</div>
+                    <div style={{ fontSize:'1rem', fontWeight:600, color:'#0f172a' }}>{formatPercent(results.employmentRate)}</div>
+                  </div>
                 </div>
               </div>
+
+              {/* Housing Market */}
+              <div style={{ background:'#fff', border:'1px solid #e5e7eb', borderRadius:20, padding:24, boxShadow:'0 2px 4px rgba(0,0,0,.06)' }}>
+                <h3 style={{ fontSize:'1.25rem', fontWeight:600, color:'#0f172a', marginBottom:16 }}>Housing Market</h3>
+                <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
+                  <div style={{ display:'flex', justifyContent:'space-between', padding:'8px 0', borderBottom:'1px solid #f1f5f9' }}>
+                    <span style={{ color:'#64748b', fontSize:'0.875rem' }}>Total Housing Units</span>
+                    <span style={{ fontWeight:600, color:'#0f172a' }}>{fmt(results.totalHousingUnits)}</span>
+                  </div>
+                  <div style={{ display:'flex', justifyContent:'space-between', padding:'8px 0', borderBottom:'1px solid #f1f5f9' }}>
+                    <span style={{ color:'#64748b', fontSize:'0.875rem' }}>Occupied Units</span>
+                    <span style={{ fontWeight:600, color:'#0f172a' }}>{fmt(results.occupiedUnits)}</span>
+                  </div>
+                  <div style={{ display:'flex', justifyContent:'space-between', padding:'8px 0', borderBottom:'1px solid #f1f5f9' }}>
+                    <span style={{ color:'#64748b', fontSize:'0.875rem' }}>Vacant Units</span>
+                    <span style={{ fontWeight:600, color:'#0f172a' }}>{fmt(results.vacantUnits)}</span>
+                  </div>
+                  <div style={{ display:'flex', justifyContent:'space-between', padding:'8px 0', borderBottom:'1px solid #f1f5f9' }}>
+                    <span style={{ color:'#64748b', fontSize:'0.875rem' }}>Vacancy Rate</span>
+                    <span style={{ fontWeight:600, color: results.vacancyRate > 10 ? '#ef4444' : '#0f172a' }}>{formatPercent(results.vacancyRate)}</span>
+                  </div>
+                  <div style={{ display:'flex', justifyContent:'space-between', padding:'8px 0', borderBottom:'1px solid #f1f5f9' }}>
+                    <span style={{ color:'#64748b', fontSize:'0.875rem' }}>Owner-Occupied</span>
+                    <span style={{ fontWeight:600, color:'#0f172a' }}>{fmt(results.owner_units)} ({formatPercent(results.pct_owner)})</span>
+                  </div>
+                  <div style={{ display:'flex', justifyContent:'space-between', padding:'8px 0' }}>
+                    <span style={{ color:'#64748b', fontSize:'0.875rem' }}>Renter-Occupied</span>
+                    <span style={{ fontWeight:600, color:'#10b981' }}>{fmt(results.renter_units)} ({formatPercent(results.pct_renter)})</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Rent & Value */}
+              <div style={{ background:'#fff', border:'1px solid #e5e7eb', borderRadius:20, padding:24, boxShadow:'0 2px 4px rgba(0,0,0,.06)' }}>
+                <h3 style={{ fontSize:'1.25rem', fontWeight:600, color:'#0f172a', marginBottom:16 }}>Rent & Home Values</h3>
+                <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, marginBottom:16 }}>
+                  <div>
+                    <div style={{ fontSize:'0.75rem', color:'#64748b', marginBottom:4, textTransform:'uppercase' }}>Median Rent</div>
+                    <div style={{ fontSize:'1.5rem', fontWeight:700, color:'#10b981' }}>{formatCurrency(results.medianGrossRent)}</div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize:'0.75rem', color:'#64748b', marginBottom:4, textTransform:'uppercase' }}>FMR 2BR</div>
+                    <div style={{ fontSize:'1.5rem', fontWeight:700, color:'#0ea5e9' }}>
+                      {results.fmr_2br != null ? formatCurrency(results.fmr_2br) : 'N/A'}
+                    </div>
+                  </div>
+                </div>
+                <div style={{ borderTop:'1px solid #e5e7eb', paddingTop:16 }}>
+                  <div style={{ display:'flex', justifyContent:'space-between', padding:'8px 0', borderBottom:'1px solid #f1f5f9' }}>
+                    <span style={{ color:'#64748b', fontSize:'0.875rem' }}>Home Value (ZHVI)</span>
+                    <span style={{ fontWeight:600, color:'#0f172a' }}>{results.zhvi != null ? formatCurrency(results.zhvi) : 'N/A'}</span>
+                  </div>
+                  <div style={{ display:'flex', justifyContent:'space-between', padding:'8px 0', borderBottom:'1px solid #f1f5f9' }}>
+                    <span style={{ color:'#64748b', fontSize:'0.875rem' }}>1yr Value Growth</span>
+                    <span style={{ fontWeight:600, color: results.zhvi_1y_growth_pct >= 0 ? '#10b981' : '#ef4444' }}>
+                      {results.zhvi_1y_growth_pct != null ? formatPercent(results.zhvi_1y_growth_pct) : 'N/A'}
+                    </span>
+                  </div>
+                  <div style={{ display:'flex', justifyContent:'space-between', padding:'8px 0', borderBottom:'1px solid #f1f5f9' }}>
+                    <span style={{ color:'#64748b', fontSize:'0.875rem' }}>5yr Value Growth</span>
+                    <span style={{ fontWeight:600, color: results.zhvi_5y_growth_pct >= 0 ? '#10b981' : '#ef4444' }}>
+                      {results.zhvi_5y_growth_pct != null ? formatPercent(results.zhvi_5y_growth_pct) : 'N/A'}
+                    </span>
+                  </div>
+                  <div style={{ display:'flex', justifyContent:'space-between', padding:'8px 0', borderBottom:'1px solid #f1f5f9' }}>
+                    <span style={{ color:'#64748b', fontSize:'0.875rem' }}>12m Forecast</span>
+                    <span style={{ fontWeight:600, color:'#0f172a' }}>
+                      {results.zhvf_forecast_12m != null ? formatPercent(results.zhvf_forecast_12m) : 'N/A'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Landlord-Friendly Score */}
+              {results.landlord_friendly_score != null && (
+                <div style={{ background:'#fff', border:'1px solid #e5e7eb', borderRadius:20, padding:24, boxShadow:'0 2px 4px rgba(0,0,0,.06)' }}>
+                  <h3 style={{ fontSize:'1.25rem', fontWeight:600, color:'#0f172a', marginBottom:8 }}>Landlord-Friendly Score</h3>
+                  <div style={{ fontSize:'2.5rem', fontWeight:800, color:'#0ea5e9', marginBottom:8 }}>
+                    {(Number(results.landlord_friendly_score) > 1 ? Number(results.landlord_friendly_score).toFixed(1) : (Number(results.landlord_friendly_score)*5).toFixed(1))}/5
+                  </div>
+                  {results.landlord_friendly_note && (
+                    <div style={{ fontSize:'0.875rem', color:'#64748b', marginTop:8 }}>{results.landlord_friendly_note}</div>
+                  )}
+                </div>
+              )}
 
               {/* AI Market Score (short) */}
               {ai && (
@@ -1495,6 +2295,225 @@ const MarketAnalysisPage = ({ setCurrentPage }) => {
                   { xLabel: '2023', y: results.population != null ? Number(results.population) : null }
                 ]}
               />
+              {/* Cap Rate & NOI Calculation */}
+              {capRate !== null && noi !== null && (
+                <div style={{ 
+                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', 
+                  borderRadius: 24, 
+                  padding: 32, 
+                  boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+                  marginBottom: 24,
+                  position: 'relative',
+                  overflow: 'hidden'
+                }}>
+                  {/* Animated background pattern */}
+                  <div style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    background: 'url("data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23ffffff" fill-opacity="0.1"%3E%3Ccircle cx="7" cy="7" r="1"/%3E%3Ccircle cx="27" cy="7" r="1"/%3E%3Ccircle cx="47" cy="7" r="1"/%3E%3Ccircle cx="7" cy="27" r="1"/%3E%3Ccircle cx="27" cy="27" r="1"/%3E%3Ccircle cx="47" cy="27" r="1"/%3E%3Ccircle cx="7" cy="47" r="1"/%3E%3Ccircle cx="27" cy="47" r="1"/%3E%3Ccircle cx="47" cy="47" r="1"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")',
+                    opacity: 0.6
+                  }} />
+                  
+                  <div style={{ position: 'relative', zIndex: 1 }}>
+                    <h3 style={{ 
+                      fontSize: '1.75rem', 
+                      fontWeight: 800, 
+                      color: '#fff', 
+                      marginBottom: 24,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 12,
+                      textShadow: '0 2px 4px rgba(0,0,0,0.3)'
+                    }}>
+                      <div style={{
+                        background: 'rgba(255, 255, 255, 0.2)',
+                        borderRadius: '50%',
+                        padding: 10,
+                        backdropFilter: 'blur(10px)'
+                      }}>
+                        💰
+                      </div>
+                      Cap Rate & NOI Calculator
+                    </h3>
+                    
+                    {/* Main metrics display */}
+                    <div style={{ 
+                      display: 'grid', 
+                      gridTemplateColumns: '1fr 1fr', 
+                      gap: 20, 
+                      marginBottom: 28 
+                    }}>
+                      <div style={{
+                        background: 'rgba(255, 255, 255, 0.15)',
+                        borderRadius: 16,
+                        padding: 20,
+                        backdropFilter: 'blur(10px)',
+                        border: '1px solid rgba(255, 255, 255, 0.2)'
+                      }}>
+                        <div style={{ 
+                          fontSize: '0.9rem', 
+                          color: 'rgba(255, 255, 255, 0.8)', 
+                          marginBottom: 8,
+                          fontWeight: 600,
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.05em'
+                        }}>
+                          Net Operating Income
+                        </div>
+                        <div style={{ 
+                          fontSize: '2rem', 
+                          fontWeight: 900, 
+                          color: '#fff',
+                          textShadow: '0 2px 4px rgba(0,0,0,0.3)'
+                        }}>
+                          {formatCurrency(noi)}
+                        </div>
+                      </div>
+                      
+                      <div style={{
+                        background: 'rgba(255, 255, 255, 0.15)',
+                        borderRadius: 16,
+                        padding: 20,
+                        backdropFilter: 'blur(10px)',
+                        border: '1px solid rgba(255, 255, 255, 0.2)'
+                      }}>
+                        <div style={{ 
+                          fontSize: '0.9rem', 
+                          color: 'rgba(255, 255, 255, 0.8)', 
+                          marginBottom: 8,
+                          fontWeight: 600,
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.05em'
+                        }}>
+                          Capitalization Rate
+                        </div>
+                        <div style={{ 
+                          fontSize: '2rem', 
+                          fontWeight: 900, 
+                          color: '#fff',
+                          textShadow: '0 2px 4px rgba(0,0,0,0.3)',
+                          display: 'flex',
+                          alignItems: 'baseline',
+                          gap: 4
+                        }}>
+                          {capRate}
+                          <span style={{ fontSize: '1.2rem', opacity: 0.8 }}>%</span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Expense ratio slider */}
+                    <div style={{
+                      background: 'rgba(255, 255, 255, 0.1)',
+                      borderRadius: 16,
+                      padding: 24,
+                      backdropFilter: 'blur(10px)',
+                      border: '1px solid rgba(255, 255, 255, 0.15)'
+                    }}>
+                      <div style={{ 
+                        display: 'flex', 
+                        justifyContent: 'space-between', 
+                        alignItems: 'center', 
+                        marginBottom: 16 
+                      }}>
+                        <label htmlFor="expense-slider" style={{ 
+                          fontWeight: 700, 
+                          color: '#fff', 
+                          fontSize: '1.1rem',
+                          textShadow: '0 1px 2px rgba(0,0,0,0.3)'
+                        }}>
+                          Expense Ratio
+                        </label>
+                        <div style={{
+                          background: 'rgba(255, 255, 255, 0.2)',
+                          borderRadius: 20,
+                          padding: '6px 16px',
+                          fontWeight: 800,
+                          color: '#fff',
+                          fontSize: '1.1rem',
+                          backdropFilter: 'blur(5px)'
+                        }}>
+                          {(expenseRatio * 100).toFixed(0)}%
+                        </div>
+                      </div>
+                      
+                      <div style={{ position: 'relative', marginBottom: 12 }}>
+                        <input
+                          id="expense-slider"
+                          type="range"
+                          min={0.2}
+                          max={0.6}
+                          step={0.01}
+                          value={expenseRatio}
+                          onChange={e => setExpenseRatio(Number(e.target.value))}
+                          style={{
+                            width: '100%',
+                            height: '8px',
+                            borderRadius: '4px',
+                            background: 'linear-gradient(to right, #10b981 0%, #f59e0b 50%, #ef4444 100%)',
+                            outline: 'none',
+                            WebkitAppearance: 'none',
+                            cursor: 'pointer'
+                          }}
+                        />
+                        <style>
+                          {`
+                            #expense-slider::-webkit-slider-thumb {
+                              appearance: none;
+                              width: 24px;
+                              height: 24px;
+                              border-radius: 50%;
+                              background: #fff;
+                              cursor: pointer;
+                              box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+                              border: 2px solid rgba(255,255,255,0.8);
+                            }
+                            #expense-slider::-webkit-slider-thumb:hover {
+                              transform: scale(1.1);
+                              box-shadow: 0 6px 12px rgba(0,0,0,0.4);
+                            }
+                            #expense-slider::-moz-range-thumb {
+                              width: 24px;
+                              height: 24px;
+                              border-radius: 50%;
+                              background: #fff;
+                              cursor: pointer;
+                              box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+                              border: 2px solid rgba(255,255,255,0.8);
+                            }
+                          `}
+                        </style>
+                      </div>
+                      
+                      <div style={{ 
+                        display: 'flex', 
+                        justifyContent: 'space-between', 
+                        color: 'rgba(255, 255, 255, 0.7)', 
+                        fontSize: '0.85rem',
+                        fontWeight: 500
+                      }}>
+                        <span>20% (Low)</span>
+                        <span>40% (Typical)</span>
+                        <span>60% (High)</span>
+                      </div>
+                      
+                      <div style={{ 
+                        color: 'rgba(255, 255, 255, 0.9)', 
+                        fontSize: '1rem', 
+                        marginTop: 16,
+                        textAlign: 'center',
+                        fontWeight: 500,
+                        lineHeight: 1.5
+                      }}>
+                        🎯 Adjust the expense ratio to see live Cap Rate and NOI calculations
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
               <FMRChart
                 title="HUD Fair Market Rents"
                 width={chartsWidth - 16}

@@ -6,11 +6,18 @@ from typing import Optional, Dict, Any, List
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pypdf import PdfReader, PdfWriter
+from cors_config import install_cors
 from dotenv import load_dotenv
 from mistralai import Mistral
 from anthropic import Anthropic
 
-load_dotenv()
+# Usage tracking
+from usage_tracker import increment_page_usage, count_pages_from_file
+
+# Load environment variables from the script's directory
+script_dir = os.path.dirname(os.path.abspath(__file__))
+env_path = os.path.join(script_dir, '.env')
+load_dotenv(env_path)
 
 # ---------------- Config ----------------
 MISTRAL_API_KEY = os.getenv("MISTRAL_API_KEY")
@@ -39,14 +46,7 @@ ALLOWED_SHEET_MIMES = {
 ALLOWED_UPLOAD_MIMES = ALLOWED_DOC_MIMES | ALLOWED_SHEET_MIMES
 
 app = FastAPI(title="Property Health Check Backend", version="4.0.0")
-app.add_middleware(
-   CORSMiddleware,
-   # Allow ALL origins for development
-   allow_origins=["*"],
-   allow_credentials=True,
-   allow_methods=["*"],
-   allow_headers=["*"],
-)
+install_cors(app)
 
 # ---------------- Utils ----------------
 def _to_data_url(file_bytes: bytes, mime: str) -> str:
@@ -520,15 +520,55 @@ def health():
 async def health_check_verify(
    file: UploadFile = File(...),
    pages: Optional[str] = Form(default=""),
-   user_fixes: Optional[str] = Form(default="{}")
+   user_fixes: Optional[str] = Form(default="{}"),
+   user_id: Optional[str] = Form(default=None)
 ):
    """Extract and verify property data"""
+   
+   print(f"\n{'='*80}")
+   print(f"[HEALTH CHECK] REQUEST RECEIVED")
+   print(f"[HEALTH CHECK] File: {file.filename}")
+   print(f"[HEALTH CHECK] User ID: {user_id}")
+   print(f"[HEALTH CHECK] Pages: {pages}")
+   print(f"{'='*80}\n")
+   
+   # Check 60-page limit (backend enforcement)
+   if user_id:
+       try:
+           from usage_tracker import get_supabase_client
+           from datetime import datetime
+           
+           current_month = datetime.now().strftime("%Y-%m")
+           supabase = get_supabase_client()
+           
+           result = supabase.table("user_usage") \
+               .select("pages_processed") \
+               .eq("user_id", user_id) \
+               .eq("month_year", current_month) \
+               .execute()
+           
+           pages_used = result.data[0]["pages_processed"] if result.data else 0
+           
+           if pages_used >= 60:
+               raise HTTPException(
+                   status_code=403,
+                   detail="You have reached your 60-page limit for this month. Please purchase more pages to continue."
+               )
+           
+           print(f"[HEALTH CHECK] Usage check passed: {pages_used}/60 pages used")
+       except HTTPException:
+           raise
+       except Exception as e:
+           print(f"[HEALTH CHECK] Warning: Could not check usage limit: {e}")
+           # Continue processing if check fails (non-blocking)
    
    mime = (file.content_type or "").lower()
    if mime not in ALLOWED_UPLOAD_MIMES:
        raise HTTPException(status_code=415, detail=f"Unsupported content type: {mime}")
    
    data = await file.read()
+   orig_data = data  # Save for page counting
+   orig_mime = mime  # Save for page counting
    if not data:
        raise HTTPException(status_code=400, detail="Empty upload")
    if len(data) > MAX_BYTES:
@@ -582,6 +622,15 @@ async def health_check_verify(
    
    # Validate
    validation = _validate_data(extracted_data)
+   
+   # Track page usage
+   if user_id:
+       try:
+           pages_count = count_pages_from_file(orig_data, orig_mime)
+           await increment_page_usage(user_id, pages_count, "pfa")
+           print(f"[Usage] Tracked {pages_count} pages for user {user_id} (PFA)")
+       except Exception as e:
+           print(f"[Usage] Error tracking usage: {str(e)}")
    
    return {
        "ok": True,

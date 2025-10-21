@@ -26,7 +26,8 @@ import {
   Calculator,
   PieChart,
   X,
-  AlertTriangle
+  AlertTriangle,
+  RefreshCw
 } from 'lucide-react';
 import { supabase } from './lib/supabase';
 
@@ -36,20 +37,20 @@ const PRICING_PLANS = {
   starter: {
     id: 'starter',
     name: 'Starter',
-    price: 35,
-  priceId: process.env.REACT_APP_STRIPE_STARTER_PRICE_ID || 'price_1S6Khq2Xp6FKKwINgUI5caDQ'
+    price: 0,
+    priceId: 'price_starter',
+    pagesIncluded: 5,
+    additionalPagePrice: 25,
+    additionalPages: 50
   },
-  pro: {
-    id: 'pro',
-    name: 'Pro',
-    price: 99,
-  priceId: process.env.REACT_APP_STRIPE_PRO_PRICE_ID || 'price_1S6Kk62Xp6FKKwINIyh13ZGN'
-  },
-  power: {
-    id: 'power',
-    name: 'Power',
-    price: 199,
-  priceId: process.env.REACT_APP_STRIPE_POWER_PRICE_ID || 'price_1S6Kit2Xp6FKKwINQBHnNglZ'
+  standard: {
+    id: 'standard',
+    name: 'Standard',
+    price: 50,
+    priceId: process.env.REACT_APP_STRIPE_STANDARD_PRICE_ID || 'price_standard',
+    pagesIncluded: 50,
+    additionalPagePrice: 25, // $25 for 50 additional pages
+    additionalPages: 50
   }
 };
 
@@ -59,6 +60,22 @@ const DashboardPage = ({ setCurrentPage, currentUser }) => {
   const [feedbackMessage, setFeedbackMessage] = useState('');
   const [showFeedbackSuccess, setShowFeedbackSuccess] = useState(false);
   const [userData, setUserData] = useState(null);
+  const [profileForm, setProfileForm] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    company: '',
+    investorType: '',
+    address: '',
+    address2: '',
+    city: '',
+    state: '',
+    zipCode: ''
+  });
+  const [profileLoading, setProfileLoading] = useState(false);
+  const [profileError, setProfileError] = useState(null);
+  const [profileSuccess, setProfileSuccess] = useState(null);
   const [usageData, setUsageData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -81,14 +98,30 @@ const DashboardPage = ({ setCurrentPage, currentUser }) => {
     try {
       setLoading(true);
       setError(null);
+      // --- Stale/invalid session detection ---
       const { data: { session } } = await supabase.auth.getSession();
+      if (!session || !session.access_token) {
+        // Clear localStorage/sessionStorage and redirect to login
+        localStorage.clear();
+        sessionStorage.clear();
+        setError('Session expired or invalid. Please log in again.');
+        setTimeout(() => {
+          window.location.href = '/login';
+        }, 1200);
+        return;
+      }
       const headers = {
         'Content-Type': 'application/json',
-        ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {})
+        Authorization: `Bearer ${session.access_token}`
       };
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        setError('No authenticated user found');
+        localStorage.clear();
+        sessionStorage.clear();
+        setError('No authenticated user found. Please log in again.');
+        setTimeout(() => {
+          window.location.href = '/login';
+        }, 1200);
         return;
       }
       // Fetch user profile
@@ -97,9 +130,13 @@ const DashboardPage = ({ setCurrentPage, currentUser }) => {
         .select('*')
         .eq('id', user.id)
         .single();
-      if (profileError) {
-        console.error('Error fetching profile:', profileError);
-        setError('Error loading user profile');
+      if (profileError || !profile) {
+        localStorage.clear();
+        sessionStorage.clear();
+        setError('Error loading user profile. Please log in again.');
+        setTimeout(() => {
+          window.location.href = '/login';
+        }, 1200);
         return;
       }
       // Fetch usage data from backend using proxy
@@ -108,13 +145,19 @@ const DashboardPage = ({ setCurrentPage, currentUser }) => {
       try {
         raw = await response.text();
         usageSummary = raw ? JSON.parse(raw) : {};
+        console.log('[Dashboard] Usage summary received:', usageSummary);
       } catch {
         usageSummary = {};
       }
-      if (!response.ok) {
+      if (!response.ok || usageSummary.error || usageSummary.detail) {
+        // Backend error or invalid usage data: clear session and redirect
+        localStorage.clear();
+        sessionStorage.clear();
         const msg = usageSummary.error || usageSummary.detail || raw || `HTTP ${response.status}`;
-        console.error('usage summary raw:', raw);
         setError(msg);
+        setTimeout(() => {
+          window.location.href = '/login';
+        }, 1200);
         return;
       }
       // Set user data
@@ -137,7 +180,7 @@ const DashboardPage = ({ setCurrentPage, currentUser }) => {
           day: 'numeric'
         }),
         subscriptionPlan: profile.subscription_plan || 'starter',
-  subscriptionStatus: profile.subscription_status || 'inactive',
+        subscriptionStatus: profile.subscription_status || 'inactive',
         cancelAtPeriodEnd: profile.cancel_at_period_end || false,
         periodEndDate: profile.period_end_date || null,
         planPrice: PRICING_PLANS[profile.subscription_plan]?.price || PRICING_PLANS.starter.price,
@@ -146,15 +189,31 @@ const DashboardPage = ({ setCurrentPage, currentUser }) => {
           month: 'long',
           day: 'numeric'
         }),
-  subscriptionId: profile.stripe_subscription_id || ''
+        subscriptionId: profile.stripe_subscription_id || ''
       };
-      
       setUserData(userDataObj);
+      setProfileForm({
+        firstName: userDataObj.firstName,
+        lastName: userDataObj.lastName,
+        email: userDataObj.email,
+        phone: userDataObj.phone,
+        company: userDataObj.company,
+        investorType: userDataObj.investorType,
+        address: userDataObj.address,
+        address2: userDataObj.address2,
+        city: userDataObj.city,
+        state: userDataObj.state,
+        zipCode: userDataObj.zipCode
+      });
       setUsageData(usageSummary);
-      
     } catch (error) {
-      console.error('Error fetching dashboard data:', error);
-      setError('Failed to load dashboard data');
+      // Catch-all: clear session and redirect if error is likely stale auth
+      localStorage.clear();
+      sessionStorage.clear();
+      setError('Failed to load dashboard data. Please log in again.');
+      setTimeout(() => {
+        window.location.href = '/login';
+      }, 1200);
     } finally {
       setLoading(false);
     }
@@ -162,25 +221,12 @@ const DashboardPage = ({ setCurrentPage, currentUser }) => {
 
   const getFeatureAccess = (feature) => {
     if (!usageData) return { allowed: false, reason: 'Loading...' };
-    
-    const plan = usageData.plan;
-    
+    // Unlock all features for all plans
     switch (feature) {
       case 'upload':
-        if (plan === 'starter') {
-          return { allowed: false, reason: 'Upgrade to Pro or Power for AI Document Analysis' };
-        }
-        return { allowed: true, reason: null };
-        
       case 'manual':
-        return { allowed: true, reason: null }; // All plans
-        
       case 'pfa':
-        if (plan === 'starter') {
-          return { allowed: false, reason: 'Upgrade to Pro or Power for Property Financial Analysis' };
-        }
         return { allowed: true, reason: null };
-        
       default:
         return { allowed: false, reason: 'Unknown feature' };
     }
@@ -258,10 +304,17 @@ const DashboardPage = ({ setCurrentPage, currentUser }) => {
         'Content-Type': 'application/json',
         ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {})
       };
-      const response = await fetch(`/api/proxy?endpoint=/api/cancel-subscription`, {
+      
+      // Use direct backend URL for local development, proxy for production
+      const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+      const baseUrl = isLocal ? 'http://127.0.0.1:8010' : '';
+      const url = isLocal 
+        ? `${baseUrl}/api/cancel-subscription?user_id=${currentUser.id}`
+        : `/api/proxy?endpoint=/cancel-subscription&user_id=${currentUser.id}`;
+      
+      const response = await fetch(url, {
         method: 'POST',
-        headers,
-        body: JSON.stringify({ subscriptionId: userData.subscriptionId })
+        headers
       });
       let raw, data;
       try {
@@ -753,6 +806,40 @@ const DashboardPage = ({ setCurrentPage, currentUser }) => {
 
           {activeTab === 'overview' && (
             <>
+              {/* Usage Statistics section - HIDDEN */}
+              <div style={{ display: 'none' }}>
+              <div style={{ 
+                display: 'flex', 
+                justifyContent: 'space-between', 
+                alignItems: 'center',
+                marginBottom: '16px'
+              }}>
+                <h3 style={{ fontSize: '1.25rem', fontWeight: '600', color: '#111827', margin: 0 }}>
+                  Usage Statistics
+                </h3>
+                <button
+                  onClick={() => window.location.reload()}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    padding: '8px 16px',
+                    background: '#f3f4f6',
+                    border: '1px solid #e5e7eb',
+                    borderRadius: '8px',
+                    color: '#374151',
+                    fontSize: '0.875rem',
+                    fontWeight: '500',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s'
+                  }}
+                  onMouseOver={(e) => e.target.style.background = '#e5e7eb'}
+                  onMouseOut={(e) => e.target.style.background = '#f3f4f6'}
+                >
+                  <RefreshCw size={14} />
+                  Refresh Stats
+                </button>
+              </div>
               <div style={{
                 display: 'grid',
                 gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
@@ -893,6 +980,8 @@ const DashboardPage = ({ setCurrentPage, currentUser }) => {
                   </div>
                 </div>
               </div>
+              </div>
+              {/* End of hidden Usage Statistics section */}
 
               {(!uploadAccess.allowed || !pfaAccess.allowed) && usageData?.plan === 'starter' && (
                 <div style={{
@@ -1258,8 +1347,8 @@ const DashboardPage = ({ setCurrentPage, currentUser }) => {
                   </label>
                   <input
                     type="text"
-                    value={userData?.firstName || ''}
-                    readOnly
+                    value={profileForm.firstName}
+                    onChange={e => setProfileForm(f => ({ ...f, firstName: e.target.value }))}
                     style={{
                       width: '100%',
                       padding: '10px 12px',
@@ -1277,8 +1366,8 @@ const DashboardPage = ({ setCurrentPage, currentUser }) => {
                   </label>
                   <input
                     type="text"
-                    value={userData?.lastName || ''}
-                    readOnly
+                    value={profileForm.lastName}
+                    onChange={e => setProfileForm(f => ({ ...f, lastName: e.target.value }))}
                     style={{
                       width: '100%',
                       padding: '10px 12px',
@@ -1296,8 +1385,8 @@ const DashboardPage = ({ setCurrentPage, currentUser }) => {
                   </label>
                   <input
                     type="email"
-                    value={userData?.email || ''}
-                    readOnly
+                    value={profileForm.email}
+                    onChange={e => setProfileForm(f => ({ ...f, email: e.target.value }))}
                     style={{
                       width: '100%',
                       padding: '10px 12px',
@@ -1315,8 +1404,8 @@ const DashboardPage = ({ setCurrentPage, currentUser }) => {
                   </label>
                   <input
                     type="tel"
-                    value={userData?.phone || ''}
-                    readOnly
+                    value={profileForm.phone}
+                    onChange={e => setProfileForm(f => ({ ...f, phone: e.target.value }))}
                     style={{
                       width: '100%',
                       padding: '10px 12px',
@@ -1334,8 +1423,8 @@ const DashboardPage = ({ setCurrentPage, currentUser }) => {
                   </label>
                   <input
                     type="text"
-                    value={userData?.company || ''}
-                    readOnly
+                    value={profileForm.company}
+                    onChange={e => setProfileForm(f => ({ ...f, company: e.target.value }))}
                     style={{
                       width: '100%',
                       padding: '10px 12px',
@@ -1353,8 +1442,8 @@ const DashboardPage = ({ setCurrentPage, currentUser }) => {
                   </label>
                   <input
                     type="text"
-                    value={userData?.investorType || ''}
-                    readOnly
+                    value={profileForm.investorType}
+                    onChange={e => setProfileForm(f => ({ ...f, investorType: e.target.value }))}
                     style={{
                       width: '100%',
                       padding: '10px 12px',
@@ -1373,8 +1462,8 @@ const DashboardPage = ({ setCurrentPage, currentUser }) => {
                   <div style={{ marginBottom: '10px' }}>
                     <input
                       type="text"
-                      value={userData?.address || ''}
-                      readOnly
+                      value={profileForm.address}
+                      onChange={e => setProfileForm(f => ({ ...f, address: e.target.value }))}
                       placeholder="Street Address"
                       style={{
                         width: '100%',
@@ -1388,8 +1477,8 @@ const DashboardPage = ({ setCurrentPage, currentUser }) => {
                     />
                     <input
                       type="text"
-                      value={userData?.address2 || ''}
-                      readOnly
+                      value={profileForm.address2}
+                      onChange={e => setProfileForm(f => ({ ...f, address2: e.target.value }))}
                       placeholder="Apt, Suite, Unit, etc. (optional)"
                       style={{
                         width: '100%',
@@ -1404,8 +1493,8 @@ const DashboardPage = ({ setCurrentPage, currentUser }) => {
                   <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: '8px' }}>
                     <input
                       type="text"
-                      value={userData?.city || ''}
-                      readOnly
+                      value={profileForm.city}
+                      onChange={e => setProfileForm(f => ({ ...f, city: e.target.value }))}
                       placeholder="City"
                       style={{
                         width: '100%',
@@ -1418,8 +1507,8 @@ const DashboardPage = ({ setCurrentPage, currentUser }) => {
                     />
                     <input
                       type="text"
-                      value={userData?.state || ''}
-                      readOnly
+                      value={profileForm.state}
+                      onChange={e => setProfileForm(f => ({ ...f, state: e.target.value }))}
                       placeholder="State"
                       style={{
                         width: '100%',
@@ -1432,8 +1521,8 @@ const DashboardPage = ({ setCurrentPage, currentUser }) => {
                     />
                     <input
                       type="text"
-                      value={userData?.zipCode || ''}
-                      readOnly
+                      value={profileForm.zipCode}
+                      onChange={e => setProfileForm(f => ({ ...f, zipCode: e.target.value }))}
                       placeholder="Zip"
                       style={{
                         width: '100%',
@@ -1458,8 +1547,42 @@ const DashboardPage = ({ setCurrentPage, currentUser }) => {
                   borderRadius: '8px',
                   fontSize: '0.875rem',
                   fontWeight: '600',
-                  cursor: 'pointer',
+                  cursor: profileLoading ? 'not-allowed' : 'pointer',
+                  opacity: profileLoading ? 0.6 : 1,
                   transition: 'all 0.2s ease'
+                }}
+                disabled={profileLoading}
+                onClick={async () => {
+                  setProfileLoading(true);
+                  setProfileError(null);
+                  setProfileSuccess(null);
+                  try {
+                    const { data: { user } } = await supabase.auth.getUser();
+                    if (!user) throw new Error('No authenticated user');
+                    const { error: updateError } = await supabase
+                      .from('profiles')
+                      .update({
+                        first_name: profileForm.firstName,
+                        last_name: profileForm.lastName,
+                        email: profileForm.email,
+                        phone: profileForm.phone,
+                        company: profileForm.company,
+                        investor_type: profileForm.investorType,
+                        address1: profileForm.address,
+                        address2: profileForm.address2,
+                        city: profileForm.city,
+                        state: profileForm.state,
+                        zip_code: profileForm.zipCode
+                      })
+                      .eq('id', user.id);
+                    if (updateError) throw new Error(updateError.message);
+                    setProfileSuccess('Profile updated successfully!');
+                    await fetchDashboardData();
+                  } catch (err) {
+                    setProfileError(err.message || 'Failed to update profile');
+                  } finally {
+                    setProfileLoading(false);
+                  }
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.backgroundColor = '#333333';
@@ -1468,8 +1591,14 @@ const DashboardPage = ({ setCurrentPage, currentUser }) => {
                   e.currentTarget.style.backgroundColor = '#000000';
                 }}
               >
-                Update Profile
+                {profileLoading ? 'Updating...' : 'Update Profile'}
               </button>
+              {profileError && (
+                <div style={{ color: '#ef4444', marginTop: '12px', textAlign: 'center' }}>{profileError}</div>
+              )}
+              {profileSuccess && (
+                <div style={{ color: '#22c55e', marginTop: '12px', textAlign: 'center' }}>{profileSuccess}</div>
+              )}
             </div>
           )}
 
@@ -1497,11 +1626,11 @@ const DashboardPage = ({ setCurrentPage, currentUser }) => {
                   <div style={{ fontSize: '0.875rem', color: '#666666', marginBottom: '4px' }}>
                     Current Plan
                   </div>
-                  <div style={{ fontSize: '1.5rem', fontWeight: '700', marginBottom: '4px', textTransform: 'capitalize' }}>
-                    {usageData?.plan || 'Loading...'} Plan
+                  <div style={{ fontSize: '1.5rem', fontWeight: '700', marginBottom: '4px' }}>
+                    Monthly Subscription
                   </div>
                   <div style={{ fontSize: '0.875rem', color: '#666666' }}>
-                    ${userData?.planPrice || 0}/month
+                    $60/month • 60 pages included
                   </div>
                 </div>
                 <div style={{
@@ -1632,37 +1761,48 @@ const DashboardPage = ({ setCurrentPage, currentUser }) => {
                   <div style={{ fontSize: '1.125rem', fontWeight: '600' }}>
                     {userData?.cancelAtPeriodEnd ? 'N/A (Cancelled)' : userData?.nextBilling || 'Loading...'}
                   </div>
+                  {!userData?.cancelAtPeriodEnd && userData?.nextBilling && (
+                    <div style={{ fontSize: '0.75rem', color: '#10b981', marginTop: '4px', fontWeight: '600' }}>
+                      {(() => {
+                        try {
+                          const nextBilling = new Date(userData.nextBilling);
+                          const today = new Date();
+                          const daysUntil = Math.ceil((nextBilling - today) / (1000 * 60 * 60 * 24));
+                          return daysUntil > 0 ? `${daysUntil} days until renewal` : 'Renews today';
+                        } catch {
+                          return '';
+                        }
+                      })()}
+                    </div>
+                  )}
                 </div>
               </div>
 
               <div style={{ display: 'flex', gap: '12px' }}>
                 <button
-                  onClick={handleCompletePayment}
-                  disabled={isUpgrading || !userData || !userData.id || !userData.subscriptionPlan || !PRICING_PLANS[userData.subscriptionPlan]}
+                  onClick={() => {
+                    const userId = currentUser?.id;
+                    window.location.href = `https://buy.stripe.com/test_aFacMY6Btb4Sd2RcLFf3a01?client_reference_id=${userId}`;
+                  }}
                   style={{
                     padding: '12px 24px',
-                    backgroundColor: isUpgrading ? '#6b7280' : '#000000',
+                    backgroundColor: '#2563eb',
                     color: 'white',
                     border: 'none',
                     borderRadius: '8px',
                     fontSize: '0.875rem',
                     fontWeight: '600',
-                    cursor: isUpgrading ? 'not-allowed' : 'pointer',
+                    cursor: 'pointer',
                     transition: 'all 0.2s ease',
-                    opacity: isUpgrading ? 0.6 : 1
                   }}
                   onMouseEnter={(e) => {
-                    if (!isUpgrading) {
-                      e.currentTarget.style.backgroundColor = '#333333';
-                    }
+                    e.currentTarget.style.backgroundColor = '#1d4ed8';
                   }}
                   onMouseLeave={(e) => {
-                    if (!isUpgrading) {
-                      e.currentTarget.style.backgroundColor = '#000000';
-                    }
+                    e.currentTarget.style.backgroundColor = '#2563eb';
                   }}
                 >
-                  {isUpgrading ? 'Processing...' : usageData?.status === 'pending' ? 'Complete Payment' : 'Upgrade Plan'}
+                  Buy 60 Pages - $29
                 </button>
 
                 {!userData?.cancelAtPeriodEnd && (
@@ -1803,6 +1943,24 @@ const DashboardPage = ({ setCurrentPage, currentUser }) => {
                       }}
                       onMouseLeave={(e) => {
                         e.currentTarget.style.backgroundColor = 'transparent';
+                      }}
+                      onClick={async () => {
+                        if (!userData?.id) return;
+                        try {
+                          // Call backend to delete user from Auth and profiles
+                          const resp = await fetch('http://localhost:8010/api/delete-user', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ user_id: userData.id })
+                          });
+                          const result = await resp.json();
+                          if (!result.success) throw new Error(result.detail || 'Delete failed');
+                          await supabase.auth.signOut();
+                          setCurrentPage?.('landing');
+                          alert('Account deleted.');
+                        } catch (err) {
+                          alert('Failed to delete account: ' + (err?.message || err));
+                        }
                       }}
                     >
                       Delete Account

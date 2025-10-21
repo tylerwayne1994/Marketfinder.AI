@@ -4,8 +4,8 @@
 import os, io, json, base64, re
 from typing import Optional, Dict, Any, List
 
-from fastapi import FastAPI, UploadFile, File, Form, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
+from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Request
+from cors_config import install_cors
 
 from pypdf import PdfReader, PdfWriter
 from dotenv import load_dotenv
@@ -13,34 +13,30 @@ from dotenv import load_dotenv
 from mistralai import Mistral
 from anthropic import Anthropic
 
-from protected_routes import router as protected_router
-# Optional local parsers (kept for compatibility; not required)
-try:
-    from parser_v4 import parse_om as PARSER_V4_PARSE_OM
-    HAS_PARSER_V4 = True
-except Exception:
-    PARSER_V4_PARSE_OM = None
-    HAS_PARSER_V4 = False
+# Usage tracking
+from usage_tracker import increment_page_usage, count_pages_from_file
 
-try:
-    from health_check_parser import parse_health_check as HEALTH_CHECK_PARSE
-    HAS_HEALTH_CHECK_PARSER = True
-except Exception:
-    HEALTH_CHECK_PARSE = None
-    HAS_HEALTH_CHECK_PARSER = False
+# from protected_routes import router as protected_router  # Moved to after startup
+# Optional local parsers (kept for compatibility; not required)
+# try:
+#     from parser_v4 import parse_om as PARSER_V4_PARSE_OM
+#     HAS_PARSER_V4 = True
+# except Exception:
+#     PARSER_V4_PARSE_OM = None
+#     HAS_PARSER_V4 = False
+
+PARSER_V4_PARSE_OM = None
+HAS_PARSER_V4 = False
 
 load_dotenv()
 
 # ---------------- Config / Keys ----------------
 MISTRAL_API_KEY = os.getenv("MISTRAL_API_KEY")
-CLAUDE_API_KEY  = os.getenv("CLAUDE_API_KEY")
-if not MISTRAL_API_KEY:
-    raise RuntimeError("Set MISTRAL_API_KEY in .env")
-if not CLAUDE_API_KEY:
-    raise RuntimeError("Set CLAUDE_API_KEY in .env")
+# support both env names
+ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY") or os.getenv("CLAUDE_API_KEY")
 
-MISTRAL   = Mistral(api_key=MISTRAL_API_KEY)
-ANTHROPIC = Anthropic(api_key=CLAUDE_API_KEY)
+MISTRAL = None
+ANTHROPIC = None
 
 ALLOWED_ORIGINS = [
     "http://localhost:5173",
@@ -49,6 +45,19 @@ ALLOWED_ORIGINS = [
 ]
 MAX_BYTES = 50 * 1024 * 1024
 OCR_MODEL = "mistral-ocr-latest"
+
+
+# ---- CORS allowed origins ----
+ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+    "http://localhost:3001",
+    "http://127.0.0.1:3000",
+    "http://127.0.0.1:3001",
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    # add your prod domain here when you deploy
+    "https://terra-investai.com",
+]
 
 ALLOWED_DOC_MIMES = {
     "application/pdf", "image/png", "image/jpeg", "image/jpg", "image/webp",
@@ -64,16 +73,39 @@ PARSER_STRATEGY_DEFAULT = (os.getenv("PARSER_STRATEGY") or "claude").strip().low
 
 
 app = FastAPI(title="Underwriting Backend", version="9.0.0")
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=ALLOWED_ORIGINS,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+install_cors(app)
 
-# Include protected routes
-app.include_router(protected_router, prefix="/api")
+import logging
+log = logging.getLogger("app")
+logging.basicConfig(level=logging.INFO)
+
+@app.on_event("startup")
+async def _init_clients():
+    global MISTRAL, ANTHROPIC
+
+    if MISTRAL_API_KEY:
+        try:
+            MISTRAL = Mistral(api_key=MISTRAL_API_KEY)
+        except Exception as e:
+            log.exception("Failed to init Mistral: %s", e)
+    else:
+        log.warning("MISTRAL_API_KEY missing")
+
+    if ANTHROPIC_API_KEY:
+        try:
+            ANTHROPIC = Anthropic(api_key=ANTHROPIC_API_KEY)
+        except Exception as e:
+            log.exception("Failed to init Anthropic: %s", e)
+    else:
+        log.warning("ANTHROPIC_API_KEY/CLAUDE_API_KEY missing")
+
+# Include protected routes (deferred to avoid import-time crashes)
+try:
+    from protected_routes import router as protected_router
+    app.include_router(protected_router, prefix="/api")
+    log.info("Protected routes loaded successfully")
+except Exception as e:
+    log.exception("Failed to load protected routes: %s", e)
 
 # ---------------- Utils ----------------
 def _to_data_url(file_bytes: bytes, mime: str) -> str:
@@ -135,6 +167,9 @@ def _as_number(v):
 
 # ---------------- OCR + Claude ----------------
 def _call_mistral_ocr(doc_bytes: bytes, mime: str) -> dict:
+    if MISTRAL is None:
+        raise HTTPException(status_code=503, detail="Mistral not configured")
+    
     try:
         resp = MISTRAL.ocr.process(
             model=OCR_MODEL,
@@ -190,6 +225,9 @@ Return ONLY JSON. Extract EVERYTHING into this schema.
         "You are an expert underwriter. Parse ALL financial and property data.\n\n"
         "OCR TEXT\n--------\n" + ocr_text + "\n\n" + schema_block + "\n\n" + financing_context
     )
+
+    if ANTHROPIC is None:
+        raise HTTPException(status_code=503, detail="Anthropic/Claude not configured")
 
     try:
         res = ANTHROPIC.messages.create(
@@ -1008,16 +1046,18 @@ def health():
     return {
         "ok": True,
         "version": "9.0.0",
-        "ocr": "mistral",
         "parser_default": PARSER_STRATEGY_DEFAULT,
-        "has_parser_v4": HAS_PARSER_V4,
-        "has_health_check_parser": HAS_HEALTH_CHECK_PARSER,
+        "clients": {
+            "mistral": MISTRAL is not None,
+            "anthropic": ANTHROPIC is not None,
+        }
     }
 
 @app.post("/ocr/underwrite")
 async def ocr_and_underwrite(
     file: UploadFile = File(...),
     pages: Optional[str] = Form(default=""),
+    user_id: Optional[str] = Form(default=None),  # Add user_id for usage tracking
 
     # strategy override
     parser_strategy: Optional[str] = Form(default=None),
@@ -1048,6 +1088,43 @@ async def ocr_and_underwrite(
     st_remaining_term_years: Optional[int] = Form(default=None),
     st_amort_years: Optional[int] = Form(default=None),
 ):
+    print(f"\n{'='*80}")
+    print(f"[OCR/UNDERWRITE] REQUEST RECEIVED")
+    print(f"[OCR/UNDERWRITE] File: {file.filename}")
+    print(f"[OCR/UNDERWRITE] User ID: {user_id}")
+    print(f"[OCR/UNDERWRITE] Pages: {pages}")
+    print(f"{'='*80}\n")
+    
+    # Check 60-page limit (backend enforcement)
+    if user_id:
+        try:
+            from usage_tracker import get_supabase_client
+            from datetime import datetime
+            
+            current_month = datetime.now().strftime("%Y-%m")
+            supabase = get_supabase_client()
+            
+            result = supabase.table("user_usage") \
+                .select("pages_processed") \
+                .eq("user_id", user_id) \
+                .eq("month_year", current_month) \
+                .execute()
+            
+            pages_used = result.data[0]["pages_processed"] if result.data else 0
+            
+            if pages_used >= 60:
+                raise HTTPException(
+                    status_code=403,
+                    detail="You have reached your 60-page limit for this month. Please purchase more pages to continue."
+                )
+            
+            print(f"[OCR/UNDERWRITE] Usage check passed: {pages_used}/60 pages used")
+        except HTTPException:
+            raise
+        except Exception as e:
+            print(f"[OCR/UNDERWRITE] Warning: Could not check usage limit: {e}")
+            # Continue processing if check fails (non-blocking)
+    
     mime = (file.content_type or "").lower()
     if mime not in ALLOWED_UPLOAD_MIMES:
         raise HTTPException(status_code=415, detail=f"Unsupported content type: {mime}")
@@ -1310,6 +1387,16 @@ async def ocr_and_underwrite(
     # Calculate comprehensive deal metrics instead of simple opinion
     normalized["deal_analysis"] = _calculate_deal_metrics(normalized)
 
+    # Track page usage if user_id provided
+    if user_id:
+        try:
+            pages_count = count_pages_from_file(orig_data, orig_mime)
+            await increment_page_usage(user_id, pages_count, "upload")
+            print(f"[Usage] Tracked {pages_count} pages for user {user_id}")
+        except Exception as e:
+            print(f"[Usage] Error tracking usage: {str(e)}")
+            # Don't fail the request if tracking fails
+
     return {
         "ok": True,
         "parsed": normalized,
@@ -1346,82 +1433,167 @@ async def ocr_file_legacy(
     ocr_json = _call_mistral_ocr(data, mime)
     return {"ok": True, "parser": "none (ocr only)", "ocr_data": ocr_json}
 
-@app.post("/api/health-check/verify")
-async def health_check_verify(
-    file: UploadFile = File(...),
-    pages: Optional[str] = Form(default=""),
-    user_fixes: Optional[str] = Form(default="{}")
-):
-    mime = (file.content_type or "").lower()
-    if mime not in ALLOWED_UPLOAD_MIMES:
-        raise HTTPException(status_code=415, detail=f"Unsupported content type: {mime}")
-
-    data = await file.read()
-    if not data:
-        raise HTTPException(status_code=400, detail="Empty upload")
-    if len(data) > MAX_BYTES:
-        raise HTTPException(status_code=413, detail=f"File too large")
-
-    if mime == "application/pdf" and pages:
-        try:
-            data = _slice_pdf(data, pages)
-        except ValueError as e:
-            raise HTTPException(status_code=400, detail=str(e))
-
-    if mime in ALLOWED_DOC_MIMES:
-        ocr_json = _call_mistral_ocr(data, mime)
-        md_parts = [p.get("markdown", "") for p in ocr_json.get("pages", []) if isinstance(p, dict)]
-        markdown_text = "\n\n".join([m for m in md_parts if m])
-    else:
-        ocr_json = None
-        try:
-            text = data.decode("utf-8", errors="ignore")
-        except Exception:
-            text = base64.b64encode(data).decode("utf-8")
-        markdown_text = "SPREADSHEET_CONTENT\n\n" + text[:500000]
-
-    payload = {}
-    if HAS_HEALTH_CHECK_PARSER and ocr_json:
-        try:
-            payload = HEALTH_CHECK_PARSE(ocr_json)
-        except Exception:
-            pass
-    if not payload:
-        payload = {
-            "doc_meta": {"property_name": "", "address": "", "city": "", "state": "", "zip": ""},
-            "unit_mix": [],
-            "occupancy": {"total_units": None, "occupied_units": None, "vacant_units": None},
-            "rents_summary": {"current_avg_by_type": {}, "proforma_avg_by_type": {}},
-            "income_statement": {"gpr": None, "opex_total": None, "noi": None},
-            "page_refs": {}
-        }
-
+# ============================================================================
+# STRIPE WEBHOOK - Reset pages_processed after 60 Page Pack purchase
+# ============================================================================
+@app.post("/webhook/stripe")
+async def stripe_webhook(request: Request):
+    """
+    Handle Stripe webhook events for 60 Page Pack purchases.
+    Resets pages_processed to 0 when payment is successful.
+    """
     try:
-        user_fixes_dict = json.loads(user_fixes) if user_fixes != "{}" else {}
-    except json.JSONDecodeError:
-        user_fixes_dict = {}
-
-    if user_fixes_dict:
-        for k, v in user_fixes_dict.items():
-            tgt = payload
-            parts = k.split(".")
-            for part in parts[:-1]:
-                tgt = tgt.setdefault(part, {})
-            tgt[parts[-1]] = v
-
-    return {
-        "ok": True,
-        "verification": {"can_run_healthcheck": True, "verified_payload": payload},
-        "file_name": file.filename
-   
-    }
-
-@app.post("/api/health-check/analyze")
-async def health_check_analyze(request: Dict[str, Any]):
-    verified_payload = request.get("verified_payload", {})
-    if not verified_payload:
-        raise HTTPException(status_code=400, detail="Missing verified_payload")
-    return {"ok": True, "health_check": {"snapshot": {}, "strengths": [], "weak_spots": [], "noi_levers": {"revenue": [], "expenses": []}}}
+        import stripe
+    except ImportError:
+        raise HTTPException(status_code=500, detail="Stripe library not installed")
+    
+    stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
+    webhook_secret = os.getenv("STRIPE_WEBHOOK_SECRET")
+    
+    if not webhook_secret:
+        print("⚠️ WARNING: STRIPE_WEBHOOK_SECRET not set, skipping signature verification")
+    
+    # Get the webhook payload
+    payload = await request.body()
+    sig_header = request.headers.get("stripe-signature")
+    
+    try:
+        # Verify webhook signature
+        if webhook_secret and sig_header:
+            event = stripe.Webhook.construct_event(
+                payload, sig_header, webhook_secret
+            )
+        else:
+            # For testing without signature verification
+            event = json.loads(payload)
+        
+        print(f"\n{'='*80}")
+        print(f"[STRIPE WEBHOOK] Event received: {event.get('type')}")
+        print(f"{'='*80}\n")
+        
+        # Handle checkout completion
+        if event["type"] == "checkout.session.completed":
+            session = event["data"]["object"]
+            user_id = session.get("client_reference_id")
+            
+            if not user_id:
+                print("⚠️ WARNING: No client_reference_id found")
+                return {"status": "warning", "message": "No user ID provided"}
+            
+            print(f"[STRIPE WEBHOOK] Processing payment for user: {user_id}")
+            
+            # Check if this is a subscription or one-time purchase
+            if session.get("mode") == "subscription":
+                # Monthly subscription - activate user
+                from usage_tracker import get_supabase_client
+                
+                supabase = get_supabase_client()
+                stripe_customer_id = session.get("customer")
+                stripe_subscription_id = session.get("subscription")
+                
+                # Update user profile with subscription info
+                supabase.table("profiles").update({
+                    "stripe_customer_id": stripe_customer_id,
+                    "stripe_subscription_id": stripe_subscription_id,
+                    "subscription_status": "active"
+                }).eq("id", user_id).execute()
+                
+                print(f"✅ [STRIPE WEBHOOK] Activated subscription for user {user_id}")
+                
+                return {
+                    "status": "success",
+                    "user_id": user_id,
+                    "subscription_activated": True
+                }
+            
+            else:
+                # One-time 60 Page Pack purchase - reset counter
+                from usage_tracker import get_supabase_client
+                from datetime import datetime
+                
+                current_month = datetime.now().strftime("%Y-%m")
+                supabase = get_supabase_client()
+                
+                # Reset pages_processed to 0
+                result = supabase.table("user_usage") \
+                    .upsert({
+                        "user_id": user_id,
+                        "month_year": current_month,
+                        "pages_processed": 0
+                    }, on_conflict="user_id,month_year") \
+                    .execute()
+                
+                print(f"✅ [STRIPE WEBHOOK] Reset pages_processed to 0 for user {user_id}")
+                
+                return {
+                    "status": "success",
+                    "user_id": user_id,
+                    "pages_reset": True,
+                    "month": current_month
+                }
+        
+        # Handle subscription cancelled
+        elif event["type"] == "customer.subscription.deleted":
+            subscription = event["data"]["object"]
+            stripe_customer_id = subscription.get("customer")
+            
+            from usage_tracker import get_supabase_client
+            supabase = get_supabase_client()
+            
+            # Deactivate user subscription
+            supabase.table("profiles").update({
+                "subscription_status": "cancelled",
+                "stripe_subscription_id": None
+            }).eq("stripe_customer_id", stripe_customer_id).execute()
+            
+            print(f"✅ [STRIPE WEBHOOK] Deactivated subscription for customer {stripe_customer_id}")
+            
+            return {"status": "success", "subscription_cancelled": True}
+        
+        # Handle subscription updated (e.g., renewal)
+        elif event["type"] == "customer.subscription.updated":
+            subscription = event["data"]["object"]
+            stripe_customer_id = subscription.get("customer")
+            status = subscription.get("status")
+            
+            from usage_tracker import get_supabase_client
+            from datetime import datetime
+            
+            supabase = get_supabase_client()
+            current_month = datetime.now().strftime("%Y-%m")
+            
+            # Update subscription status
+            supabase.table("profiles").update({
+                "subscription_status": status
+            }).eq("stripe_customer_id", stripe_customer_id).execute()
+            
+            # If renewed, reset pages for new month
+            if status == "active":
+                result = supabase.table("profiles").select("id").eq("stripe_customer_id", stripe_customer_id).single().execute()
+                if result.data:
+                    user_id = result.data["id"]
+                    supabase.table("user_usage").upsert({
+                        "user_id": user_id,
+                        "month_year": current_month,
+                        "pages_processed": 0
+                    }, on_conflict="user_id,month_year").execute()
+            
+            print(f"✅ [STRIPE WEBHOOK] Updated subscription status to {status}")
+            
+            return {"status": "success", "subscription_updated": True}
+        
+        # Other event types
+        return {"status": "ignored", "event_type": event.get("type")}
+        
+    except stripe.error.SignatureVerificationError as e:
+        print(f"❌ [STRIPE WEBHOOK] Signature verification failed: {e}")
+        raise HTTPException(status_code=400, detail="Invalid signature")
+    
+    except Exception as e:
+        print(f"❌ [STRIPE WEBHOOK] Error: {e}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":
     import uvicorn

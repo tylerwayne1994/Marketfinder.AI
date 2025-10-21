@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Calculator, DollarSign, Building, TrendingUp, FileText, BarChart3, Download, Home } from 'lucide-react';
+import { ArrowLeft, Calculator, DollarSign, Building, TrendingUp, FileText, BarChart3, Download, Home, MessageCircle, Send, Bot, User } from 'lucide-react';
 import { PieChart, Pie, Cell, BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, RadialBarChart, RadialBar } from 'recharts';
 import { supabase } from './lib/supabase';
 
@@ -101,6 +101,18 @@ const ManualUnderwritePage = ({ setCurrentPage }) => {
     annualizedAmount: 0,
     annualizedROIPercent: 0
   });
+
+  // AI Chat state
+  const [showAIChat, setShowAIChat] = useState(false);
+  const [chatMessages, setChatMessages] = useState([
+    {
+      id: 1,
+      type: 'ai',
+      content: "👋 Hi! I'm your AI underwriting assistant. I can help you figure out what purchase price you need to achieve specific cashflow goals based on your current property inputs. Try asking me something like: 'What purchase price do I need to cashflow $2,000 per month?' or 'How much should I offer to get a 12% cash-on-cash return?'"
+    }
+  ]);
+  const [currentMessage, setCurrentMessage] = useState('');
+  const [isAIThinking, setIsAIThinking] = useState(false);
 
   // Get current user and track usage on page load
   useEffect(() => {
@@ -293,13 +305,373 @@ const ManualUnderwritePage = ({ setCurrentPage }) => {
     }
     
     setCalculations(calc);
-  }, [formData]);
+  }, [formData]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
     }));
+  };
+
+  // AI Chat Functions
+  const calculatePurchasePriceForCashflow = (targetMonthlyCashflow, shouldUpdateForm = false) => {
+    // Use current form data to reverse-engineer the purchase price
+    const monthlyIncome = calculations.monthlyGrossIncome || 
+      (parseFloat(formData.grossRents) + parseFloat(formData.parking || 0) + parseFloat(formData.other || 0));
+    
+    const monthlyExpenses = calculations.totalMonthlyExpenses ||
+      (parseFloat(formData.taxes) + parseFloat(formData.insurance) + parseFloat(formData.utilities) + 
+       parseFloat(formData.maintenance) + parseFloat(formData.electrical || 0) + parseFloat(formData.water || 0) + 
+       parseFloat(formData.sewer || 0) + parseFloat(formData.trash || 0) + parseFloat(formData.gas || 0));
+    
+    const monthlyVacancy = monthlyIncome * (formData.vacancyRate / 100);
+    const effectiveIncome = monthlyIncome - monthlyVacancy;
+    const managementFee = effectiveIncome * (formData.managementPercent / 100);
+    
+    const netIncome = effectiveIncome - monthlyExpenses - managementFee;
+    const targetMonthlyPayment = netIncome - targetMonthlyCashflow;
+    
+    if (targetMonthlyPayment <= 0) {
+      return null; // Not feasible with current expenses
+    }
+    
+    // Calculate loan amount from monthly payment
+    const monthlyRate = formData.interestRate / 100 / 12;
+    const numPayments = formData.term * 12;
+    const loanAmount = targetMonthlyPayment * ((1 - Math.pow(1 + monthlyRate, -numPayments)) / monthlyRate);
+    
+    // Calculate purchase price from loan amount and down payment
+    const downPaymentDecimal = formData.downPaymentPercent / 100;
+    const purchasePrice = loanAmount / (1 - downPaymentDecimal);
+    
+    const result = {
+      purchasePrice: Math.round(purchasePrice),
+      loanAmount: Math.round(loanAmount),
+      monthlyPayment: Math.round(targetMonthlyPayment),
+      downPayment: Math.round(purchasePrice * downPaymentDecimal),
+      projectedCashflow: targetMonthlyCashflow,
+      noi: Math.round(netIncome * 12),
+      capRate: ((netIncome * 12) / purchasePrice * 100).toFixed(2)
+    };
+
+    // Automatically update the form if requested
+    if (shouldUpdateForm && result) {
+      setFormData(prev => ({
+        ...prev,
+        purchasePrice: result.purchasePrice
+      }));
+    }
+    
+    return result;
+  };
+
+  const calculatePurchasePriceForCashOnCash = (targetCashOnCashReturn, shouldUpdateForm = false) => {
+    const monthlyIncome = calculations.monthlyGrossIncome || 
+      (parseFloat(formData.grossRents) + parseFloat(formData.parking || 0) + parseFloat(formData.other || 0));
+    
+    const monthlyExpenses = calculations.totalMonthlyExpenses ||
+      (parseFloat(formData.taxes) + parseFloat(formData.insurance) + parseFloat(formData.utilities) + 
+       parseFloat(formData.maintenance) + parseFloat(formData.electrical || 0) + parseFloat(formData.water || 0) + 
+       parseFloat(formData.sewer || 0) + parseFloat(formData.trash || 0) + parseFloat(formData.gas || 0));
+    
+    const monthlyVacancy = monthlyIncome * (formData.vacancyRate / 100);
+    const effectiveIncome = monthlyIncome - monthlyVacancy;
+    const managementFee = effectiveIncome * (formData.managementPercent / 100);
+    
+    // Use iterative approach to find purchase price
+    let purchasePrice = 1000000; // Starting point
+    const downPaymentDecimal = formData.downPaymentPercent / 100;
+    
+    for (let i = 0; i < 1000; i++) {
+      const loanAmount = purchasePrice * (1 - downPaymentDecimal);
+      const monthlyRate = formData.interestRate / 100 / 12;
+      const numPayments = formData.term * 12;
+      const monthlyPayment = loanAmount * (monthlyRate * Math.pow(1 + monthlyRate, numPayments)) / (Math.pow(1 + monthlyRate, numPayments) - 1);
+      
+      const netIncome = effectiveIncome - monthlyExpenses - managementFee;
+      const cashFlow = netIncome - monthlyPayment;
+      const annualCashFlow = cashFlow * 12;
+      const downPayment = purchasePrice * downPaymentDecimal;
+      const actualCashOnCash = (annualCashFlow / downPayment) * 100;
+      
+      if (Math.abs(actualCashOnCash - targetCashOnCashReturn) < 0.01) {
+        const result = {
+          purchasePrice: Math.round(purchasePrice),
+          loanAmount: Math.round(loanAmount),
+          monthlyPayment: Math.round(monthlyPayment),
+          downPayment: Math.round(downPayment),
+          projectedCashflow: Math.round(cashFlow),
+          annualCashflow: Math.round(annualCashFlow),
+          cashOnCashReturn: actualCashOnCash.toFixed(2),
+          noi: Math.round(netIncome * 12),
+          capRate: ((netIncome * 12) / purchasePrice * 100).toFixed(2)
+        };
+
+        // Automatically update the form if requested
+        if (shouldUpdateForm) {
+          setFormData(prev => ({
+            ...prev,
+            purchasePrice: result.purchasePrice
+          }));
+        }
+
+        return result;
+      }
+      
+      // Adjust purchase price based on whether we're above or below target
+      if (actualCashOnCash > targetCashOnCashReturn) {
+        purchasePrice += 10000;
+      } else {
+        purchasePrice -= 10000;
+      }
+      
+      if (purchasePrice <= 0) break;
+    }
+    
+    return null;
+  };
+
+  const calculateOptimalCapRate = (targetCapRate, shouldUpdateForm = false) => {
+    const monthlyIncome = calculations.monthlyGrossIncome || 
+      (parseFloat(formData.grossRents) + parseFloat(formData.parking || 0) + parseFloat(formData.other || 0));
+    
+    const monthlyExpenses = calculations.totalMonthlyExpenses ||
+      (parseFloat(formData.taxes) + parseFloat(formData.insurance) + parseFloat(formData.utilities) + 
+       parseFloat(formData.maintenance) + parseFloat(formData.electrical || 0) + parseFloat(formData.water || 0) + 
+       parseFloat(formData.sewer || 0) + parseFloat(formData.trash || 0) + parseFloat(formData.gas || 0));
+    
+    const monthlyVacancy = monthlyIncome * (formData.vacancyRate / 100);
+    const effectiveIncome = monthlyIncome - monthlyVacancy;
+    const managementFee = effectiveIncome * (formData.managementPercent / 100);
+    const annualNOI = (effectiveIncome - monthlyExpenses - managementFee) * 12;
+    
+    // Calculate purchase price for target cap rate: Price = NOI / Cap Rate
+    const purchasePrice = Math.round(annualNOI / (targetCapRate / 100));
+    
+    if (purchasePrice <= 0) return null;
+
+    const result = {
+      purchasePrice,
+      noi: Math.round(annualNOI),
+      capRate: targetCapRate.toFixed(2),
+      pricePerUnit: formData.studios + formData.oneBed + formData.twoBed + formData.threeBed > 0 ? 
+        Math.round(purchasePrice / (formData.studios + formData.oneBed + formData.twoBed + formData.threeBed)) : 0
+    };
+
+    if (shouldUpdateForm) {
+      setFormData(prev => ({
+        ...prev,
+        purchasePrice: result.purchasePrice
+      }));
+    }
+
+    return result;
+  };
+
+  const optimizeForBreakeven = (shouldUpdateForm = false) => {
+    const monthlyIncome = calculations.monthlyGrossIncome || 
+      (parseFloat(formData.grossRents) + parseFloat(formData.parking || 0) + parseFloat(formData.other || 0));
+    
+    const monthlyExpenses = calculations.totalMonthlyExpenses ||
+      (parseFloat(formData.taxes) + parseFloat(formData.insurance) + parseFloat(formData.utilities) + 
+       parseFloat(formData.maintenance) + parseFloat(formData.electrical || 0) + parseFloat(formData.water || 0) + 
+       parseFloat(formData.sewer || 0) + parseFloat(formData.trash || 0) + parseFloat(formData.gas || 0));
+    
+    const monthlyVacancy = monthlyIncome * (formData.vacancyRate / 100);
+    const effectiveIncome = monthlyIncome - monthlyVacancy;
+    const managementFee = effectiveIncome * (formData.managementPercent / 100);
+    const netIncome = effectiveIncome - monthlyExpenses - managementFee;
+    
+    // For breakeven, monthly payment should equal net income
+    const targetMonthlyPayment = netIncome;
+    
+    if (targetMonthlyPayment <= 0) return null;
+    
+    const monthlyRate = formData.interestRate / 100 / 12;
+    const numPayments = formData.term * 12;
+    const loanAmount = targetMonthlyPayment * ((1 - Math.pow(1 + monthlyRate, -numPayments)) / monthlyRate);
+    const downPaymentDecimal = formData.downPaymentPercent / 100;
+    const purchasePrice = loanAmount / (1 - downPaymentDecimal);
+    
+    const result = {
+      purchasePrice: Math.round(purchasePrice),
+      loanAmount: Math.round(loanAmount),
+      monthlyPayment: Math.round(targetMonthlyPayment),
+      downPayment: Math.round(purchasePrice * downPaymentDecimal),
+      projectedCashflow: 0,
+      noi: Math.round(netIncome * 12),
+      capRate: ((netIncome * 12) / purchasePrice * 100).toFixed(2)
+    };
+
+    if (shouldUpdateForm) {
+      setFormData(prev => ({
+        ...prev,
+        purchasePrice: result.purchasePrice
+      }));
+    }
+
+    return result;
+  };
+
+  const processAIMessage = async (message) => {
+    setIsAIThinking(true);
+    
+    try {
+      // Parse the user's message to understand what they want
+      const lowerMessage = message.toLowerCase();
+      let response = "";
+      let shouldAutoUpdate = lowerMessage.includes('update') || lowerMessage.includes('set') || lowerMessage.includes('change') || lowerMessage.includes('adjust');
+      
+      if (lowerMessage.includes('cashflow') || lowerMessage.includes('cash flow')) {
+        // Extract target cashflow amount
+        const cashflowMatch = message.match(/\$?(\d+(?:,\d{3})*(?:\.\d{2})?)/);
+        if (cashflowMatch) {
+          const targetCashflow = parseFloat(cashflowMatch[1].replace(/,/g, ''));
+          const result = calculatePurchasePriceForCashflow(targetCashflow, shouldAutoUpdate);
+          
+          if (result) {
+            response = `💰 **${shouldAutoUpdate ? 'Updated Purchase Price!' : 'Analysis Complete!'}**\n\nTo achieve **$${targetCashflow.toLocaleString()}/month** in cashflow:\n\n` +
+              `📊 **Required Purchase Price:** $${result.purchasePrice.toLocaleString()}\n` +
+              `🏦 **Loan Amount:** $${result.loanAmount.toLocaleString()}\n` +
+              `💵 **Down Payment (${formData.downPaymentPercent}%):** $${result.downPayment.toLocaleString()}\n` +
+              `🏠 **Monthly Payment:** $${result.monthlyPayment.toLocaleString()}\n` +
+              `📈 **Projected NOI:** $${result.noi.toLocaleString()}/year\n` +
+              `🎯 **Cap Rate:** ${result.capRate}%\n\n` +
+              `${shouldAutoUpdate ? '✅ **Form Updated!** Your purchase price has been automatically adjusted.' : '💡 **Want me to update the form?** Ask me to "set the purchase price" and I\'ll update it for you!'}\n\n` +
+              `*Based on your current income/expense assumptions*`;
+          } else {
+            response = `❌ **Not Feasible**\n\nWith your current expense structure, achieving $${targetCashflow.toLocaleString()}/month cashflow isn't possible. Consider:\n\n` +
+              `• Reducing expenses\n• Increasing rental income\n• Lowering interest rate\n• Increasing down payment percentage\n\n` +
+              `💡 **Want me to find the breakeven price?** Just ask "What's the breakeven purchase price?"`;
+          }
+        } else {
+          response = `I'd be happy to help calculate and update the purchase price for your target cashflow! Try:\n\n` +
+            `• "Set purchase price for $2,000/month cashflow"\n• "Update form to cashflow $1,500/month"\n• "What purchase price gives me $3,000/month?"`;
+        }
+      } else if (lowerMessage.includes('cash on cash') || lowerMessage.includes('return') || lowerMessage.includes('%')) {
+        // Extract target return percentage
+        const returnMatch = message.match(/(\d+(?:\.\d+)?)%?/);
+        if (returnMatch) {
+          const targetReturn = parseFloat(returnMatch[1]);
+          const result = calculatePurchasePriceForCashOnCash(targetReturn, shouldAutoUpdate);
+          
+          if (result) {
+            response = `🎯 **${shouldAutoUpdate ? 'Updated Purchase Price!' : 'Return Analysis Complete!'}**\n\nTo achieve **${targetReturn}%** cash-on-cash return:\n\n` +
+              `📊 **Required Purchase Price:** $${result.purchasePrice.toLocaleString()}\n` +
+              `🏦 **Loan Amount:** $${result.loanAmount.toLocaleString()}\n` +
+              `💵 **Down Payment (${formData.downPaymentPercent}%):** $${result.downPayment.toLocaleString()}\n` +
+              `🏠 **Monthly Payment:** $${result.monthlyPayment.toLocaleString()}\n` +
+              `💰 **Monthly Cashflow:** $${result.projectedCashflow.toLocaleString()}\n` +
+              `📈 **Annual Cashflow:** $${result.annualCashflow.toLocaleString()}\n` +
+              `🎯 **Cap Rate:** ${result.capRate}%\n\n` +
+              `${shouldAutoUpdate ? '✅ **Form Updated!** Your purchase price has been automatically adjusted.' : '💡 **Want me to update the form?** Ask me to "set the purchase price" and I\'ll update it for you!'}\n\n` +
+              `*Based on your current income/expense assumptions*`;
+          } else {
+            response = `❌ **Target Too High**\n\nAchieving ${targetReturn}% cash-on-cash return with current assumptions isn't feasible. Try asking:\n\n` +
+              `• "What's the maximum return possible?"\n• "Set purchase price for 8% return"\n• "Update form for breakeven"`;
+          }
+        } else {
+          response = `I can calculate and update the purchase price for your target return! Try:\n\n` +
+            `• "Set purchase price for 12% return"\n• "Update form to get 15% cash-on-cash"\n• "What price gives me 10%?"`;
+        }
+      } else if (lowerMessage.includes('cap rate')) {
+        const capRateMatch = message.match(/(\d+(?:\.\d+)?)%?/);
+        if (capRateMatch) {
+          const targetCapRate = parseFloat(capRateMatch[1]);
+          const result = calculateOptimalCapRate(targetCapRate, shouldAutoUpdate);
+          
+          if (result) {
+            response = `🎯 **${shouldAutoUpdate ? 'Updated Purchase Price!' : 'Cap Rate Analysis Complete!'}**\n\nTo achieve **${targetCapRate}%** cap rate:\n\n` +
+              `📊 **Required Purchase Price:** $${result.purchasePrice.toLocaleString()}\n` +
+              `📈 **Current NOI:** $${result.noi.toLocaleString()}/year\n` +
+              `🎯 **Target Cap Rate:** ${result.capRate}%\n` +
+              `${result.pricePerUnit > 0 ? `💰 **Price per Unit:** $${result.pricePerUnit.toLocaleString()}\n` : ''}` +
+              `${shouldAutoUpdate ? '✅ **Form Updated!** Your purchase price has been automatically adjusted.' : '💡 **Want me to update the form?** Ask me to "set the purchase price" and I\'ll update it for you!'}\n\n` +
+              `*Based on your current NOI of $${result.noi.toLocaleString()}*`;
+          } else {
+            response = `❌ **Invalid Cap Rate**\n\nUnable to calculate purchase price for ${targetCapRate}% cap rate. Your current NOI might be too low.`;
+          }
+        } else {
+          response = `I can calculate purchase prices for specific cap rates! Try:\n\n` +
+            `• "Set purchase price for 6% cap rate"\n• "What price gives me 8% cap rate?"\n• "Update form to 7.5% cap rate"`;
+        }
+      } else if (lowerMessage.includes('breakeven') || lowerMessage.includes('break even')) {
+        const result = optimizeForBreakeven(shouldAutoUpdate);
+        
+        if (result) {
+          response = `⚖️ **${shouldAutoUpdate ? 'Updated to Breakeven!' : 'Breakeven Analysis Complete!'}**\n\nFor **$0 monthly cashflow** (breakeven):\n\n` +
+            `📊 **Required Purchase Price:** $${result.purchasePrice.toLocaleString()}\n` +
+            `🏦 **Loan Amount:** $${result.loanAmount.toLocaleString()}\n` +
+            `💵 **Down Payment (${formData.downPaymentPercent}%):** $${result.downPayment.toLocaleString()}\n` +
+            `🏠 **Monthly Payment:** $${result.monthlyPayment.toLocaleString()}\n` +
+            `📈 **Annual NOI:** $${result.noi.toLocaleString()}\n` +
+            `🎯 **Cap Rate:** ${result.capRate}%\n\n` +
+            `${shouldAutoUpdate ? '✅ **Form Updated!** Your purchase price has been set to breakeven.' : '💡 **Want me to update the form?** Ask me to "set breakeven price" and I\'ll update it for you!'}\n\n` +
+            `*This is the maximum you can pay without losing money monthly*`;
+        } else {
+          response = `❌ **Breakeven Not Possible**\n\nWith your current expense structure, you can't achieve breakeven. Your expenses exceed your income.\n\n` +
+            `Consider reducing expenses or increasing rental income.`;
+        }
+      } else if (lowerMessage.includes('help') || lowerMessage.includes('what can you do')) {
+        response = `🤖 **I'm your hands-on AI assistant! I can:**\n\n` +
+          `💰 **Calculate & Update Cashflow** - "Set purchase price for $2,000/month cashflow"\n\n` +
+          `📈 **Calculate & Update Returns** - "Update form to get 12% cash-on-cash return"\n\n` +
+          `🎯 **Calculate & Update Cap Rates** - "Set purchase price for 8% cap rate"\n\n` +
+          `⚖️ **Find Breakeven** - "What's the breakeven purchase price?"\n\n` +
+          `✨ **Auto-Update Magic** - Use words like "set", "update", "change", or "adjust" and I'll automatically update your form!\n\n` +
+          `Just tell me what you want to achieve and I'll calculate it AND update your inputs!`;
+      } else if (lowerMessage.includes('current') || lowerMessage.includes('what are my')) {
+        response = `📊 **Your Current Metrics:**\n\n` +
+          `💰 **Monthly Cashflow:** $${calculations.cashFlow.toLocaleString()}\n` +
+          `📈 **Cash-on-Cash Return:** ${calculations.cashOnCashReturn.toFixed(2)}%\n` +
+          `🎯 **Cap Rate:** ${calculations.capRate.toFixed(2)}%\n` +
+          `⚖️ **DSCR:** ${calculations.debtServiceCoverage.toFixed(2)}\n` +
+          `🏠 **Purchase Price:** $${formData.purchasePrice.toLocaleString()}\n` +
+          `📈 **Monthly NOI:** $${calculations.monthlyGrossIncome - calculations.totalMonthlyExpenses - (calculations.monthlyGrossIncome * formData.vacancyRate / 100) - (calculations.effectiveGrossIncome * formData.managementPercent / 100)}\n\n` +
+          `💡 **Want to optimize?** Ask me to "set purchase price for 15% return" or "update to cashflow $3,000/month"!`;
+      } else {
+        response = `🚀 **I'm your hands-on AI assistant!** I don't just calculate - I UPDATE your form too!\n\n` +
+          `**Try saying:**\n` +
+          `• "Set purchase price for $1,500/month cashflow"\n` +
+          `• "Update form to get 12% cash-on-cash return"\n` +
+          `• "Change purchase price for 7% cap rate"\n` +
+          `• "Adjust to breakeven cashflow"\n\n` +
+          `🎯 **I'll calculate the optimal price AND update your form automatically!**\n\n` +
+          `What would you like me to optimize for you?`;
+      }
+      
+      // Add AI response to chat
+      setChatMessages(prev => [...prev, {
+        id: Date.now(),
+        type: 'ai',
+        content: response
+      }]);
+      
+    } catch (error) {
+      setChatMessages(prev => [...prev, {
+        id: Date.now(),
+        type: 'ai',
+        content: '❌ Sorry, I encountered an error calculating that. Please check your inputs and try again.'
+      }]);
+    } finally {
+      setIsAIThinking(false);
+    }
+  };
+
+  const sendMessage = () => {
+    if (!currentMessage.trim()) return;
+    
+    // Add user message
+    setChatMessages(prev => [...prev, {
+      id: Date.now(),
+      type: 'user',
+      content: currentMessage
+    }]);
+    
+    // Process AI response
+    processAIMessage(currentMessage);
+    setCurrentMessage('');
   };
 
   // Export to PDF function
@@ -455,6 +827,18 @@ const ManualUnderwritePage = ({ setCurrentPage }) => {
               style={{...styles.button, background: "linear-gradient(135deg, #10b981 0%, #059669 100%)"}}
             >
               <Download size={16} /> Export as PDF
+            </button>
+            
+            <button 
+              onClick={() => setShowAIChat(!showAIChat)}
+              style={{
+                ...styles.button, 
+                background: showAIChat 
+                  ? "linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)" 
+                  : "linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)"
+              }}
+            >
+              <Bot size={16} /> {showAIChat ? 'Close AI Chat' : 'AI Assistant'}
             </button>
           </div>
           
@@ -1617,6 +2001,242 @@ const ManualUnderwritePage = ({ setCurrentPage }) => {
             </div>
           </div>
         </div>
+
+        {/* AI Chat Interface */}
+        {showAIChat && (
+          <div style={{
+            position: 'fixed',
+            bottom: 20,
+            right: 20,
+            width: '400px',
+            height: '600px',
+            backgroundColor: 'white',
+            borderRadius: '16px',
+            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+            border: '1px solid #e5e7eb',
+            display: 'flex',
+            flexDirection: 'column',
+            zIndex: 1000
+          }}>
+            {/* Chat Header */}
+            <div style={{
+              padding: '16px 20px',
+              borderBottom: '1px solid #e5e7eb',
+              borderRadius: '16px 16px 0 0',
+              background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
+              color: 'white'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Bot size={20} />
+                <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '600' }}>
+                  AI Underwriting Assistant
+                </h3>
+              </div>
+              <p style={{ margin: '4px 0 0 0', fontSize: '12px', opacity: 0.9 }}>
+                Ask me about purchase price calculations
+              </p>
+            </div>
+
+            {/* Chat Messages */}
+            <div style={{
+              flex: 1,
+              padding: '16px',
+              overflowY: 'auto',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '12px'
+            }}>
+              {chatMessages.map(message => (
+                <div
+                  key={message.id}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    gap: '8px',
+                    ...(message.type === 'user' ? { justifyContent: 'flex-end' } : {})
+                  }}
+                >
+                  {message.type === 'ai' && (
+                    <div style={{
+                      width: '28px',
+                      height: '28px',
+                      borderRadius: '50%',
+                      background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0
+                    }}>
+                      <Bot size={14} color="white" />
+                    </div>
+                  )}
+                  
+                  <div style={{
+                    maxWidth: message.type === 'user' ? '80%' : '85%',
+                    padding: '12px 16px',
+                    borderRadius: '12px',
+                    fontSize: '14px',
+                    lineHeight: '1.4',
+                    whiteSpace: 'pre-wrap',
+                    ...(message.type === 'user' ? {
+                      background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
+                      color: 'white',
+                      borderBottomRightRadius: '4px'
+                    } : {
+                      backgroundColor: '#f8fafc',
+                      border: '1px solid #e2e8f0',
+                      color: '#374151',
+                      borderBottomLeftRadius: '4px'
+                    })
+                  }}>
+                    {message.content}
+                  </div>
+
+                  {message.type === 'user' && (
+                    <div style={{
+                      width: '28px',
+                      height: '28px',
+                      borderRadius: '50%',
+                      background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0
+                    }}>
+                      <User size={14} color="white" />
+                    </div>
+                  )}
+                </div>
+              ))}
+
+              {/* AI Thinking Indicator */}
+              {isAIThinking && (
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px'
+                }}>
+                  <div style={{
+                    width: '28px',
+                    height: '28px',
+                    borderRadius: '50%',
+                    background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}>
+                    <Bot size={14} color="white" />
+                  </div>
+                  <div style={{
+                    padding: '12px 16px',
+                    borderRadius: '12px',
+                    backgroundColor: '#f8fafc',
+                    border: '1px solid #e2e8f0',
+                    fontSize: '14px',
+                    color: '#6b7280'
+                  }}>
+                    🤔 Calculating...
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Quick Action Buttons */}
+            <div style={{
+              padding: '8px 16px',
+              borderTop: '1px solid #f3f4f6',
+              display: 'flex',
+              flexWrap: 'wrap',
+              gap: '6px'
+            }}>
+              {[
+                'Set purchase price for $2,000/month cashflow',
+                'Update form to get 12% cash-on-cash return',
+                'Change price for 7% cap rate',
+                'Set breakeven purchase price'
+              ].map((suggestion, index) => (
+                <button
+                  key={index}
+                  onClick={() => {
+                    setCurrentMessage(suggestion);
+                    // Auto-send the suggestion
+                    setChatMessages(prev => [...prev, {
+                      id: Date.now(),
+                      type: 'user',
+                      content: suggestion
+                    }]);
+                    processAIMessage(suggestion);
+                  }}
+                  style={{
+                    padding: '4px 8px',
+                    fontSize: '11px',
+                    backgroundColor: '#f8fafc',
+                    border: '1px solid #e5e7eb',
+                    borderRadius: '12px',
+                    color: '#6b7280',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.target.style.backgroundColor = '#f1f5f9';
+                    e.target.style.borderColor = '#cbd5e1';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.backgroundColor = '#f8fafc';
+                    e.target.style.borderColor = '#e5e7eb';
+                  }}
+                >
+                  {suggestion}
+                </button>
+              ))}
+            </div>
+
+            {/* Chat Input */}
+            <div style={{
+              padding: '16px',
+              borderTop: '1px solid #e5e7eb',
+              borderRadius: '0 0 16px 16px'
+            }}>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <input
+                  type="text"
+                  value={currentMessage}
+                  onChange={(e) => setCurrentMessage(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
+                  placeholder="Ask me about purchase prices..."
+                  style={{
+                    flex: 1,
+                    padding: '10px 12px',
+                    border: '1px solid #d1d5db',
+                    borderRadius: '8px',
+                    fontSize: '14px',
+                    outline: 'none',
+                    transition: 'border-color 0.2s'
+                  }}
+                  onFocus={(e) => e.target.style.borderColor = '#8b5cf6'}
+                  onBlur={(e) => e.target.style.borderColor = '#d1d5db'}
+                />
+                <button
+                  onClick={sendMessage}
+                  disabled={!currentMessage.trim() || isAIThinking}
+                  style={{
+                    padding: '10px 12px',
+                    background: currentMessage.trim() && !isAIThinking 
+                      ? 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)' 
+                      : '#e5e7eb',
+                    color: currentMessage.trim() && !isAIThinking ? 'white' : '#9ca3af',
+                    border: 'none',
+                    borderRadius: '8px',
+                    cursor: currentMessage.trim() && !isAIThinking ? 'pointer' : 'not-allowed',
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  <Send size={16} />
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

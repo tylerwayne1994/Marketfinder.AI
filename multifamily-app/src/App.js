@@ -35,9 +35,60 @@ function App() {
 
   // URL-based routing (path/hash/query param)
   useEffect(() => {
+    // Check if returning from Stripe (has subscription=success in URL)
+    const urlParams = new URLSearchParams(window.location.search);
+    // Always show landing page on fresh visit to root URL
+    if (window.location.pathname === '/' && !window.location.search && !window.location.hash) {
+      localStorage.removeItem('terra_last_page');
+      setCurrentPage('landing');
+      return;
+    }
+    if (urlParams.get('subscription') === 'success') {
+      // Check if user is authenticated
+      const savedAuthState = localStorage.getItem(AUTH_STATE_KEY);
+      const savedUserData = localStorage.getItem(USER_DATA_KEY);
+      
+      if (savedAuthState === 'true' && savedUserData) {
+        // User is logged in - redirect to appropriate page
+        try {
+          const userData = JSON.parse(savedUserData);
+          setCurrentUser(userData);
+          setIsAuthenticated(true);
+          
+          const redirectTo = urlParams.get('redirect');
+          if (redirectTo === 'underwrite') {
+            console.log('Detected 60 page pack purchase, redirecting to underwrite');
+            setCurrentPage('underwrite');
+            localStorage.setItem('terra_last_page', 'underwrite');
+          } else {
+            // Monthly subscription - go to dashboard
+            console.log('Detected monthly subscription, redirecting to dashboard');
+            setCurrentPage('dashboard');
+            localStorage.setItem('terra_last_page', 'dashboard');
+          }
+        } catch (e) {
+          console.error('Error parsing user data:', e);
+          setCurrentPage('login');
+        }
+      } else {
+        // User not logged in - save redirect intent and go to login
+        const redirectTo = urlParams.get('redirect');
+        localStorage.setItem('stripe_payment_complete', 'true');
+        localStorage.setItem('stripe_redirect_to', redirectTo || 'dashboard');
+        console.log('Payment complete but user not logged in - redirecting to login');
+        setCurrentPage('login');
+      }
+      
+      // Clean up URL
+      const newUrl = window.location.pathname;
+      window.history.replaceState({}, document.title, newUrl);
+      return;
+    }
+
     // direct path
     if (window.location.pathname === '/dashboard') {
       setCurrentPage('dashboard');
+      localStorage.setItem('terra_last_page', 'dashboard');
       return;
     }
     // hash
@@ -45,58 +96,93 @@ function App() {
       const hashPath = window.location.hash.substring(1);
       if (hashPath === '/dashboard') {
         setCurrentPage('dashboard');
+        localStorage.setItem('terra_last_page', 'dashboard');
         return;
       }
     }
     // query ?page=
-    const urlParams = new URLSearchParams(window.location.search);
     const pageParam = urlParams.get('page');
     if (pageParam) {
       setCurrentPage(pageParam);
+      localStorage.setItem('terra_last_page', pageParam);
       const newUrl = window.location.pathname;
       window.history.replaceState({}, document.title, newUrl);
+      return;
+    }
+    // Restore last visited page if available
+    const lastPage = localStorage.getItem('terra_last_page');
+    if (lastPage) {
+      setCurrentPage(lastPage);
     }
   }, []);
 
   // Restore saved state if Supabase session is still valid
   useEffect(() => {
     const checkSavedAuthState = async () => {
-      const savedAuthState = localStorage.getItem(AUTH_STATE_KEY);
-      const savedUserData = localStorage.getItem(USER_DATA_KEY);
+      try {
+        console.log("Starting auth state check...");
+        const savedAuthState = localStorage.getItem(AUTH_STATE_KEY);
+        const savedUserData = localStorage.getItem(USER_DATA_KEY);
 
-      if (savedAuthState === 'true' && savedUserData) {
-        try {
-          const { data: { user } } = await supabase.auth.getUser();
-          if (user) {
-            let userData;
-            try {
-              userData = JSON.parse(savedUserData);
-            } catch (e) {
+        // Force exit loading state after 3 seconds as a failsafe
+        setTimeout(() => {
+          console.log("Failsafe timeout triggered");
+          if (isLoading) {
+            setIsLoading(false);
+          }
+        }, 3000);
+
+        if (savedAuthState === 'true' && savedUserData) {
+          try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) {
+              let userData;
+              try {
+                userData = JSON.parse(savedUserData);
+              } catch (e) {
+                console.log("Error parsing user data:", e);
+                localStorage.removeItem(AUTH_STATE_KEY);
+                localStorage.removeItem(USER_DATA_KEY);
+                setCurrentPage('landing');
+                setIsLoading(false);
+                return;
+              }
+              
+              // Restore last visited page if available, otherwise landing
+              const lastPage = localStorage.getItem('terra_last_page');
+              setCurrentUser(userData);
+              setIsAuthenticated(true);
+              if (lastPage) {
+                setCurrentPage(lastPage);
+              } else {
+                setCurrentPage('landing');
+              }
+            } else {
+              console.log("No user found in session");
               localStorage.removeItem(AUTH_STATE_KEY);
               localStorage.removeItem(USER_DATA_KEY);
               setCurrentPage('landing');
-              return;
             }
-            setCurrentUser(userData);
-            setIsAuthenticated(true);
-            console.log('Restored authentication from saved state');
-          } else {
+          } catch (error) {
+            console.error('Error checking saved auth state:', error);
             localStorage.removeItem(AUTH_STATE_KEY);
             localStorage.removeItem(USER_DATA_KEY);
             setCurrentPage('landing');
           }
-        } catch (error) {
-          console.error('Error checking saved auth state:', error);
-          localStorage.removeItem(AUTH_STATE_KEY);
-          localStorage.removeItem(USER_DATA_KEY);
+        } else {
+          console.log("No saved auth state found");
           setCurrentPage('landing');
         }
-      } else {
-        setCurrentPage('landing');
+      } catch (err) {
+        console.error("Unexpected error in auth check:", err);
+      } finally {
+        console.log("Auth check complete, setting isLoading to false");
+        setIsLoading(false);
       }
     };
+    
     checkSavedAuthState();
-  }, []);
+  }, [isLoading]);
 
   // Single Supabase auth listener
   useEffect(() => {
@@ -105,9 +191,32 @@ function App() {
     const handleAuthChange = async (_event, session) => {
       if (!isMounted) return;
       console.log('Auth event:', _event, session ? 'with session' : 'no session');
-
+      
+      // Always make sure we're not stuck in loading state
+      setIsLoading(false);
+      
+      // Special case for SIGNED_IN event - restore last page or go to dashboard if none
+      if (_event === 'SIGNED_IN' && session?.user) {
+        console.log('SIGNED_IN event detected - setting authenticated and redirecting');
+        const savedUserData = localStorage.getItem(USER_DATA_KEY);
+        if (savedUserData) {
+          try {
+            const userData = JSON.parse(savedUserData);
+            setCurrentUser(userData);
+            setIsAuthenticated(true);
+            const lastPage = localStorage.getItem('terra_last_page');
+            setCurrentPage(lastPage || 'dashboard');
+            return;
+          } catch (e) {
+            console.error('Failed to parse saved user data:', e);
+          }
+        }
+        // If no saved user data, fall through to general session handling below
+      }
+      
       try {
         if (session?.user) {
+          console.log("Auth session detected - user authenticated");
           // Try to fetch profile (non-fatal if missing)
           const { data: profile, error: profileError } = await supabase
             .from('profiles')
@@ -186,7 +295,10 @@ function App() {
       if (data.document) setDocumentData(data.document);
       if (data.property) setPropertyData(data.property);
     }
-    if (page) setCurrentPage(page);
+    if (page) {
+      setCurrentPage(page);
+      localStorage.setItem('terra_last_page', page);
+    }
   };
 
   const handleFileUpload = (file) => {
@@ -215,6 +327,16 @@ function App() {
   };
 
   // Initial loading screen
+  useEffect(() => {
+    // Force exit loading state after 3 seconds as a global failsafe
+    const timer = setTimeout(() => {
+      console.log("Global failsafe timeout triggered");
+      setIsLoading(false);
+    }, 3000);
+    
+    return () => clearTimeout(timer);
+  }, []);
+  
   if (isLoading) {
     return (
       <div style={{
@@ -235,6 +357,9 @@ function App() {
             margin: '0 auto 16px'
           }} />
           <p style={{ color: '#666666', fontSize: '1rem' }}>Loading Terra.Ai...</p>
+          <button onClick={() => setIsLoading(false)} style={{ marginTop: '20px', padding: '8px 16px', backgroundColor: '#f0f0f0', border: '1px solid #ddd', borderRadius: '4px', cursor: 'pointer' }}>
+            Click if stuck
+          </button>
         </div>
         <style>
           {`
@@ -268,8 +393,9 @@ function App() {
           return <SignupPage setCurrentPage={handlePageChange} />;
 
         case 'dashboard':
-          // Guard: if not authenticated, show login
+          // Guard: if not authenticated, show login directly
           if (!isAuthenticated || !currentUser) {
+            console.log("Not authenticated, showing login directly");
             return (
               <LoginPage
                 setCurrentPage={handlePageChange}
@@ -278,6 +404,7 @@ function App() {
               />
             );
           }
+          console.log("Rendering dashboard with current user:", currentUser?.email);
           return (
             <DashboardPage
               setCurrentPage={handlePageChange}

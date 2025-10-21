@@ -99,6 +99,8 @@ const PropertyAnalyzerPage = ({ setCurrentPage }) => {
 
  // Existing state
  const [error, setError] = useState("");
+ const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+ const [isLimitReached, setIsLimitReached] = useState(false);
  const [step, setStep] = useState("upload");
  const [file, setFile] = useState(null);
  const [pdfPages, setPdfPages] = useState([]);
@@ -123,7 +125,7 @@ const PropertyAnalyzerPage = ({ setCurrentPage }) => {
          return;
        }
 
-       // Get user profile with subscription info
+       // Get user profile
        const { data: profile, error: profileError } = await supabase
          .from('profiles')
          .select('*')
@@ -137,59 +139,27 @@ const PropertyAnalyzerPage = ({ setCurrentPage }) => {
        }
 
        const userId = session.user.id;
-       const plan = profile?.subscription_plan || 'starter';
-  const status = profile?.subscription_status || 'inactive';
 
        setCurrentUser({
          id: userId,
          email: session.user.email,
          ...profile
        });
-       setUserPlan(plan);
+       setUserPlan('subscribed'); // Single subscription tier
 
-       // Check if user has access to PFA
-       if (plan === 'starter') {
-         setSubscriptionError('PFA requires Pro or Power plan. Please upgrade to access this feature.');
-         setLoading(false);
-         return;
-       }
-
-       if (status !== 'active') {
-         setSubscriptionError('Your subscription is not active. Please update your payment method.');
-         setLoading(false);
-         return;
-       }
-
-       // Get subscription limits for Pro users
-       if (plan === 'pro') {
-         const { data: limits, error: limitsError } = await supabase
-           .from('subscription_limits')
-           .select('*')
-           .eq('plan_name', plan)
-           .single();
-
-         if (!limitsError && limits) {
-           setUserLimits(limits);
+       // Get usage data from backend API
+       try {
+         const response = await fetch(`${API_BASE}/user/usage?user_id=${userId}`);
+         if (response.ok) {
+           const usageData = await response.json();
+           setUserLimits(usageData.limits);
+           setUserUsage(usageData.usage);
          }
-
-         // Get current usage
-         const currentMonth = new Date().toISOString().slice(0, 7);
-         const { data: usage, error: usageError } = await supabase
-           .from('user_usage')
-           .select('*')
-           .eq('user_id', userId)
-           .eq('month_year', currentMonth)
-           .single();
-
-         if (usage) {
-           setUserUsage(usage);
-         } else {
-           setUserUsage({
-             om_pdfs_parsed: 0,
-             pages_processed: 0,
-             underwriting_sessions: 0
-           });
-         }
+       } catch (err) {
+         console.warn('Could not load usage data:', err);
+         // Set defaults if API fails
+         setUserLimits({ pages_per_month: 50, max_pages_per_pdf: 25 });
+         setUserUsage({ pages_processed: 0, om_pdfs_parsed: 0 });
        }
 
      } catch (err) {
@@ -203,74 +173,40 @@ const PropertyAnalyzerPage = ({ setCurrentPage }) => {
    checkUserAccess();
  }, []);
 
- // Function to increment usage
- const incrementUsage = async (userId, usageType, amount = 1) => {
+ // Check 60-page limit before processing
+ const checkPageLimit = async () => {
    try {
      const currentMonth = new Date().toISOString().slice(0, 7);
-     
-     const { data: currentUsage, error: fetchError } = await supabase
+     const { data: usage, error } = await supabase
        .from('user_usage')
-       .select('*')
-       .eq('user_id', userId)
+       .select('pages_processed')
+       .eq('user_id', currentUser.id)
        .eq('month_year', currentMonth)
        .single();
 
-     if (fetchError && fetchError.code !== 'PGRST116') {
-       throw fetchError;
+     if (error && error.code !== 'PGRST116') {
+       console.error('Error checking usage:', error);
+       return { allowed: true }; // Allow if can't check
      }
 
-     const newValue = (currentUsage?.[usageType] || 0) + amount;
+     const pagesUsed = usage?.pages_processed || 0;
+     const pagesRemaining = 60 - pagesUsed;
 
-     const { error: upsertError } = await supabase
-       .from('user_usage')
-       .upsert({
-         user_id: userId,
-         month_year: currentMonth,
-         [usageType]: newValue,
-         ...(currentUsage ? {} : {
-           om_pdfs_parsed: usageType === 'om_pdfs_parsed' ? amount : 0,
-           pages_processed: usageType === 'pages_processed' ? amount : 0,
-           underwriting_sessions: usageType === 'underwriting_sessions' ? amount : 0
-         })
-       }, {
-         onConflict: 'user_id,month_year'
-       });
-
-     if (upsertError) {
-       throw upsertError;
-     }
-
-     // Update local state
-     setUserUsage(prev => ({
-       ...prev,
-       [usageType]: newValue
-     }));
-
-     return true;
-   } catch (error) {
-     console.error('Error incrementing usage:', error);
-     return false;
-   }
- };
-
- // Check if user can process files (usage limits)
- const canProcessFile = () => {
-   if (userPlan === 'power') return { canProcess: true };
-   
-   if (userPlan === 'pro' && userLimits && userUsage) {
-     if (userUsage.om_pdfs_parsed >= userLimits.max_pdfs_per_month) {
-       return {
-         canProcess: false,
-         reason: 'Monthly PDF limit reached. Upgrade to Power for unlimited processing.'
+     if (pagesRemaining <= 0) {
+       setIsLimitReached(true);
+       return { 
+         allowed: false, 
+         pagesUsed, 
+         message: 'You have reached your 60-page limit for this month. Purchase 60 more pages to continue.' 
        };
      }
-     return {
-       canProcess: true,
-       remaining: userLimits.max_pdfs_per_month - userUsage.om_pdfs_parsed
-     };
+
+     setIsLimitReached(false);
+     return { allowed: true, pagesUsed, pagesRemaining };
+   } catch (error) {
+     console.error('Error checking page limit:', error);
+     return { allowed: true }; // Allow if error
    }
-   
-   return { canProcess: true };
  };
 
  const onFileInput = async (e) => {
@@ -357,10 +293,12 @@ const PropertyAnalyzerPage = ({ setCurrentPage }) => {
        return;
      }
 
-     // Check usage limits before processing
-     const accessCheck = canProcessFile();
-     if (!accessCheck.canProcess) {
-       setError(accessCheck.reason);
+     // Check 60-page limit before processing
+     const limitCheck = await checkPageLimit();
+     if (!limitCheck.allowed) {
+       setError(limitCheck.message);
+       setShowUpgradeModal(true);
+       setIsLimitReached(true);
        return;
      }
 
@@ -433,11 +371,7 @@ const PropertyAnalyzerPage = ({ setCurrentPage }) => {
      const analysisJson = await analysisRes.json();
      setHealthCheckResult(analysisJson.health_check);
 
-     // Track usage after successful processing
-     if (file.type === "application/pdf") {
-       await incrementUsage(currentUser.id, 'om_pdfs_parsed', 1);
-       await incrementUsage(currentUser.id, 'pages_processed', selectedPages.size);
-     }
+     // Usage tracking is now handled by the backend automatically
 
      setProgress(100);
      setProcessingMsg("Health check complete!");
@@ -504,11 +438,7 @@ const PropertyAnalyzerPage = ({ setCurrentPage }) => {
      const analysisJson = await analysisRes.json();
      setHealthCheckResult(analysisJson.health_check);
 
-     // Track usage after successful processing
-     if (file.type === "application/pdf") {
-       await incrementUsage(currentUser.id, 'om_pdfs_parsed', 1);
-       await incrementUsage(currentUser.id, 'pages_processed', selectedPages.size);
-     }
+     // Usage tracking is now handled by the backend automatically
 
      setProgress(100);
      setProcessingMsg("Health check complete!");
@@ -592,22 +522,6 @@ const PropertyAnalyzerPage = ({ setCurrentPage }) => {
                {subscriptionError}
              </p>
 
-             {userPlan === 'starter' && (
-               <div style={{ marginBottom: '24px' }}>
-                 <div style={{ fontSize: '14px', color: '#7f1d1d', marginBottom: '16px' }}>
-                   Property Financial Analysis is available with:
-                 </div>
-                 <div style={{ display: 'flex', gap: '16px', justifyContent: 'center' }}>
-                   <div style={{ padding: '8px 16px', background: '#fbbf24', color: 'white', borderRadius: '8px', fontSize: '14px', fontWeight: '600' }}>
-                     Pro - $99/month
-                   </div>
-                   <div style={{ padding: '8px 16px', background: '#8b5cf6', color: 'white', borderRadius: '8px', fontSize: '14px', fontWeight: '600' }}>
-                     Power - $199/month
-                   </div>
-                 </div>
-               </div>
-             )}
-
              <button
                onClick={() => setCurrentPage ? setCurrentPage('dashboard') : window.location.href = '/dashboard'}
                style={{
@@ -615,7 +529,7 @@ const PropertyAnalyzerPage = ({ setCurrentPage }) => {
                  background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)'
                }}
              >
-               <Crown size={18} /> Upgrade Your Plan
+               <ArrowLeft size={18} /> Back to Dashboard
              </button>
            </div>
          </div>
@@ -626,8 +540,6 @@ const PropertyAnalyzerPage = ({ setCurrentPage }) => {
 
  // RENDER FUNCTIONS
  if (step === "upload") {
-   const accessCheck = canProcessFile();
-   
    return (
      <div style={styles.page}>
        <div style={styles.container}>
@@ -640,51 +552,17 @@ const PropertyAnalyzerPage = ({ setCurrentPage }) => {
            </button>
          </div>
          
-         {/* Current Plan Display */}
-         <div style={{ textAlign: 'center', marginBottom: '24px' }}>
-           <div style={{
-             padding: '12px 24px',
-             backgroundColor: '#f0f9ff',
-             border: '1px solid #dbeafe',
-             borderRadius: '8px',
-             display: 'inline-flex',
-             alignItems: 'center',
-             gap: '8px'
-           }}>
-             <Crown size={16} color="#3b82f6" />
-             <span style={{ fontSize: '14px', fontWeight: '600', color: '#1e40af' }}>
-               Current Plan: {userPlan?.charAt(0).toUpperCase() + userPlan?.slice(1)}
-             </span>
-           </div>
-
-           {userPlan === 'pro' && userLimits && userUsage && (
-             <div style={{
-               marginTop: '12px',
-               padding: '8px 16px',
-               backgroundColor: accessCheck.canProcess ? '#fef3c7' : '#fee2e2',
-               border: `1px solid ${accessCheck.canProcess ? '#fbbf24' : '#ef4444'}`,
-               borderRadius: '6px',
-               display: 'inline-block'
-             }}>
-               <span style={{ fontSize: '12px', color: accessCheck.canProcess ? '#92400e' : '#991b1b' }}>
-                 PDFs this month: {userUsage.om_pdfs_parsed}/{userLimits.max_pdfs_per_month} used
-                 {!accessCheck.canProcess && ' - LIMIT REACHED'}
-               </span>
-             </div>
-           )}
-         </div>
-         
          <div style={{ padding: "20px 0" }}>
            <h1 style={styles.h1}>Financial Health Check</h1>
            <p style={{ fontSize: 16, color: "#6b7280", textAlign: "center", marginBottom: 24 }}>
              Upload your P&L, T12, or Rent Roll to get an AI-powered property health analysis
            </p>
 
-           {(error || !accessCheck.canProcess) && (
+           {error && (
              <div style={{ marginBottom: 20, padding: 16, background: "#fef2f2", border: "1px solid #fecaca", borderRadius: 12, display: "flex", gap: 12, alignItems: "center" }}>
                <AlertCircle size={20} color="#b91c1c" />
                <span style={{ color: "#991b1b", fontSize: 14 }}>
-                 {error || accessCheck.reason}
+                 {error}
                </span>
              </div>
            )}
@@ -697,12 +575,10 @@ const PropertyAnalyzerPage = ({ setCurrentPage }) => {
                  padding: 48,
                  textAlign: "center",
                  background: "linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)",
-                 opacity: accessCheck.canProcess ? 1 : 0.5
                }}
                onDragOver={(e) => e.preventDefault()}
                onDrop={(e) => {
                  e.preventDefault();
-                 if (!accessCheck.canProcess) return;
                  const f = e.dataTransfer.files[0];
                  if (f) onFileInput({ target: { files: [f] } });
                }}
@@ -722,38 +598,31 @@ const PropertyAnalyzerPage = ({ setCurrentPage }) => {
                  accept=".pdf,.csv,.xlsx,.xls" 
                  onChange={onFileInput} 
                  style={{ display: "none" }} 
-                 disabled={!accessCheck.canProcess}
                />
                <label htmlFor="fileInput" style={{ 
                  ...styles.button, 
-                 cursor: accessCheck.canProcess ? "pointer" : "not-allowed", 
-                 background: accessCheck.canProcess ? "linear-gradient(135deg, #3b82f6, #1d4ed8)" : "#9ca3af"
+                 cursor: "pointer", 
+                 background: "linear-gradient(135deg, #3b82f6, #1d4ed8)"
                }}>
                  <Upload size={18} /> Choose File
                </label>
-               
-               {accessCheck.remaining !== undefined && (
-                 <div style={{ marginTop: 12, fontSize: 12, color: "#6b7280" }}>
-                   {accessCheck.remaining} PDF analyses remaining this month
-                 </div>
-               )}
              </div>
            </div>
 
-           {!accessCheck.canProcess && userPlan === 'pro' && (
-             <div style={{
+           <div style={{
                marginTop: '24px',
                padding: '24px',
                background: 'linear-gradient(135deg, #f59e0b, #d97706)',
                borderRadius: '12px',
                textAlign: 'center',
-               color: 'white'
+               color: 'white',
+               display: 'none'
              }}>
                <h3 style={{ fontSize: '1.25rem', fontWeight: '700', marginBottom: '12px', color: 'white' }}>
                  Monthly Limit Reached
                </h3>
                <p style={{ marginBottom: '20px', opacity: 0.9 }}>
-                 You've used all {userLimits?.max_pdfs_per_month} PDF analyses this month. Upgrade to Power for unlimited processing.
+                 Placeholder - hidden
                </p>
                <button
                  onClick={() => setCurrentPage ? setCurrentPage('dashboard') : window.location.href = '/dashboard'}
@@ -771,7 +640,6 @@ const PropertyAnalyzerPage = ({ setCurrentPage }) => {
                  Upgrade to Power Plan
                </button>
              </div>
-           )}
          </div>
        </div>
      </div>
@@ -1378,6 +1246,99 @@ const PropertyAnalyzerPage = ({ setCurrentPage }) => {
          {health.source_check && (
            <div style={{ marginTop: 24, padding: 12, background: "#f3f4f6", borderRadius: 8, fontSize: 12, color: "#6b7280", textAlign: "center" }}>
              {health.source_check}
+           </div>
+         )}
+
+         {/* Upgrade Modal */}
+         {showUpgradeModal && (
+           <div style={{
+             position: 'fixed',
+             top: 0,
+             left: 0,
+             right: 0,
+             bottom: 0,
+             background: 'rgba(0, 0, 0, 0.5)',
+             display: 'flex',
+             alignItems: 'center',
+             justifyContent: 'center',
+             zIndex: 9999,
+           }}>
+             <div style={{
+               background: '#fff',
+               borderRadius: 16,
+               padding: 32,
+               maxWidth: 500,
+               width: '90%',
+               boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+             }}>
+               <div style={{ textAlign: 'center', marginBottom: 24 }}>
+                 <div style={{ fontSize: 48, marginBottom: 16 }}>📄</div>
+                 <h2 style={{ fontSize: 24, fontWeight: 700, color: '#111827', marginBottom: 12 }}>
+                   60-Page Limit Reached
+                 </h2>
+                 <p style={{ fontSize: 16, color: '#6b7280', lineHeight: 1.6 }}>
+                   You've processed 60 pages this month. Purchase 60 more pages to continue analyzing deals.
+                 </p>
+               </div>
+
+               <div style={{ 
+                 background: 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)',
+                 border: '2px solid #0ea5e9',
+                 borderRadius: 12,
+                 padding: 24,
+                 marginBottom: 24,
+                 textAlign: 'center',
+               }}>
+                 <div style={{ fontSize: 14, color: '#0369a1', fontWeight: 600, marginBottom: 8 }}>
+                   60 PAGE PACK
+                 </div>
+                 <div style={{ fontSize: 36, fontWeight: 800, color: '#0369a1' }}>
+                   $29
+                 </div>
+                 <div style={{ fontSize: 14, color: '#0369a1', marginTop: 4 }}>
+                   One-time purchase • No subscription
+                 </div>
+               </div>
+
+               <div style={{ display: 'flex', gap: 12 }}>
+                 <button
+                   onClick={() => {
+                     const userId = currentUser?.id;
+                     window.location.href = `https://buy.stripe.com/test_aFacMY6Btb4Sd2RcLFf3a01?client_reference_id=${userId}&redirect=underwrite`;
+                   }}
+                   style={{
+                     flex: 1,
+                     padding: '14px 28px',
+                     background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
+                     color: '#fff',
+                     border: 'none',
+                     borderRadius: 10,
+                     fontSize: 16,
+                     fontWeight: 700,
+                     cursor: 'pointer',
+                     boxShadow: '0 4px 6px -1px rgba(37, 99, 235, 0.3)',
+                   }}
+                 >
+                   Buy 60 Pages - $29
+                 </button>
+               </div>
+               <button
+                 onClick={() => window.location.href = '/'}
+                 style={{
+                   width: '100%',
+                   marginTop: 12,
+                   padding: '10px',
+                   background: 'transparent',
+                   color: '#6b7280',
+                   border: 'none',
+                   fontSize: 14,
+                   cursor: 'pointer',
+                   textDecoration: 'underline',
+                 }}
+               >
+                 Go to Dashboard
+               </button>
+             </div>
            </div>
          )}
        </div>

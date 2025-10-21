@@ -1,17 +1,48 @@
+
 import React, { useEffect, useState } from "react";
 import { supabase } from './lib/supabase';
 import {
   Upload, ArrowRight, ArrowLeft, AlertCircle, Loader, Check, TrendingUp,
-  DollarSign, Building, FileText, ThumbsUp, ThumbsDown, AlertTriangle,
-  PieChart as PieChartIcon, BarChart3, Calculator, CheckCircle, XCircle, Home, Edit3,
-  Save, RefreshCw, Activity, Target, Briefcase, Download, Share2, Award
+  DollarSign, Building, FileText, ThumbsUp, AlertTriangle,
+  Calculator, CheckCircle, XCircle, Home, Edit3,
+  Save, RefreshCw, Activity, Target, Briefcase, Award, GitCompare, Layers
 } from "lucide-react";
 import { 
-  PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, 
+  PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, 
   ResponsiveContainer, LineChart, Line, AreaChart, Area
 } from 'recharts';
 
-const API_BASE = (typeof import.meta !== "undefined" && import.meta.env?.VITE_API_BASE_URL) || "http://localhost:8010";
+// ...existing code...
+
+const autoCalculateFinancing = (pricing, setVerifiedData) => {
+  const price = pricing?.price;
+  const downPct = pricing?.down_payment_pct;
+  const rate = pricing?.interest_rate;
+  const termYears = pricing?.term_years;
+  const amortYears = pricing?.amortization_years || termYears;
+  if (price && downPct != null && rate && amortYears) {
+    const loanAmount = price * (1 - downPct / 100);
+    const monthlyRate = rate;
+    const n = amortYears * 12;
+    let monthlyPayment = 0;
+    if (monthlyRate > 0) {
+      monthlyPayment = loanAmount * (monthlyRate / 12) / (1 - Math.pow(1 + monthlyRate / 12, -n));
+    } else {
+      monthlyPayment = loanAmount / n;
+    }
+    setVerifiedData(prev => ({
+      ...prev,
+      pricing_financing: {
+        ...prev.pricing_financing,
+        loan_amount: loanAmount,
+        monthly_payment: monthlyPayment,
+        annual_debt_service: monthlyPayment * 12
+      }
+    }));
+  }
+};
+
+const API_BASE = (typeof import.meta !== "undefined" && import.meta.env?.VITE_API_BASE_URL) || "https://marketfinder-ai.onrender.com";
 
 const COLORS = {
   primary: '#4F46E5',
@@ -156,7 +187,11 @@ function pagesToSpec(sortedPages) {
 }
 
 const EnhancedUploadPage = ({ setCurrentPage }) => {
+  // County autocomplete state
+  const [countyMatches, setCountyMatches] = useState([]);
   const [error, setError] = useState("");
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [isLimitReached, setIsLimitReached] = useState(false);
   // Subscription and user state - ADD THESE
   const [currentUser, setCurrentUser] = useState(null);
   const [userPlan, setUserPlan] = useState(null);
@@ -190,23 +225,12 @@ const EnhancedUploadPage = ({ setCurrentPage }) => {
 
         const userId = session.user.id;
         const plan = profile?.subscription_plan || 'starter';
-  const status = profile?.subscription_status || 'inactive';
 
         setCurrentUser({ id: userId, email: session.user.email, ...profile });
         setUserPlan(plan);
 
-        if (plan === 'starter') {
-          setSubscriptionError('AI Document Analysis requires Pro or Power plan. Please upgrade.');
-          setSubscriptionLoading(false);
-          return;
-        }
-
-        if (status !== 'active') {
-          setSubscriptionError('Your subscription is not active. Please update payment method.');
-          setSubscriptionLoading(false);
-          return;
-        }
-
+        // Remove subscription tier checks; all users can access upload
+        // Only check usage limits below
         if (plan === 'pro') {
           const { data: limits } = await supabase
             .from('subscription_limits')
@@ -235,49 +259,43 @@ const EnhancedUploadPage = ({ setCurrentPage }) => {
 
     checkUserAccess();
   }, []);
-  // Function to increment usage - ADD THIS
-  const incrementUsage = async (userId, usageType, amount = 1) => {
+  
+  // Check 60-page limit before processing
+  const checkPageLimit = async () => {
     try {
       const currentMonth = new Date().toISOString().slice(0, 7);
-      const { data: currentUsage } = await supabase
+      const { data: usage, error } = await supabase
         .from('user_usage')
-        .select('*')
-        .eq('user_id', userId)
+        .select('pages_processed')
+        .eq('user_id', currentUser.id)
         .eq('month_year', currentMonth)
         .single();
 
-      const newValue = (currentUsage?.[usageType] || 0) + amount;
-      await supabase
-        .from('user_usage')
-        .upsert({
-          user_id: userId,
-          month_year: currentMonth,
-          [usageType]: newValue,
-          ...(currentUsage ? {} : {
-            om_pdfs_parsed: usageType === 'om_pdfs_parsed' ? amount : 0,
-            pages_processed: usageType === 'pages_processed' ? amount : 0,
-            underwriting_sessions: usageType === 'underwriting_sessions' ? amount : 0
-          })
-        }, { onConflict: 'user_id,month_year' });
-
-      setUserUsage(prev => ({ ...prev, [usageType]: newValue }));
-      return true;
-    } catch (error) {
-      console.error('Error incrementing usage:', error);
-      return false;
-    }
-  };
-  // Check if user can process files - ADD THIS
-  const canProcessFile = () => {
-    if (userPlan === 'power') return { canProcess: true };
-    if (userPlan === 'pro' && userLimits && userUsage) {
-      if (userUsage.om_pdfs_parsed >= userLimits.max_pdfs_per_month) {
-        return { canProcess: false, reason: 'Monthly PDF limit reached. Upgrade to Power for unlimited processing.' };
+      if (error && error.code !== 'PGRST116') {
+        console.error('Error checking usage:', error);
+        return { allowed: true }; // Allow if can't check
       }
-      return { canProcess: true, remaining: userLimits.max_pdfs_per_month - userUsage.om_pdfs_parsed };
+
+      const pagesUsed = usage?.pages_processed || 0;
+      const pagesRemaining = 60 - pagesUsed;
+
+      if (pagesRemaining <= 0) {
+        setIsLimitReached(true);
+        return { 
+          allowed: false, 
+          pagesUsed, 
+          message: 'You have reached your 60-page limit for this month. Purchase 60 more pages to continue.' 
+        };
+      }
+
+      setIsLimitReached(false);
+      return { allowed: true, pagesUsed, pagesRemaining };
+    } catch (error) {
+      console.error('Error checking page limit:', error);
+      return { allowed: true }; // Allow if error
     }
-    return { canProcess: true };
   };
+  
   const [step, setStep] = useState("upload");
   const [file, setFile] = useState(null);
   const [pdfPages, setPdfPages] = useState([]);
@@ -286,12 +304,14 @@ const EnhancedUploadPage = ({ setCurrentPage }) => {
   const [progress, setProgress] = useState(0);
   const [processingMsg, setProcessingMsg] = useState("");
   const [backendData, setBackendData] = useState(null);
-  const [showMonthly, setShowMonthly] = useState(false);
   const [verifiedData, setVerifiedData] = useState(null);
   const [validationErrors, setValidationErrors] = useState({});
   const [activeTab, setActiveTab] = useState("property");
   const [resultsTab, setResultsTab] = useState('overview');
   const [cashFlowYears, setCashFlowYears] = useState(10);
+  const [proformaRentRows, setProformaRentRows] = useState([{ type: '', units: '', rent: '' }]);
+  const [proformaPurchasePrice, setProformaPurchasePrice] = useState(0);
+  const [proformaMonthlyRent, setProformaMonthlyRent] = useState(0);
 
   const parsed = backendData?.parsed || null;
 
@@ -479,12 +499,16 @@ const EnhancedUploadPage = ({ setCurrentPage }) => {
 
   const processNow = async () => {
     setError("");
-    // Check usage limits before processing - ADD THIS BLOCK
-    const accessCheck = canProcessFile();
-    if (!accessCheck.canProcess) {
-      setError(accessCheck.reason);
+    
+    // Check 60-page limit before processing
+    const limitCheck = await checkPageLimit();
+    if (!limitCheck.allowed) {
+      setError(limitCheck.message);
+      setShowUpgradeModal(true);
+      setIsLimitReached(true);
       return;
     }
+    
     try {
       if (!file) {
         setError("No file loaded");
@@ -533,13 +557,20 @@ const EnhancedUploadPage = ({ setCurrentPage }) => {
       setProgress(30);
       setProcessingMsg("OCR processing with Mistral...");
 
-      const res = await fetch(`${API_BASE}/api/ai-parse-pdf`, {
+      console.log("[DEBUG] About to send request to:", `${API_BASE}/ocr/underwrite`);
+      console.log("[DEBUG] User ID being sent:", currentUser?.id);
+      console.log("[DEBUG] Selected pages:", selectedPages.size);
+
+      const res = await fetch(`${API_BASE}/ocr/underwrite`, {
         method: "POST",
         body: fd,
       });
 
       setProgress(60);
       setProcessingMsg("AI analyzing deal with Claude...");
+
+      console.log("[DEBUG] Backend response status:", res.status);
+      console.log("[DEBUG] Backend response ok:", res.ok);
 
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({}));
@@ -570,11 +601,7 @@ const EnhancedUploadPage = ({ setCurrentPage }) => {
 
       setProgress(100);
       setProcessingMsg("Complete! Please verify data...");
-      // Track usage after successful processing - ADD THIS BLOCK
-      if (userPlan === 'pro') {
-        await incrementUsage(currentUser.id, 'om_pdfs_parsed', 1);
-        await incrementUsage(currentUser.id, 'pages_processed', selectedPages.size);
-      }
+      // Usage tracking is now handled by the backend automatically
       setStep("verify");
     } catch (e) {
       setError(e.message || String(e));
@@ -596,6 +623,24 @@ const EnhancedUploadPage = ({ setCurrentPage }) => {
       delete newErrors[`${section}.${field}`];
       return newErrors;
     });
+  };
+
+  const handleProformaRentChange = (index, field, value) => {
+    setProformaRentRows(prev => {
+      const updated = [...prev];
+      updated[index] = { ...updated[index], [field]: value };
+      return updated;
+    });
+  };
+
+  const addProformaRentRow = () => {
+    setProformaRentRows(prev => [...prev, { type: '', units: '', rent: '' }]);
+  };
+
+  const removeProformaRentRow = (index) => {
+    if (proformaRentRows.length > 1) {
+      setProformaRentRows(prev => prev.filter((_, i) => i !== index));
+    }
   };
 
   const validateRequiredFields = () => {
@@ -637,6 +682,21 @@ const EnhancedUploadPage = ({ setCurrentPage }) => {
     // CRITICAL FIX: Always recalculate financing first
     recalculateFinancingMetrics();
     
+    // AUTO-CALCULATE GPR from proforma data if available
+    if (verifiedData.proforma?.rent_schedule && verifiedData.proforma.rent_schedule.length > 0) {
+      let calculatedGPR = 0;
+      verifiedData.proforma.rent_schedule.forEach(row => {
+        const units = parseFloat(row.units) || 0;
+        const rent = parseFloat(row.rent) || 0;
+        calculatedGPR += units * rent * 12; // Annual rent
+      });
+      
+      if (calculatedGPR > 0) {
+        verifiedData.pnl.gross_potential_rent = calculatedGPR;
+        verifiedData.pnl.gross_potential_rent_source = 'proforma';
+      }
+    }
+    
     const price = parseFloat(verifiedData.pricing_financing?.price) || 0;
     const units = parseFloat(verifiedData.property?.units) || 0;
     const grossRent = parseFloat(verifiedData.pnl?.gross_potential_rent) || 0;
@@ -671,14 +731,12 @@ const EnhancedUploadPage = ({ setCurrentPage }) => {
       verifiedData.expenses.utilities = utilities;
     }
     
-    // Calculate total operating expenses
-    totalExpenses += (verifiedData.expenses?.taxes || 0) +
-                    (verifiedData.expenses?.insurance || 0) +
-                    (verifiedData.expenses?.utilities || 0) +
-                    (verifiedData.expenses?.repairs_maintenance || 0) +
-                    (verifiedData.expenses?.management || 0) +
-                    (verifiedData.expenses?.payroll || 0) +
-                    (verifiedData.expenses?.other || 0);
+  // Calculate total operating expenses (exclude taxes and insurance)
+  totalExpenses += (verifiedData.expenses?.utilities || 0) +
+          (verifiedData.expenses?.repairs_maintenance || 0) +
+          (verifiedData.expenses?.management || 0) +
+          (verifiedData.expenses?.payroll || 0) +
+          (verifiedData.expenses?.other || 0);
     
     if (totalExpenses > 0) {
       verifiedData.pnl.operating_expenses = totalExpenses;
@@ -722,6 +780,17 @@ const EnhancedUploadPage = ({ setCurrentPage }) => {
     if (!validateRequiredFields()) {
       setError("Please fill in all required fields marked in red");
       return;
+    }
+    
+    // SAVE PROFORMA DATA: Filter out empty rows and add to verifiedData
+    const validProformaRows = proformaRentRows.filter(row => 
+      row.type && row.units && row.rent
+    );
+    
+    if (validProformaRows.length > 0) {
+      verifiedData.proforma = {
+        rent_schedule: validProformaRows
+      };
     }
     
     // CRITICAL FIX: Validate debt service calculation
@@ -779,7 +848,6 @@ const EnhancedUploadPage = ({ setCurrentPage }) => {
     const price = parsed?.pricing_financing?.price || 0;
     
     for (let i = 1; i <= 10; i++) {
-      const year = 2024 + i;
       const projectedCashFlow = cashFlow * Math.pow(1.03, i); // 3% annual growth
       const propertyValue = price * Math.pow(1.04, i); // 4% appreciation
       const netWorth = propertyValue - (parsed?.pricing_financing?.loan_amount || 0) * Math.pow(0.97, i);
@@ -993,9 +1061,14 @@ const EnhancedUploadPage = ({ setCurrentPage }) => {
 
             <div style={{ display: "flex", gap: 12, justifyContent: "center", marginTop: 24 }}>
               <button
-                style={styles.button}
-                disabled={selectedPages.size === 0}
+                style={{
+                  ...styles.button,
+                  opacity: (selectedPages.size === 0 || isLimitReached) ? 0.5 : 1,
+                  cursor: (selectedPages.size === 0 || isLimitReached) ? 'not-allowed' : 'pointer'
+                }}
+                disabled={selectedPages.size === 0 || isLimitReached}
                 onClick={processNow}
+                title={isLimitReached ? 'Page limit reached. Purchase more pages to continue.' : ''}
               >
                 Process Selected Pages <ArrowRight size={18} />
               </button>
@@ -1094,7 +1167,7 @@ const EnhancedUploadPage = ({ setCurrentPage }) => {
           )}
 
           <div style={{ display: "flex", gap: 4, marginBottom: 24, background: "#f9fafb", padding: 4, borderRadius: 12 }}>
-            {tabs.map(tab => {
+            {[...tabs, { id: "proforma", label: "Proforma", icon: FileText }].map(tab => {
               const Icon = tab.icon;
               return (
                 <button
@@ -1124,6 +1197,201 @@ const EnhancedUploadPage = ({ setCurrentPage }) => {
               );
             })}
           </div>
+          {activeTab === "proforma" && (
+            <div style={styles.card}>
+              <h3 style={{ marginBottom: 20, display: "flex", alignItems: "center", gap: 8 }}>
+                <FileText size={20} /> Proforma
+              </h3>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 20 }}>
+                {/* Purchase Price */}
+                <div>
+                  <label style={{ display: "block", marginBottom: 6, fontSize: 13, color: "#6b7280", fontWeight: 500 }}>Purchase Price</label>
+                  <input type="number" style={styles.input} placeholder="Enter purchase price" />
+                  {verifiedData?.pricing_financing?.price && (
+                    <div style={{ fontSize: 12, color: '#6b7280', marginTop: 2 }}>Current: {verifiedData.pricing_financing.price}</div>
+                  )}
+                </div>
+                {/* Insurance */}
+                <div>
+                  <label style={{ display: "block", marginBottom: 6, fontSize: 13, color: "#6b7280", fontWeight: 500 }}>Insurance</label>
+                  <input type="number" style={styles.input} placeholder="Enter insurance" />
+                  {verifiedData?.expenses?.insurance && (
+                    <div style={{ fontSize: 12, color: '#6b7280', marginTop: 2 }}>Current: {verifiedData.expenses.insurance}</div>
+                  )}
+                </div>
+                {/* Taxes */}
+                <div>
+                  <label style={{ display: "block", marginBottom: 6, fontSize: 13, color: "#6b7280", fontWeight: 500 }}>Taxes</label>
+                  <input type="number" style={styles.input} placeholder="Enter taxes" />
+                  {verifiedData?.expenses?.taxes && (
+                    <div style={{ fontSize: 12, color: '#6b7280', marginTop: 2 }}>Current: {verifiedData.expenses.taxes}</div>
+                  )}
+                </div>
+                {/* Annual Debt Service */}
+                <div>
+                  <label style={{ display: "block", marginBottom: 6, fontSize: 13, color: "#6b7280", fontWeight: 500 }}>Annual Debt Service</label>
+                  <input type="number" style={styles.input} placeholder="Enter annual debt service" />
+                  {verifiedData?.pricing_financing?.annual_debt_service && (
+                    <div style={{ fontSize: 12, color: '#6b7280', marginTop: 2 }}>Current: {Number(verifiedData.pricing_financing.annual_debt_service).toFixed(2)}</div>
+                  )}
+                </div>
+                {/* Property Management */}
+                <div>
+                  <label style={{ display: "block", marginBottom: 6, fontSize: 13, color: "#6b7280", fontWeight: 500 }}>Property Management (%)</label>
+                  <input type="number" style={styles.input} placeholder="Enter property management %" />
+                  {verifiedData?.expenses?.property_management_pct && (
+                    <div style={{ fontSize: 12, color: '#6b7280', marginTop: 2 }}>Current: {verifiedData.expenses.property_management_pct}</div>
+                  )}
+                </div>
+                {/* Vacancy (%) */}
+                <div>
+                  <label style={{ display: "block", marginBottom: 6, fontSize: 13, color: "#6b7280", fontWeight: 500 }}>Vacancy (%)</label>
+                  <input type="number" style={styles.input} placeholder="Enter vacancy %" />
+                  {verifiedData?.expenses?.vacancy_pct && (
+                    <div style={{ fontSize: 12, color: '#6b7280', marginTop: 2 }}>Current: {verifiedData.expenses.vacancy_pct}</div>
+                  )}
+                </div>
+                {/* CapEx (%) */}
+                <div>
+                  <label style={{ display: "block", marginBottom: 6, fontSize: 13, color: "#6b7280", fontWeight: 500 }}>CapEx (%)</label>
+                  <input type="number" style={styles.input} placeholder="Enter CapEx %" />
+                  {verifiedData?.expenses?.capex_pct && (
+                    <div style={{ fontSize: 12, color: '#6b7280', marginTop: 2 }}>Current: {verifiedData.expenses.capex_pct}</div>
+                  )}
+                </div>
+                {/* Payroll */}
+                <div>
+                  <label style={{ display: "block", marginBottom: 6, fontSize: 13, color: "#6b7280", fontWeight: 500 }}>Payroll</label>
+                  <input type="number" style={styles.input} placeholder="Enter payroll" />
+                  {verifiedData?.expenses?.payroll && (
+                    <div style={{ fontSize: 12, color: '#6b7280', marginTop: 2 }}>Current: {verifiedData.expenses.payroll}</div>
+                  )}
+                </div>
+                {/* Utilities */}
+                <div>
+                  <label style={{ display: "block", marginBottom: 6, fontSize: 13, color: "#6b7280", fontWeight: 500 }}>Gas (Monthly)</label>
+                  <input type="number" style={styles.input} placeholder="Enter monthly gas" />
+                  {verifiedData?.expenses?.gas && (
+                    <div style={{ fontSize: 12, color: '#6b7280', marginTop: 2 }}>Current: {verifiedData.expenses.gas}</div>
+                  )}
+                </div>
+                <div>
+                  <label style={{ display: "block", marginBottom: 6, fontSize: 13, color: "#6b7280", fontWeight: 500 }}>Electrical (Monthly)</label>
+                  <input type="number" style={styles.input} placeholder="Enter monthly electrical" />
+                  {verifiedData?.expenses?.electrical && (
+                    <div style={{ fontSize: 12, color: '#6b7280', marginTop: 2 }}>Current: {verifiedData.expenses.electrical}</div>
+                  )}
+                </div>
+                <div>
+                  <label style={{ display: "block", marginBottom: 6, fontSize: 13, color: "#6b7280", fontWeight: 500 }}>Water (Monthly)</label>
+                  <input type="number" style={styles.input} placeholder="Enter monthly water" />
+                  {verifiedData?.expenses?.water && (
+                    <div style={{ fontSize: 12, color: '#6b7280', marginTop: 2 }}>Current: {verifiedData.expenses.water}</div>
+                  )}
+                </div>
+                <div>
+                  <label style={{ display: "block", marginBottom: 6, fontSize: 13, color: "#6b7280", fontWeight: 500 }}>Sewer (Monthly)</label>
+                  <input type="number" style={styles.input} placeholder="Enter monthly sewer" />
+                  {verifiedData?.expenses?.sewer && (
+                    <div style={{ fontSize: 12, color: '#6b7280', marginTop: 2 }}>Current: {verifiedData.expenses.sewer}</div>
+                  )}
+                </div>
+                <div>
+                  <label style={{ display: "block", marginBottom: 6, fontSize: 13, color: "#6b7280", fontWeight: 500 }}>Trash (Monthly)</label>
+                  <input type="number" style={styles.input} placeholder="Enter monthly trash" />
+                  {verifiedData?.expenses?.trash && (
+                    <div style={{ fontSize: 12, color: '#6b7280', marginTop: 2 }}>Current: {verifiedData.expenses.trash}</div>
+                  )}
+                </div>
+                <div>
+                  <label style={{ display: "block", marginBottom: 6, fontSize: 13, color: "#6b7280", fontWeight: 500 }}>Total Utilities</label>
+                  <input type="number" style={styles.input} placeholder="Enter total utilities" />
+                  {verifiedData?.expenses?.utilities && (
+                    <div style={{ fontSize: 12, color: '#6b7280', marginTop: 2 }}>Current: {verifiedData.expenses.utilities}</div>
+                  )}
+                </div>
+              </div>
+
+              {/* Proforma Rents Section */}
+              <div style={{ marginTop: 32, paddingTop: 20, borderTop: "2px solid #e5e7eb" }}>
+                <h4 style={{ marginBottom: 16, fontSize: 15, fontWeight: 600, color: "#374151" }}>Proforma Rents</h4>
+                
+                {proformaRentRows.map((row, index) => (
+                  <div key={index} style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr auto", gap: 20, marginBottom: 12 }}>
+                    <div>
+                      <label style={{ display: "block", marginBottom: 6, fontSize: 13, color: "#6b7280", fontWeight: 500 }}>Type (Bed/Bath)</label>
+                      <input 
+                        type="text" 
+                        style={styles.input} 
+                        placeholder="e.g., 2BR/2BA" 
+                        value={row.type}
+                        onChange={(e) => handleProformaRentChange(index, 'type', e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <label style={{ display: "block", marginBottom: 6, fontSize: 13, color: "#6b7280", fontWeight: 500 }}>Units</label>
+                      <input 
+                        type="number" 
+                        style={styles.input} 
+                        placeholder="Number of units" 
+                        value={row.units}
+                        onChange={(e) => handleProformaRentChange(index, 'units', e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <label style={{ display: "block", marginBottom: 6, fontSize: 13, color: "#6b7280", fontWeight: 500 }}>Proforma Rent</label>
+                      <input 
+                        type="number" 
+                        style={styles.input} 
+                        placeholder="Enter proforma rent" 
+                        value={row.rent}
+                        onChange={(e) => handleProformaRentChange(index, 'rent', e.target.value)}
+                      />
+                    </div>
+                    <div style={{ display: "flex", alignItems: "flex-end" }}>
+                      {proformaRentRows.length > 1 && (
+                        <button
+                          onClick={() => removeProformaRentRow(index)}
+                          style={{
+                            padding: "10px 12px",
+                            background: "#ef4444",
+                            color: "white",
+                            border: "none",
+                            borderRadius: 8,
+                            cursor: "pointer",
+                            fontSize: 13,
+                            fontWeight: 500
+                          }}
+                        >
+                          Remove
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+
+                <button
+                  onClick={addProformaRentRow}
+                  style={{
+                    marginTop: 12,
+                    padding: "10px 16px",
+                    background: "linear-gradient(135deg, #10b981, #059669)",
+                    color: "white",
+                    border: "none",
+                    borderRadius: 8,
+                    cursor: "pointer",
+                    fontSize: 14,
+                    fontWeight: 500,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8
+                  }}
+                >
+                  + Add Another Unit Type
+                </button>
+              </div>
+            </div>
+          )}
 
           {activeTab === "property" && (
             <div style={styles.card}>
@@ -1132,6 +1400,83 @@ const EnhancedUploadPage = ({ setCurrentPage }) => {
                 <span style={{ marginLeft: "auto", fontSize: 13, color: "#ef4444" }}>* Required fields</span>
               </h3>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 20 }}>
+                  <div>
+                    <label style={{ display: "block", marginBottom: 6, fontSize: 13, color: "#6b7280", fontWeight: 500 }}>
+                      County Name (Type exactly: e.g. "Autauga County")
+                    </label>
+                    <input
+                      type="text"
+                      style={{
+                        ...styles.input,
+                        ...(verifiedData?.property?.county ? styles.inputSuccess : {})
+                      }}
+                      value={verifiedData?.property?.county || ""}
+                      onChange={async (e) => {
+                        const value = e.target.value;
+                        updateVerifiedField("property", "county", value);
+                        // Autocomplete logic
+                        if (!window._countyList) {
+                          const Papa = (await import('papaparse')).default;
+                          const csv = await fetch('/Property%20Taxes%20by%20State%20and%20County,%202025%20%20Tax%20Foundation%20Maps.csv').then(r => r.text());
+                          const data = Papa.parse(csv, { header: true }).data;
+                          window._countyList = data.map(row => row.County).filter(Boolean);
+                        }
+                        const matches = window._countyList.filter(c => c.toLowerCase().startsWith(value.toLowerCase())).slice(0, 10);
+                        window._countyMatches = matches;
+                        // Force re-render
+                        setCountyMatches(matches);
+                      }}
+                      placeholder="Autauga County"
+                      autoComplete="off"
+                    />
+                    {/* County autocomplete dropdown */}
+                    {countyMatches && countyMatches.length > 0 && (
+                      <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 8, marginTop: 2, maxHeight: 180, overflowY: 'auto', position: 'absolute', zIndex: 10, width: '100%' }}>
+                        {countyMatches.map((county, idx) => (
+                          <div
+                            key={county}
+                            style={{ padding: '8px 12px', cursor: 'pointer', fontSize: 13, color: '#374151', borderBottom: idx < countyMatches.length - 1 ? '1px solid #e5e7eb' : 'none' }}
+                            onClick={() => {
+                              updateVerifiedField("property", "county", county);
+                              setCountyMatches([]);
+                            }}
+                          >{county}</div>
+                        ))}
+                      </div>
+                    )}
+                    <button
+                      style={{ ...styles.button, marginTop: 8, fontSize: 14, padding: "8px 16px" }}
+                      type="button"
+                      onClick={async () => {
+                        const Papa = (await import('papaparse')).default;
+                        const countyName = verifiedData?.property?.county?.trim();
+                        const price = parseFloat(verifiedData?.pricing_financing?.price) || 0;
+                        if (!countyName || !price) {
+                          alert("Enter county and purchase price first.");
+                          return;
+                        }
+                        const csv = await fetch('/Property%20Taxes%20by%20State%20and%20County,%202025%20%20Tax%20Foundation%20Maps.csv').then(r => r.text());
+                        const data = Papa.parse(csv, { header: true }).data;
+                        const match = data.find(row => row.County === countyName);
+                        if (!match) {
+                          alert("County not found. Type exactly as in the CSV.");
+                          return;
+                        }
+                        let rateStr = match["Effective Property Tax Rate (2023)"];
+                        if (!rateStr) {
+                          alert("Tax rate not found for county.");
+                          return;
+                        }
+                        rateStr = rateStr.replace('%','');
+                        const rate = parseFloat(rateStr) / 100;
+                        const annualTax = price * rate;
+                        const monthlyTax = annualTax / 12;
+                        updateVerifiedField("expenses", "taxes", Math.round(annualTax));
+                        updateVerifiedField("expenses", "monthly_taxes", Math.round(monthlyTax));
+                        alert(`Annual Tax: $${Math.round(annualTax)}\nMonthly Tax: $${Math.round(monthlyTax)}`);
+                      }}
+                    >Calculate Property Tax</button>
+                  </div>
                 <div>
                   <label style={{ display: "block", marginBottom: 6, fontSize: 13, color: "#6b7280", fontWeight: 500 }}>
                     Address *
@@ -1312,7 +1657,20 @@ const EnhancedUploadPage = ({ setCurrentPage }) => {
                         ...(verifiedData?.pricing_financing?.price ? styles.inputSuccess : {})
                       }}
                       value={verifiedData?.pricing_financing?.price || ""}
-                      onChange={(e) => updateVerifiedField("pricing_financing", "price", parseFloat(e.target.value))}
+                      onChange={(e) => {
+                        const price = parseFloat(e.target.value);
+                        setVerifiedData(prev => ({
+                          ...prev,
+                          pricing_financing: {
+                            ...prev.pricing_financing,
+                            price
+                          }
+                        }));
+                        autoCalculateFinancing({
+                          ...verifiedData?.pricing_financing,
+                          price
+                        }, setVerifiedData);
+                      }}
                       placeholder="Enter purchase price"
                     />
                   </div>
@@ -1331,7 +1689,20 @@ const EnhancedUploadPage = ({ setCurrentPage }) => {
                             ...(verifiedData?.pricing_financing?.down_payment_pct ? styles.inputSuccess : {})
                           }}
                           value={verifiedData?.pricing_financing?.down_payment_pct || ""}
-                          onChange={(e) => updateVerifiedField("pricing_financing", "down_payment_pct", parseFloat(e.target.value))}
+                          onChange={(e) => {
+                            const downPct = parseFloat(e.target.value);
+                            setVerifiedData(prev => ({
+                              ...prev,
+                              pricing_financing: {
+                                ...prev.pricing_financing,
+                                down_payment_pct: downPct
+                              }
+                            }));
+                            autoCalculateFinancing({
+                              ...verifiedData?.pricing_financing,
+                              down_payment_pct: downPct
+                            }, setVerifiedData);
+                          }}
                           placeholder="Enter down payment %"
                         />
                       </div>
@@ -1347,7 +1718,20 @@ const EnhancedUploadPage = ({ setCurrentPage }) => {
                             ...(verifiedData?.pricing_financing?.term_years ? styles.inputSuccess : {})
                           }}
                           value={verifiedData?.pricing_financing?.term_years || ""}
-                          onChange={(e) => updateVerifiedField("pricing_financing", "term_years", parseInt(e.target.value))}
+                          onChange={(e) => {
+                            const termYears = parseInt(e.target.value);
+                            setVerifiedData(prev => ({
+                              ...prev,
+                              pricing_financing: {
+                                ...prev.pricing_financing,
+                                term_years: termYears
+                              }
+                            }));
+                            autoCalculateFinancing({
+                              ...verifiedData?.pricing_financing,
+                              term_years: termYears
+                            }, setVerifiedData);
+                          }}
                           placeholder="Enter loan term"
                         />
                       </div>
@@ -1362,7 +1746,20 @@ const EnhancedUploadPage = ({ setCurrentPage }) => {
                             ...(verifiedData?.pricing_financing?.amortization_years ? styles.inputSuccess : {})
                           }}
                           value={verifiedData?.pricing_financing?.amortization_years || ""}
-                          onChange={(e) => updateVerifiedField("pricing_financing", "amortization_years", parseInt(e.target.value))}
+                          onChange={(e) => {
+                            const amortYears = parseInt(e.target.value);
+                            setVerifiedData(prev => ({
+                              ...prev,
+                              pricing_financing: {
+                                ...prev.pricing_financing,
+                                amortization_years: amortYears
+                              }
+                            }));
+                            autoCalculateFinancing({
+                              ...verifiedData?.pricing_financing,
+                              amortization_years: amortYears
+                            }, setVerifiedData);
+                          }}
                           placeholder="Enter amortization years"
                         />
                       </div>
@@ -1515,7 +1912,20 @@ const EnhancedUploadPage = ({ setCurrentPage }) => {
                         ...(verifiedData?.pricing_financing?.interest_rate ? styles.inputSuccess : {})
                       }}
                       value={verifiedData?.pricing_financing?.interest_rate ? (verifiedData.pricing_financing.interest_rate * 100) : ""}
-                      onChange={(e) => updateVerifiedField("pricing_financing", "interest_rate", parseFloat(e.target.value) / 100)}
+                      onChange={(e) => {
+                        const rate = parseFloat(e.target.value) / 100;
+                        setVerifiedData(prev => ({
+                          ...prev,
+                          pricing_financing: {
+                            ...prev.pricing_financing,
+                            interest_rate: rate
+                          }
+                        }));
+                        autoCalculateFinancing({
+                          ...verifiedData?.pricing_financing,
+                          interest_rate: rate
+                        }, setVerifiedData);
+                      }}
                       placeholder="Enter interest rate"
                     />
                   </div>
@@ -1529,7 +1939,7 @@ const EnhancedUploadPage = ({ setCurrentPage }) => {
                         ...styles.input,
                         ...(verifiedData?.pricing_financing?.monthly_payment ? styles.inputSuccess : {})
                       }}
-                      value={verifiedData?.pricing_financing?.monthly_payment || ""}
+                      value={verifiedData?.pricing_financing?.monthly_payment !== undefined && verifiedData?.pricing_financing?.monthly_payment !== null ? Number(verifiedData.pricing_financing.monthly_payment).toFixed(2) : ""}
                       onChange={(e) => updateVerifiedField("pricing_financing", "monthly_payment", parseFloat(e.target.value))}
                       placeholder="Enter monthly payment"
                     />
@@ -1544,7 +1954,7 @@ const EnhancedUploadPage = ({ setCurrentPage }) => {
                         ...styles.input,
                         ...(verifiedData?.pricing_financing?.annual_debt_service ? styles.inputSuccess : {})
                       }}
-                      value={verifiedData?.pricing_financing?.annual_debt_service || ""}
+                      value={verifiedData?.pricing_financing?.annual_debt_service !== undefined && verifiedData?.pricing_financing?.annual_debt_service !== null ? Number(verifiedData.pricing_financing.annual_debt_service).toFixed(2) : ""}
                       onChange={(e) => updateVerifiedField("pricing_financing", "annual_debt_service", parseFloat(e.target.value))}
                       placeholder="Enter annual debt service"
                     />
@@ -1619,6 +2029,21 @@ const EnhancedUploadPage = ({ setCurrentPage }) => {
                   </div>
                   <div>
                     <label style={{ display: "block", marginBottom: 6, fontSize: 13, color: "#6b7280", fontWeight: 500 }}>
+                      Rehab Cost
+                    </label>
+                    <input
+                      type="number"
+                      style={{
+                        ...styles.input,
+                        ...(verifiedData?.pricing_financing?.rehab_cost ? styles.inputSuccess : {})
+                      }}
+                      value={verifiedData?.pricing_financing?.rehab_cost || ""}
+                      onChange={(e) => updateVerifiedField("pricing_financing", "rehab_cost", parseFloat(e.target.value))}
+                      placeholder="Enter rehab cost"
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: "block", marginBottom: 6, fontSize: 13, color: "#6b7280", fontWeight: 500 }}>
                       Total Initial Cash Investment
                     </label>
                     <div style={{
@@ -1637,7 +2062,8 @@ const EnhancedUploadPage = ({ setCurrentPage }) => {
                         const realtorFees = price * (verifiedData?.pricing_financing?.realtor_fee_pct || 0) / 100;
                         const closingCosts = price * (verifiedData?.pricing_financing?.closing_costs_pct || 0) / 100;
                         const acquisitionFees = price * (verifiedData?.pricing_financing?.acquisition_fee_pct || 0) / 100;
-                        return fmtCurrency(downPayment + realtorFees + closingCosts + acquisitionFees);
+                        const rehabCost = verifiedData?.pricing_financing?.rehab_cost || 0;
+                        return fmtCurrency(downPayment + realtorFees + closingCosts + acquisitionFees + rehabCost);
                       })()}
                     </div>
                   </div>
@@ -1645,7 +2071,11 @@ const EnhancedUploadPage = ({ setCurrentPage }) => {
               </div>
 
               <div>
-                <h4 style={{ marginBottom: 16, fontSize: 16, fontWeight: 600, color: "#374151" }}>Income & NOI</h4>
+                <h4 style={{ marginBottom: 16, fontSize: 16, fontWeight: 600, color: "#374151" }}>Income</h4>
+                <div style={{ marginBottom: 12, fontSize: 13, color: "#6b7280" }}>
+                  <strong>Gross Potential Rent (Annual):</strong> Total possible rent if fully occupied, no vacancy.<br/>
+                  <strong>Effective Gross Income (Annual):</strong> Actual expected income after vacancy loss and adding other income.
+                </div>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 20 }}>
                   <div>
                     <label style={{ display: "block", marginBottom: 6, fontSize: 13, color: "#6b7280", fontWeight: 500 }}>
@@ -1680,22 +2110,6 @@ const EnhancedUploadPage = ({ setCurrentPage }) => {
                   </div>
                   <div>
                     <label style={{ display: "block", marginBottom: 6, fontSize: 13, color: "#6b7280", fontWeight: 500 }}>
-                      Vacancy Rate (%)
-                    </label>
-                    <input
-                      type="number"
-                      step="0.1"
-                      style={{
-                        ...styles.input,
-                        ...(verifiedData?.pnl?.vacancy_rate ? styles.inputSuccess : {})
-                      }}
-                      value={verifiedData?.pnl?.vacancy_rate ? (verifiedData.pnl.vacancy_rate * 100) : ""}
-                      onChange={(e) => updateVerifiedField("pnl", "vacancy_rate", parseFloat(e.target.value) / 100)}
-                      placeholder="Enter vacancy %"
-                    />
-                  </div>
-                  <div>
-                    <label style={{ display: "block", marginBottom: 6, fontSize: 13, color: "#6b7280", fontWeight: 500 }}>
                       Effective Gross Income (Annual)
                     </label>
                     <input
@@ -1707,38 +2121,6 @@ const EnhancedUploadPage = ({ setCurrentPage }) => {
                       value={verifiedData?.pnl?.effective_gross_income || ""}
                       onChange={(e) => updateVerifiedField("pnl", "effective_gross_income", parseFloat(e.target.value))}
                       placeholder="Enter EGI"
-                    />
-                  </div>
-                  <div>
-                    <label style={{ display: "block", marginBottom: 6, fontSize: 13, color: "#6b7280", fontWeight: 500 }}>
-                      Operating Expenses (Annual) *
-                    </label>
-                    <input
-                      type="number"
-                      style={{
-                        ...styles.input,
-                        ...(validationErrors['pnl.operating_expenses'] ? styles.inputError : {}),
-                        ...(verifiedData?.pnl?.operating_expenses ? styles.inputSuccess : {})
-                      }}
-                      value={verifiedData?.pnl?.operating_expenses || ""}
-                      onChange={(e) => updateVerifiedField("pnl", "operating_expenses", parseFloat(e.target.value))}
-                      placeholder="Enter total expenses"
-                    />
-                  </div>
-                  <div>
-                    <label style={{ display: "block", marginBottom: 6, fontSize: 13, color: "#6b7280", fontWeight: 500 }}>
-                      Net Operating Income (Annual) *
-                    </label>
-                    <input
-                      type="number"
-                      style={{
-                        ...styles.input,
-                        ...(validationErrors['pnl.noi'] ? styles.inputError : {}),
-                        ...(verifiedData?.pnl?.noi ? styles.inputSuccess : {})
-                      }}
-                      value={verifiedData?.pnl?.noi || ""}
-                      onChange={(e) => updateVerifiedField("pnl", "noi", parseFloat(e.target.value))}
-                      placeholder="Enter NOI"
                     />
                   </div>
                 </div>
@@ -1766,8 +2148,15 @@ const EnhancedUploadPage = ({ setCurrentPage }) => {
                       ...styles.input,
                       ...(verifiedData?.expenses?.vacancy_pct ? styles.inputSuccess : {})
                     }}
-                    value={verifiedData?.expenses?.vacancy_pct || ""}
-                    onChange={(e) => updateVerifiedField("expenses", "vacancy_pct", parseFloat(e.target.value))}
+                    value={verifiedData?.expenses?.vacancy_pct !== undefined && verifiedData?.expenses?.vacancy_pct !== null ? String(verifiedData.expenses.vacancy_pct) : ""}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (val === "" || val === null) {
+                        updateVerifiedField("expenses", "vacancy_pct", "");
+                      } else if (!isNaN(Number(val))) {
+                        updateVerifiedField("expenses", "vacancy_pct", parseFloat(val));
+                      }
+                    }}
                     placeholder="Enter vacancy %"
                   />
                   {verifiedData?.expenses?.vacancy_pct && verifiedData?.pnl?.gross_potential_rent && (
@@ -1787,8 +2176,15 @@ const EnhancedUploadPage = ({ setCurrentPage }) => {
                       ...styles.input,
                       ...(verifiedData?.expenses?.property_management_pct ? styles.inputSuccess : {})
                     }}
-                    value={verifiedData?.expenses?.property_management_pct || ""}
-                    onChange={(e) => updateVerifiedField("expenses", "property_management_pct", parseFloat(e.target.value))}
+                    value={verifiedData?.expenses?.property_management_pct !== undefined && verifiedData?.expenses?.property_management_pct !== null ? String(verifiedData.expenses.property_management_pct) : ""}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (val === "" || val === null) {
+                        updateVerifiedField("expenses", "property_management_pct", "");
+                      } else if (!isNaN(Number(val))) {
+                        updateVerifiedField("expenses", "property_management_pct", parseFloat(val));
+                      }
+                    }}
                     placeholder="Enter property mgmt %"
                   />
                   {verifiedData?.expenses?.property_management_pct && verifiedData?.pnl?.gross_potential_rent && (
@@ -1808,8 +2204,15 @@ const EnhancedUploadPage = ({ setCurrentPage }) => {
                       ...styles.input,
                       ...(verifiedData?.expenses?.capex_pct ? styles.inputSuccess : {})
                     }}
-                    value={verifiedData?.expenses?.capex_pct || ""}
-                    onChange={(e) => updateVerifiedField("expenses", "capex_pct", parseFloat(e.target.value))}
+                    value={verifiedData?.expenses?.capex_pct !== undefined && verifiedData?.expenses?.capex_pct !== null ? String(verifiedData.expenses.capex_pct) : ""}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (val === "" || val === null) {
+                        updateVerifiedField("expenses", "capex_pct", "");
+                      } else if (!isNaN(Number(val))) {
+                        updateVerifiedField("expenses", "capex_pct", parseFloat(val));
+                      }
+                    }}
                     placeholder="Enter CapEx %"
                   />
                   {verifiedData?.expenses?.capex_pct && verifiedData?.pnl?.gross_potential_rent && (
@@ -1916,7 +2319,7 @@ const EnhancedUploadPage = ({ setCurrentPage }) => {
               </div>
 
               {/* Utilities Section */}
-              <h4 style={{ marginTop: 32, marginBottom: 16, fontSize: 15, fontWeight: 600, color: "#374151" }}>Utilities (Annual)</h4>
+              <h4 style={{ marginTop: 32, marginBottom: 16, fontSize: 15, fontWeight: 600, color: "#374151" }}>Utilities (Monthly)</h4>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 20 }}>
                 <div>
                   <label style={{ display: "block", marginBottom: 6, fontSize: 13, color: "#6b7280", fontWeight: 500 }}>
@@ -1930,8 +2333,11 @@ const EnhancedUploadPage = ({ setCurrentPage }) => {
                     }}
                     value={verifiedData?.expenses?.gas || ""}
                     onChange={(e) => updateVerifiedField("expenses", "gas", parseFloat(e.target.value))}
-                    placeholder="Enter annual gas"
+                    placeholder="Enter monthly gas"
                   />
+                  <div style={{ fontSize: 12, color: '#6b7280', marginTop: 2 }}>
+                    Annual: {fmtCurrency((verifiedData?.expenses?.gas || 0) * 12)}
+                  </div>
                 </div>
                 <div>
                   <label style={{ display: "block", marginBottom: 6, fontSize: 13, color: "#6b7280", fontWeight: 500 }}>
@@ -1945,8 +2351,11 @@ const EnhancedUploadPage = ({ setCurrentPage }) => {
                     }}
                     value={verifiedData?.expenses?.electrical || ""}
                     onChange={(e) => updateVerifiedField("expenses", "electrical", parseFloat(e.target.value))}
-                    placeholder="Enter annual electrical"
+                    placeholder="Enter monthly electrical"
                   />
+                  <div style={{ fontSize: 12, color: '#6b7280', marginTop: 2 }}>
+                    Annual: {fmtCurrency((verifiedData?.expenses?.electrical || 0) * 12)}
+                  </div>
                 </div>
                 <div>
                   <label style={{ display: "block", marginBottom: 6, fontSize: 13, color: "#6b7280", fontWeight: 500 }}>
@@ -1960,8 +2369,11 @@ const EnhancedUploadPage = ({ setCurrentPage }) => {
                     }}
                     value={verifiedData?.expenses?.water || ""}
                     onChange={(e) => updateVerifiedField("expenses", "water", parseFloat(e.target.value))}
-                    placeholder="Enter annual water"
+                    placeholder="Enter monthly water"
                   />
+                  <div style={{ fontSize: 12, color: '#6b7280', marginTop: 2 }}>
+                    Annual: {fmtCurrency((verifiedData?.expenses?.water || 0) * 12)}
+                  </div>
                 </div>
                 <div>
                   <label style={{ display: "block", marginBottom: 6, fontSize: 13, color: "#6b7280", fontWeight: 500 }}>
@@ -1975,8 +2387,11 @@ const EnhancedUploadPage = ({ setCurrentPage }) => {
                     }}
                     value={verifiedData?.expenses?.sewer || ""}
                     onChange={(e) => updateVerifiedField("expenses", "sewer", parseFloat(e.target.value))}
-                    placeholder="Enter annual sewer"
+                    placeholder="Enter monthly sewer"
                   />
+                  <div style={{ fontSize: 12, color: '#6b7280', marginTop: 2 }}>
+                    Annual: {fmtCurrency((verifiedData?.expenses?.sewer || 0) * 12)}
+                  </div>
                 </div>
                 <div>
                   <label style={{ display: "block", marginBottom: 6, fontSize: 13, color: "#6b7280", fontWeight: 500 }}>
@@ -1990,8 +2405,11 @@ const EnhancedUploadPage = ({ setCurrentPage }) => {
                     }}
                     value={verifiedData?.expenses?.trash || ""}
                     onChange={(e) => updateVerifiedField("expenses", "trash", parseFloat(e.target.value))}
-                    placeholder="Enter annual trash"
+                    placeholder="Enter monthly trash"
                   />
+                  <div style={{ fontSize: 12, color: '#6b7280', marginTop: 2 }}>
+                    Annual: {fmtCurrency((verifiedData?.expenses?.trash || 0) * 12)}
+                  </div>
                 </div>
                 <div>
                   <label style={{ display: "block", marginBottom: 6, fontSize: 13, color: "#6b7280", fontWeight: 500 }}>
@@ -2247,7 +2665,9 @@ const EnhancedUploadPage = ({ setCurrentPage }) => {
       { id: 'profitability', label: 'Profitability', icon: DollarSign },
       { id: 'sensitivity', label: 'Sensitivity', icon: Target },
       { id: 'financing', label: 'Capital Structure', icon: Calculator },
-      { id: 'returns', label: 'Returns', icon: Briefcase }
+      { id: 'returns', label: 'Returns', icon: Briefcase },
+      { id: 'proforma', label: 'Proforma', icon: Layers },
+      { id: 'comparison', label: 'Comparison', icon: GitCompare }
     ];
 
     return (
@@ -2377,7 +2797,7 @@ const EnhancedUploadPage = ({ setCurrentPage }) => {
                   {/* Score Header with Gradient Background */}
                   <div style={{
                     background: scoreColors.gradient,
-                    padding: '32px',
+                    padding: '20px 24px',
                     position: 'relative',
                     overflow: 'hidden'
                   }}>
@@ -2398,34 +2818,33 @@ const EnhancedUploadPage = ({ setCurrentPage }) => {
                       )`
                     }} />
                     
-                    <div style={{ position: 'relative', textAlign: 'center' }}>
-                      {/* Score Circle */}
+                    <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'space-between', maxWidth: 800, margin: '0 auto' }}>
+                      {/* Score Circle - Smaller */}
                       <div style={{
-                        width: 140,
-                        height: 140,
-                        margin: '0 auto 20px',
+                        width: 80,
+                        height: 80,
                         position: 'relative'
                       }}>
-                        <svg width="140" height="140" style={{ transform: 'rotate(-90deg)' }}>
+                        <svg width="80" height="80" style={{ transform: 'rotate(-90deg)' }}>
                           <circle
-                            cx="70"
-                            cy="70"
-                            r="60"
+                            cx="40"
+                            cy="40"
+                            r="35"
                             stroke="rgba(255,255,255,0.2)"
-                            strokeWidth="8"
+                            strokeWidth="6"
                             fill="none"
                           />
                           <circle
-                            cx="70"
-                            cy="70"
-                            r="60"
+                            cx="40"
+                            cy="40"
+                            r="35"
                             stroke="white"
-                            strokeWidth="8"
+                            strokeWidth="6"
                             fill="none"
-                            strokeDasharray={`${(dealScore / 100) * 377} 377`}
+                            strokeDasharray={`${(dealScore / 100) * 220} 220`}
                             strokeLinecap="round"
                             style={{
-                              filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.1))',
+                              filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.1))',
                               transition: 'stroke-dasharray 0.5s ease'
                             }}
                           />
@@ -2438,7 +2857,7 @@ const EnhancedUploadPage = ({ setCurrentPage }) => {
                           textAlign: 'center'
                         }}>
                           <div style={{ 
-                            fontSize: 48, 
+                            fontSize: 28, 
                             fontWeight: 800, 
                             color: scoreColors.text,
                             lineHeight: 1,
@@ -2447,11 +2866,11 @@ const EnhancedUploadPage = ({ setCurrentPage }) => {
                             {dealScore}
                           </div>
                           <div style={{ 
-                            fontSize: 11, 
+                            fontSize: 9, 
                             fontWeight: 600,
                             color: scoreColors.text,
                             opacity: 0.9,
-                            marginTop: 4,
+                            marginTop: 2,
                             letterSpacing: 1
                           }}>
                             SCORE
@@ -2466,13 +2885,13 @@ const EnhancedUploadPage = ({ setCurrentPage }) => {
                         gap: 8,
                         background: 'rgba(255,255,255,0.2)',
                         backdropFilter: 'blur(10px)',
-                        padding: '12px 24px',
+                        padding: '8px 20px',
                         borderRadius: 100,
                         border: '2px solid rgba(255,255,255,0.3)'
                       }}>
-                        <Award size={20} color={scoreColors.text} />
+                        <Award size={18} color={scoreColors.text} />
                         <span style={{ 
-                          fontSize: 16, 
+                          fontSize: 14, 
                           fontWeight: 700, 
                           color: scoreColors.text,
                           letterSpacing: 0.5
@@ -2484,8 +2903,8 @@ const EnhancedUploadPage = ({ setCurrentPage }) => {
                   </div>
 
                   {/* Pros and Cons Section */}
-                  <div style={{ padding: 32 }}>
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 32 }}>
+                  <div style={{ padding: 24 }}>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
                       {/* Strengths */}
                       <div>
                         <div style={{ 
@@ -2647,6 +3066,55 @@ const EnhancedUploadPage = ({ setCurrentPage }) => {
                     </div>
                   </div>
                 </div>
+
+                {/* Proforma Rent Schedule - NEW SECTION */}
+                {parsed?.proforma?.rent_schedule && parsed.proforma.rent_schedule.length > 0 && (
+                  <div style={{ background: 'white', borderRadius: 12, padding: 24, boxShadow: '0 1px 3px rgba(0,0,0,0.1)', marginTop: 24 }}>
+                    <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 20, display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <FileText size={20} /> Proforma Rent Schedule
+                    </h3>
+                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                      <thead>
+                        <tr style={{ background: '#F9FAFB', borderBottom: '2px solid #E5E7EB' }}>
+                          <th style={{ padding: 12, textAlign: 'left', fontSize: 13, fontWeight: 600, color: '#6B7280' }}>Unit Type</th>
+                          <th style={{ padding: 12, textAlign: 'center', fontSize: 13, fontWeight: 600, color: '#6B7280' }}>Units</th>
+                          <th style={{ padding: 12, textAlign: 'right', fontSize: 13, fontWeight: 600, color: '#6B7280' }}>Monthly Rent</th>
+                          <th style={{ padding: 12, textAlign: 'right', fontSize: 13, fontWeight: 600, color: '#6B7280' }}>Monthly Income</th>
+                          <th style={{ padding: 12, textAlign: 'right', fontSize: 13, fontWeight: 600, color: '#6B7280' }}>Annual Income</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {parsed.proforma.rent_schedule.map((row, i) => {
+                          const units = parseFloat(row.units) || 0;
+                          const rent = parseFloat(row.rent) || 0;
+                          const monthlyIncome = units * rent;
+                          const annualIncome = monthlyIncome * 12;
+                          return (
+                            <tr key={i} style={{ borderBottom: '1px solid #F3F4F6' }}>
+                              <td style={{ padding: 12, fontSize: 14 }}>{row.type}</td>
+                              <td style={{ padding: 12, textAlign: 'center', fontSize: 14, fontWeight: 600 }}>{units}</td>
+                              <td style={{ padding: 12, textAlign: 'right', fontSize: 14, fontWeight: 600 }}>{fmtCurrency(rent)}</td>
+                              <td style={{ padding: 12, textAlign: 'right', fontSize: 14 }}>{fmtCurrency(monthlyIncome)}</td>
+                              <td style={{ padding: 12, textAlign: 'right', fontSize: 14 }}>{fmtCurrency(annualIncome)}</td>
+                            </tr>
+                          );
+                        })}
+                        <tr style={{ background: '#F9FAFB', fontWeight: 600, borderTop: '2px solid #E5E7EB' }}>
+                          <td colSpan={3} style={{ padding: 12, fontSize: 14 }}>Total Gross Potential Rent</td>
+                          <td colSpan={2} style={{ padding: 12, textAlign: 'right', fontSize: 16, color: COLORS.primary }}>
+                            {fmtCurrency(parsed.pnl?.gross_potential_rent || 0)}
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                    {parsed.pnl?.gross_potential_rent_source === 'proforma' && (
+                      <div style={{ marginTop: 12, padding: 12, background: '#ECFDF5', borderRadius: 8, fontSize: 13, color: '#047857', display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <CheckCircle size={16} />
+                        <span>GPR automatically calculated from proforma rent schedule</span>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             )}
 
@@ -2791,14 +3259,21 @@ const EnhancedUploadPage = ({ setCurrentPage }) => {
                       </tr>
                     </thead>
                     <tbody>
-                      {[0.8, 0.9, 1.0, 1.1, 1.2].map(multiplier => {
-                        const testPrice = (pricing.price || 0) * multiplier;
+                      {[0, -50000, -100000, -150000, -200000].map((reduction, index) => {
+                        const testPrice = (pricing.price || 0) + reduction;
                         const testCapRate = (pnl.noi || 0) / testPrice;
                         const testCashFlow = (pnl.noi || 0) - (pricing.annual_debt_service || 0);
                         const color = testCapRate > 0.08 ? COLORS.secondary : testCapRate > 0.06 ? COLORS.warning : COLORS.danger;
+                        const isOriginal = reduction === 0;
                         return (
-                          <tr key={multiplier} style={{ borderBottom: '1px solid #F3F4F6' }}>
-                            <td style={{ padding: 12, fontWeight: 500 }}>{fmtCurrency(testPrice)}</td>
+                          <tr key={index} style={{ 
+                            borderBottom: '1px solid #F3F4F6',
+                            background: isOriginal ? '#FEF3C7' : 'transparent'
+                          }}>
+                            <td style={{ padding: 12, fontWeight: isOriginal ? 700 : 500 }}>
+                              {fmtCurrency(testPrice)}
+                              {isOriginal && <span style={{ marginLeft: 8, fontSize: 12, color: '#92400e' }}>(Current)</span>}
+                            </td>
                             <td style={{ padding: 12, textAlign: 'center', fontWeight: 600, color }}>
                               {fmtPct(testCapRate)}
                             </td>
@@ -2810,85 +3285,330 @@ const EnhancedUploadPage = ({ setCurrentPage }) => {
                           </tr>
                         );
                       })}
+                      
+                      {/* Break-Even Row: Price to Cash Flow $1000/month */}
+                      {(() => {
+                        const targetMonthlyCashFlow = 1000;
+                        const targetAnnualCashFlow = targetMonthlyCashFlow * 12;
+                        const noi = pnl.noi || 0;
+                        const annualDebtService = pricing.annual_debt_service || 0;
+                        
+                        // To achieve target cash flow: NOI - Debt Service = Target
+                        // Since debt service is based on loan amount which is based on price,
+                        // we need to work backwards. For simplicity, we'll assume same loan structure.
+                        // Cash Flow = NOI - Debt Service
+                        // Target = $12,000/year
+                        // We need: Price where (NOI - Debt Service) = $12,000
+                        
+                        // Current cash flow
+                        const currentCashFlow = noi - annualDebtService;
+                        const cashFlowShortfall = targetAnnualCashFlow - currentCashFlow;
+                        
+                        // If we reduce price by X, we reduce debt service proportionally
+                        // Simplified: For every $1 reduction in price, cash flow improves by the debt constant
+                        // Debt constant = annual debt service / loan amount
+                        const loanAmount = pricing.loan_amount || 0;
+                        const debtConstant = loanAmount > 0 ? annualDebtService / loanAmount : 0.08; // default 8%
+                        
+                        // Price reduction needed = shortfall / debt constant (since we're reducing loan amount)
+                        const downPaymentPct = pricing.down_payment_pct || 20;
+                        const loanToValue = (100 - downPaymentPct) / 100;
+                        const priceReductionNeeded = loanToValue > 0 ? cashFlowShortfall / (debtConstant * loanToValue) : 0;
+                        
+                        const breakEvenPrice = (pricing.price || 0) - priceReductionNeeded;
+                        const breakEvenCapRate = noi / breakEvenPrice;
+                        const breakEvenCashFlow = targetAnnualCashFlow;
+                        const breakEvenROI = breakEvenCashFlow / breakEvenPrice;
+                        
+                        return (
+                          <tr style={{ 
+                            borderTop: '3px solid #10b981',
+                            background: '#ECFDF5',
+                            fontWeight: 600
+                          }}>
+                            <td style={{ padding: 12 }}>
+                              {fmtCurrency(breakEvenPrice)}
+                              <div style={{ fontSize: 11, color: '#047857', fontWeight: 500, marginTop: 4 }}>
+                                💰 Target: $1,000/mo Cash Flow
+                              </div>
+                            </td>
+                            <td style={{ padding: 12, textAlign: 'center', color: COLORS.secondary }}>
+                              {fmtPct(breakEvenCapRate)}
+                            </td>
+                            <td style={{ padding: 12, textAlign: 'center' }}>{fmtNumber(underwriting.dscr)}</td>
+                            <td style={{ padding: 12, textAlign: 'center', color: COLORS.secondary }}>
+                              {fmtCurrency(breakEvenCashFlow)}
+                            </td>
+                            <td style={{ padding: 12, textAlign: 'center', color: COLORS.secondary }}>
+                              {fmtPct(breakEvenROI)}
+                            </td>
+                          </tr>
+                        );
+                      })()}
                     </tbody>
                   </table>
+                </div>
+                
+                {/* Helper Text */}
+                <div style={{ marginTop: 16, padding: 12, background: '#F9FAFB', borderRadius: 8, fontSize: 13, color: '#6B7280' }}>
+                  <strong>💡 Tip:</strong> The green highlighted row shows the maximum price you should pay to achieve $1,000/month in positive cash flow based on current financing and operating assumptions.
                 </div>
               </div>
             )}
 
             {/* Capital Structure Tab */}
             {resultsTab === 'financing' && (
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
-                <div style={{ background: 'white', borderRadius: 12, padding: 24, boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-                  <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 24 }}>Capital Structure</h3>
-                  
-                  {/* Pie Chart */}
-                  {pricing.loan_amount && pricing.price && (
-                    <>
-                      <ResponsiveContainer width="100%" height={300}>
-                        <PieChart>
-                          <Pie
-                            data={[
-                              { name: 'Equity', value: ((pricing.price - pricing.loan_amount) / pricing.price) * 100, fill: COLORS.primary },
-                              { name: 'Debt', value: (pricing.loan_amount / pricing.price) * 100, fill: COLORS.info }
-                            ]}
-                            cx="50%"
-                            cy="50%"
-                            innerRadius={60}
-                            outerRadius={100}
-                            paddingAngle={2}
-                            dataKey="value"
-                            label={({ name, value }) => `${name} ${value.toFixed(1)}%`}
-                          >
-                            {[COLORS.primary, COLORS.info].map((color, index) => (
-                              <Cell key={`cell-${index}`} fill={color} />
-                            ))}
-                          </Pie>
-                          <Tooltip formatter={(value) => `${value.toFixed(1)}%`} />
-                        </PieChart>
-                      </ResponsiveContainer>
+              <div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, marginBottom: 24 }}>
+                  <div style={{ background: 'white', borderRadius: 12, padding: 24, boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+                    <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 24 }}>Capital Structure</h3>
+                    
+                    {/* Pie Chart */}
+                    {pricing.loan_amount && pricing.price && (
+                      <>
+                        <ResponsiveContainer width="100%" height={300}>
+                          <PieChart>
+                            <Pie
+                              data={[
+                                { name: 'Equity', value: ((pricing.price - pricing.loan_amount) / pricing.price) * 100, fill: COLORS.primary },
+                                { name: 'Debt', value: (pricing.loan_amount / pricing.price) * 100, fill: COLORS.info }
+                              ]}
+                              cx="50%"
+                              cy="50%"
+                              innerRadius={60}
+                              outerRadius={100}
+                              paddingAngle={2}
+                              dataKey="value"
+                              label={({ name, value }) => `${name} ${value.toFixed(1)}%`}
+                            >
+                              {[COLORS.primary, COLORS.info].map((color, index) => (
+                                <Cell key={`cell-${index}`} fill={color} />
+                              ))}
+                            </Pie>
+                            <Tooltip formatter={(value) => `${value.toFixed(1)}%`} />
+                          </PieChart>
+                        </ResponsiveContainer>
 
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginTop: 24 }}>
-                        <div>
-                          <div style={{ fontSize: 12, color: '#6B7280', marginBottom: 4 }}>LTV</div>
-                          <div style={{ fontSize: 18, fontWeight: 600 }}>
-                            {fmtPct((pricing.loan_amount / pricing.price))}
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginTop: 24 }}>
+                          <div>
+                            <div style={{ fontSize: 12, color: '#6B7280', marginBottom: 4 }}>LTV</div>
+                            <div style={{ fontSize: 18, fontWeight: 600 }}>
+                              {fmtPct((pricing.loan_amount / pricing.price))}
+                            </div>
+                          </div>
+                          <div>
+                            <div style={{ fontSize: 12, color: '#6B7280', marginBottom: 4 }}>DSCR</div>
+                            <div style={{ fontSize: 18, fontWeight: 600 }}>{fmtNumber(underwriting.dscr)}</div>
                           </div>
                         </div>
-                        <div>
-                          <div style={{ fontSize: 12, color: '#6B7280', marginBottom: 4 }}>DSCR</div>
-                          <div style={{ fontSize: 18, fontWeight: 600 }}>{fmtNumber(underwriting.dscr)}</div>
+                      </>
+                    )}
+                  </div>
+
+                  <div style={{ background: 'white', borderRadius: 12, padding: 24, boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+                    <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 24 }}>Expense Breakdown</h3>
+                    {expenseData.length > 0 ? (
+                      <>
+                        <ResponsiveContainer width="100%" height={300}>
+                          <PieChart>
+                            <Pie
+                              data={expenseData}
+                              cx="50%"
+                              cy="50%"
+                              innerRadius={60}
+                              outerRadius={100}
+                              paddingAngle={2}
+                              dataKey="value"
+                              label={({ name, percent }) => `${name} ${(percent * 100).toFixed(1)}%`}
+                            >
+                              {expenseData.map((entry, index) => (
+                                <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+                              ))}
+                            </Pie>
+                            <Tooltip formatter={(value) => fmtCurrency(value)} />
+                          </PieChart>
+                        </ResponsiveContainer>
+                        
+                        {/* Expense Summary Stats */}
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginTop: 24 }}>
+                          <div>
+                            <div style={{ fontSize: 12, color: '#6B7280', marginBottom: 4 }}>Total Expenses</div>
+                            <div style={{ fontSize: 18, fontWeight: 600 }}>
+                              {fmtCurrency(expenseData.reduce((sum, item) => sum + item.value, 0))}
+                            </div>
+                          </div>
+                          <div>
+                            <div style={{ fontSize: 12, color: '#6B7280', marginBottom: 4 }}>Per Unit/Month</div>
+                            <div style={{ fontSize: 18, fontWeight: 600 }}>
+                              {fmtCurrency(expenseData.reduce((sum, item) => sum + item.value, 0) / 12 / (property.units || 1))}
+                            </div>
+                          </div>
                         </div>
+                      </>
+                    ) : (
+                      <div style={{ textAlign: 'center', padding: 60, color: '#6B7280' }}>
+                        No expense breakdown available
                       </div>
-                    </>
-                  )}
+                    )}
+                  </div>
                 </div>
 
+                {/* PITI Breakdown Section */}
                 <div style={{ background: 'white', borderRadius: 12, padding: 24, boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-                  <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 24 }}>Expense Breakdown</h3>
-                  {expenseData.length > 0 ? (
-                    <ResponsiveContainer width="100%" height={300}>
-                      <PieChart>
-                        <Pie
-                          data={expenseData}
-                          cx="50%"
-                          cy="50%"
-                          outerRadius={100}
-                          dataKey="value"
-                          label={({ name, percent }) => `${name}`}
-                        >
-                          {expenseData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
-                          ))}
-                        </Pie>
-                        <Tooltip formatter={(value) => fmtCurrency(value)} />
-                      </PieChart>
-                    </ResponsiveContainer>
-                  ) : (
-                    <div style={{ textAlign: 'center', padding: 60, color: '#6B7280' }}>
-                      No expense breakdown available
+                  <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 24, display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <Calculator size={20} /> Debt Service & PITI Breakdown
+                  </h3>
+                  
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 24 }}>
+                    {/* Column 1: Purchase & Loan Info */}
+                    <div>
+                      <h4 style={{ fontSize: 14, fontWeight: 600, color: '#6B7280', marginBottom: 16, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                        Purchase & Financing
+                      </h4>
+                      <div style={{ display: 'grid', gap: 12 }}>
+                        <div style={{ padding: 12, background: '#F9FAFB', borderRadius: 8 }}>
+                          <div style={{ fontSize: 12, color: '#6B7280', marginBottom: 4 }}>Purchase Price</div>
+                          <div style={{ fontSize: 20, fontWeight: 700, color: COLORS.primary }}>
+                            {fmtCurrency(pricing.price)}
+                          </div>
+                        </div>
+                        <div style={{ padding: 12, background: '#F9FAFB', borderRadius: 8 }}>
+                          <div style={{ fontSize: 12, color: '#6B7280', marginBottom: 4 }}>Loan Amount</div>
+                          <div style={{ fontSize: 20, fontWeight: 700 }}>
+                            {fmtCurrency(pricing.loan_amount)}
+                          </div>
+                        </div>
+                        <div style={{ padding: 12, background: '#F9FAFB', borderRadius: 8 }}>
+                          <div style={{ fontSize: 12, color: '#6B7280', marginBottom: 4 }}>Down Payment</div>
+                          <div style={{ fontSize: 20, fontWeight: 700 }}>
+                            {fmtCurrency(pricing.price - pricing.loan_amount)}
+                          </div>
+                          <div style={{ fontSize: 11, color: '#6B7280', marginTop: 2 }}>
+                            ({fmtPct((pricing.price - pricing.loan_amount) / pricing.price)})
+                          </div>
+                        </div>
+                      </div>
                     </div>
-                  )}
+
+                    {/* Column 2: Loan Terms */}
+                    <div>
+                      <h4 style={{ fontSize: 14, fontWeight: 600, color: '#6B7280', marginBottom: 16, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                        Loan Terms
+                      </h4>
+                      <div style={{ display: 'grid', gap: 12 }}>
+                        <div style={{ padding: 12, background: '#F9FAFB', borderRadius: 8 }}>
+                          <div style={{ fontSize: 12, color: '#6B7280', marginBottom: 4 }}>Interest Rate</div>
+                          <div style={{ fontSize: 20, fontWeight: 700 }}>
+                            {fmtPct((pricing.interest_rate || 0) / 100)}
+                          </div>
+                        </div>
+                        <div style={{ padding: 12, background: '#F9FAFB', borderRadius: 8 }}>
+                          <div style={{ fontSize: 12, color: '#6B7280', marginBottom: 4 }}>Amortization</div>
+                          <div style={{ fontSize: 20, fontWeight: 700 }}>
+                            {pricing.amortization_years || 30} years
+                          </div>
+                        </div>
+                        <div style={{ padding: 12, background: '#F9FAFB', borderRadius: 8 }}>
+                          <div style={{ fontSize: 12, color: '#6B7280', marginBottom: 4 }}>Loan Term</div>
+                          <div style={{ fontSize: 20, fontWeight: 700 }}>
+                            {pricing.term_years || pricing.amortization_years || 30} years
+                          </div>
+                        </div>
+                        {pricing.balloon_payment && pricing.balloon_payment > 0 && (
+                          <div style={{ padding: 12, background: '#FEF3C7', borderRadius: 8, border: '1px solid #FCD34D' }}>
+                            <div style={{ fontSize: 12, color: '#92400e', marginBottom: 4 }}>Balloon Payment</div>
+                            <div style={{ fontSize: 18, fontWeight: 700, color: '#92400e' }}>
+                              {fmtCurrency(pricing.balloon_payment)}
+                            </div>
+                            <div style={{ fontSize: 11, color: '#92400e', marginTop: 2 }}>
+                              Due at end of term
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Column 3: Debt Service & PITI */}
+                    <div>
+                      <h4 style={{ fontSize: 14, fontWeight: 600, color: '#6B7280', marginBottom: 16, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                        Debt Service (PITI)
+                      </h4>
+                      <div style={{ display: 'grid', gap: 12 }}>
+                        <div style={{ padding: 12, background: '#EFF6FF', borderRadius: 8, border: '1px solid #BFDBFE' }}>
+                          <div style={{ fontSize: 12, color: '#1e40af', marginBottom: 4 }}>Monthly Payment</div>
+                          <div style={{ fontSize: 20, fontWeight: 700, color: '#1e40af' }}>
+                            {fmtCurrency((pricing.annual_debt_service || 0) / 12)}
+                          </div>
+                          <div style={{ fontSize: 11, color: '#1e40af', marginTop: 2 }}>
+                            Principal & Interest
+                          </div>
+                        </div>
+                        <div style={{ padding: 12, background: '#F9FAFB', borderRadius: 8 }}>
+                          <div style={{ fontSize: 12, color: '#6B7280', marginBottom: 4 }}>Annual Debt Service</div>
+                          <div style={{ fontSize: 20, fontWeight: 700, color: COLORS.info }}>
+                            {fmtCurrency(pricing.annual_debt_service)}
+                          </div>
+                        </div>
+                        <div style={{ padding: 12, background: '#F9FAFB', borderRadius: 8 }}>
+                          <div style={{ fontSize: 12, color: '#6B7280', marginBottom: 4 }}>Property Taxes (Annual)</div>
+                          <div style={{ fontSize: 18, fontWeight: 700 }}>
+                            {fmtCurrency(parsed?.expenses?.taxes || 0)}
+                          </div>
+                          <div style={{ fontSize: 11, color: '#6B7280', marginTop: 2 }}>
+                            {fmtCurrency((parsed?.expenses?.taxes || 0) / 12)}/mo
+                          </div>
+                        </div>
+                        <div style={{ padding: 12, background: '#ECFDF5', borderRadius: 8, border: '1px solid #86EFAC' }}>
+                          <div style={{ fontSize: 12, color: '#047857', marginBottom: 4 }}>Loan Factor Rate</div>
+                          <div style={{ fontSize: 20, fontWeight: 700, color: '#047857' }}>
+                            {(() => {
+                              const loanFactor = pricing.loan_amount > 0 
+                                ? pricing.annual_debt_service / pricing.loan_amount 
+                                : 0;
+                              return (loanFactor * 100).toFixed(3) + '%';
+                            })()}
+                          </div>
+                          <div style={{ fontSize: 11, color: '#047857', marginTop: 2 }}>
+                            Annual Debt Service / Loan Amount
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Additional Info Row */}
+                  <div style={{ 
+                    marginTop: 24, 
+                    padding: 16, 
+                    background: 'linear-gradient(135deg, #F3F4F6, #E5E7EB)', 
+                    borderRadius: 8,
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(4, 1fr)',
+                    gap: 16
+                  }}>
+                    <div>
+                      <div style={{ fontSize: 11, color: '#6B7280', marginBottom: 4, fontWeight: 600 }}>DEBT SERVICE COVERAGE</div>
+                      <div style={{ fontSize: 16, fontWeight: 700 }}>{fmtNumber(underwriting.dscr)}x</div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 11, color: '#6B7280', marginBottom: 4, fontWeight: 600 }}>ANNUAL CASH FLOW</div>
+                      <div style={{ fontSize: 16, fontWeight: 700 }}>
+                        {fmtCurrency((pnl.noi || 0) - (pricing.annual_debt_service || 0))}
+                      </div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 11, color: '#6B7280', marginBottom: 4, fontWeight: 600 }}>MONTHLY CASH FLOW</div>
+                      <div style={{ fontSize: 16, fontWeight: 700 }}>
+                        {fmtCurrency(((pnl.noi || 0) - (pricing.annual_debt_service || 0)) / 12)}
+                      </div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 11, color: '#6B7280', marginBottom: 4, fontWeight: 600 }}>CAP RATE</div>
+                      <div style={{ fontSize: 16, fontWeight: 700, color: COLORS.secondary }}>
+                        {fmtPct((pnl.noi || 0) / (pricing.price || 1))}
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             )}
@@ -2913,10 +3633,33 @@ const EnhancedUploadPage = ({ setCurrentPage }) => {
                       </div>
                     </div>
 
-                    <div style={{ padding: 20, background: COLORS.primary, borderRadius: 8 }}>
-                      <div style={{ fontSize: 14, color: 'white', opacity: 0.9, marginBottom: 4 }}>Total Return</div>
+                    <div style={{ padding: 20, background: COLORS.primary, borderRadius: 8, marginBottom: 20 }}>
+                      <div style={{ fontSize: 14, color: 'white', opacity: 0.9, marginBottom: 4 }}>Total Return (10-Year)</div>
                       <div style={{ fontSize: 32, fontWeight: 700, color: 'white' }}>
                         {fmtCurrency(projections[9]?.netWorth || 0)}
+                      </div>
+                    </div>
+
+                    {/* Equity Multiple */}
+                    <div style={{ padding: 16, background: '#ECFDF5', borderRadius: 8, border: '1px solid #86EFAC' }}>
+                      <div style={{ fontSize: 12, color: '#047857', marginBottom: 4, fontWeight: 600 }}>EQUITY MULTIPLE (10-YEAR)</div>
+                      <div style={{ fontSize: 20, fontWeight: 700, color: '#047857' }}>
+                        {(() => {
+                          const price = pricing.price || 0;
+                          const downPayment = pricing.financing_mode === 'traditional'
+                            ? price * (pricing.down_payment_pct || 0) / 100
+                            : (pricing.down_payment_amount || (price * 0.2));
+                          const realtorFees = price * (pricing.realtor_fee_pct || 0) / 100;
+                          const closingCosts = price * (pricing.closing_costs_pct || 0) / 100;
+                          const acquisitionFees = price * (pricing.acquisition_fee_pct || 0) / 100;
+                          const totalCashInvested = downPayment + realtorFees + closingCosts + acquisitionFees;
+                          const totalReturn = projections[9]?.netWorth || 0;
+                          const multiple = totalCashInvested > 0 ? totalReturn / totalCashInvested : 0;
+                          return multiple.toFixed(2) + 'x';
+                        })()}
+                      </div>
+                      <div style={{ fontSize: 11, color: '#047857', marginTop: 2 }}>
+                        Total Return / Initial Investment
                       </div>
                     </div>
                   </div>
@@ -2925,17 +3668,17 @@ const EnhancedUploadPage = ({ setCurrentPage }) => {
                 <div style={{ background: 'white', borderRadius: 12, padding: 24, boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
                   <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 24 }}>Return Metrics</h3>
                   
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 16 }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 12 }}>
                     <div style={{ padding: 12, background: '#F9FAFB', borderRadius: 8 }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <span style={{ fontSize: 14, color: '#6B7280' }}>Cap Rate</span>
-                        <span style={{ fontSize: 14, fontWeight: 700, color: COLORS.secondary }}>{fmtPct(adjustedCapRate)}</span>
+                        <span style={{ fontSize: 16, fontWeight: 700, color: COLORS.secondary }}>{fmtPct(adjustedCapRate)}</span>
                       </div>
                     </div>
                     <div style={{ padding: 12, background: '#F9FAFB', borderRadius: 8 }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <span style={{ fontSize: 14, color: '#6B7280' }}>Cash on Cash Return (Year 1)</span>
-                        <span style={{ fontSize: 14, fontWeight: 700, color: COLORS.info }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ fontSize: 14, color: '#6B7280' }}>Cash on Cash (Year 1)</span>
+                        <span style={{ fontSize: 16, fontWeight: 700, color: COLORS.info }}>
                           {fmtPct((() => {
                             const cashFlow = (pnl.noi || 0) - (pricing.annual_debt_service || 0);
                             const price = pricing.price || 0;
@@ -2952,11 +3695,10 @@ const EnhancedUploadPage = ({ setCurrentPage }) => {
                       </div>
                     </div>
                     <div style={{ padding: 12, background: '#F9FAFB', borderRadius: 8 }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <span style={{ fontSize: 14, color: '#6B7280' }}>ROI (Year 1)</span>
-                        <span style={{ fontSize: 14, fontWeight: 700, color: COLORS.primary }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ fontSize: 14, color: '#6B7280' }}>Average Annual Return</span>
+                        <span style={{ fontSize: 16, fontWeight: 700, color: COLORS.primary }}>
                           {fmtPct((() => {
-                            const cashFlow = (pnl.noi || 0) - (pricing.annual_debt_service || 0);
                             const price = pricing.price || 0;
                             const downPayment = pricing.financing_mode === 'traditional'
                               ? price * (pricing.down_payment_pct || 0) / 100
@@ -2965,31 +3707,850 @@ const EnhancedUploadPage = ({ setCurrentPage }) => {
                             const closingCosts = price * (pricing.closing_costs_pct || 0) / 100;
                             const acquisitionFees = price * (pricing.acquisition_fee_pct || 0) / 100;
                             const totalCashInvested = downPayment + realtorFees + closingCosts + acquisitionFees;
+                            const totalReturn = projections[9]?.netWorth || 0;
                             
-                            // Year 1 ROI = First Year Cash Flow / Total Initial Investment
-                            return totalCashInvested > 0 ? cashFlow / totalCashInvested : 0;
+                            // Approximate IRR using geometric mean
+                            const multiple = totalCashInvested > 0 ? totalReturn / totalCashInvested : 0;
+                            const years = 10;
+                            const annualReturn = Math.pow(multiple, 1/years) - 1;
+                            return annualReturn;
                           })())}
                         </span>
                       </div>
                     </div>
                     <div style={{ padding: 12, background: '#F9FAFB', borderRadius: 8 }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <span style={{ fontSize: 14, color: '#6B7280' }}>DSCR</span>
-                        <span style={{ fontSize: 14, fontWeight: 700, color: COLORS.warning }}>{fmtNumber(underwriting.dscr)}</span>
+                        <span style={{ fontSize: 16, fontWeight: 700, color: COLORS.warning }}>{fmtNumber(underwriting.dscr)}</span>
                       </div>
                     </div>
                     <div style={{ padding: 12, background: '#F9FAFB', borderRadius: 8 }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ fontSize: 14, color: '#6B7280' }}>Loan Factor Rate</span>
+                        <span style={{ fontSize: 16, fontWeight: 700, color: '#047857' }}>
+                          {(() => {
+                            const loanFactor = pricing.loan_amount > 0 
+                              ? pricing.annual_debt_service / pricing.loan_amount 
+                              : 0;
+                            return (loanFactor * 100).toFixed(3) + '%';
+                          })()}
+                        </span>
+                      </div>
+                    </div>
+                    <div style={{ padding: 12, background: '#F9FAFB', borderRadius: 8 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ fontSize: 14, color: '#6B7280' }}>Break-Even Occupancy</span>
+                        <span style={{ fontSize: 16, fontWeight: 700 }}>
+                          {(() => {
+                            const gpr = pnl.gross_potential_rent || 0;
+                            const opex = pnl.operating_expenses || 0;
+                            const debtService = pricing.annual_debt_service || 0;
+                            const breakEven = gpr > 0 ? (opex + debtService) / gpr : 0;
+                            return fmtPct(breakEven);
+                          })()}
+                        </span>
+                      </div>
+                    </div>
+                    <div style={{ padding: 12, background: '#F9FAFB', borderRadius: 8 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <span style={{ fontSize: 14, color: '#6B7280' }}>Expense Ratio</span>
-                        <span style={{ fontSize: 14, fontWeight: 700 }}>{fmtPct(pnl.expense_ratio)}</span>
+                        <span style={{ fontSize: 16, fontWeight: 700 }}>{fmtPct(pnl.expense_ratio)}</span>
+                      </div>
+                    </div>
+                    <div style={{ padding: 12, background: '#F9FAFB', borderRadius: 8 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ fontSize: 14, color: '#6B7280' }}>Price Per Unit</span>
+                        <span style={{ fontSize: 16, fontWeight: 700 }}>{fmtCurrency((pricing.price || 0) / (property.units || 1))}</span>
+                      </div>
+                    </div>
+                    <div style={{ padding: 12, background: '#F9FAFB', borderRadius: 8 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ fontSize: 14, color: '#6B7280' }}>Price Per SF</span>
+                        <span style={{ fontSize: 16, fontWeight: 700 }}>{fmtCurrency((pricing.price || 0) / (property.rba_sqft || 1))}</span>
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
             )}
+
+            {/* Proforma Tab */}
+            {resultsTab === 'proforma' && (() => {
+              // Initialize proforma price if not set
+              if (proformaPurchasePrice === 0 && pricing.price) {
+                setProformaPurchasePrice(pricing.price);
+              }
+              // Initialize proforma rent if not set
+              if (proformaMonthlyRent === 0 && pnl.gross_potential_rent) {
+                setProformaMonthlyRent(pnl.gross_potential_rent / 12);
+              }
+              
+              // Calculate proforma metrics based on adjusted price
+              const proformaPrice = proformaPurchasePrice || pricing.price || 0;
+              const proformaLoanAmount = proformaPrice * (1 - (pricing.down_payment_pct || 20) / 100);
+              
+              // Calculate proforma rent metrics
+              const currentMonthlyRent = (pnl.gross_potential_rent || 0) / 12;
+              const proformaMonthlyRentValue = proformaMonthlyRent || currentMonthlyRent;
+              const proformaAnnualRent = proformaMonthlyRentValue * 12;
+              const proformaRentPerUnit = proformaMonthlyRentValue / (property.units || 1);
+              
+              // Proforma NOI calculation with adjusted rent
+              const rentDifference = proformaAnnualRent - (pnl.gross_potential_rent || 0);
+              const proformaNOI = (pnl.noi || 0) + rentDifference;
+              const proformaOpex = pnl.operating_expenses || 0;
+              const proformaExpenseRatio = proformaAnnualRent > 0 ? proformaOpex / proformaAnnualRent : 0;
+              
+              // Calculate proforma debt service
+              const monthlyRate = (pricing.interest_rate || 0) / 100 / 12;
+              const n = (pricing.amortization_years || 30) * 12;
+              let proformaMonthlyPayment = 0;
+              if (monthlyRate > 0) {
+                proformaMonthlyPayment = proformaLoanAmount * monthlyRate / (1 - Math.pow(1 + monthlyRate, -n));
+              } else {
+                proformaMonthlyPayment = proformaLoanAmount / n;
+              }
+              const proformaAnnualDebtService = proformaMonthlyPayment * 12;
+              
+              // Proforma calculations
+              const proformaCashFlow = proformaNOI - proformaAnnualDebtService;
+              const proformaCapRate = proformaNOI / proformaPrice;
+              const proformaDSCR = proformaNOI / proformaAnnualDebtService;
+              const proformaPricePerUnit = proformaPrice / (property.units || 1);
+              const proformaGRM = proformaPrice / proformaAnnualRent;
+              const proformaBreakEven = proformaAnnualRent > 0 ? (proformaOpex + proformaAnnualDebtService) / proformaAnnualRent : 0;
+              
+              // Total cash invested for proforma
+              const proformaDownPayment = proformaPrice * (pricing.down_payment_pct || 20) / 100;
+              const proformaRealtorFees = proformaPrice * (pricing.realtor_fee_pct || 0) / 100;
+              const proformaClosingCosts = proformaPrice * (pricing.closing_costs_pct || 0) / 100;
+              const proformaAcquisitionFees = proformaPrice * (pricing.acquisition_fee_pct || 0) / 100;
+              const proformaTotalCashInvested = proformaDownPayment + proformaRealtorFees + proformaClosingCosts + proformaAcquisitionFees;
+              const proformaCoCReturn = proformaTotalCashInvested > 0 ? proformaCashFlow / proformaTotalCashInvested : 0;
+              
+              return (
+                <div>
+                  {/* Price & Rent Adjustment Section */}
+                  <div style={{ background: 'white', borderRadius: 12, padding: 24, marginBottom: 24, boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+                    <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 20, display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <Layers size={20} /> Adjust Proforma Assumptions
+                    </h3>
+                    
+                    {/* Purchase Price Controls */}
+                    <div style={{ marginBottom: 24 }}>
+                      <h4 style={{ fontSize: 14, fontWeight: 600, color: '#374151', marginBottom: 12 }}>Purchase Price</h4>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 24, alignItems: 'center' }}>
+                        <div>
+                          <label style={{ fontSize: 14, color: '#6B7280', marginBottom: 8, display: 'block' }}>
+                            Proforma Purchase Price
+                          </label>
+                          <input
+                            type="number"
+                            value={proformaPurchasePrice || pricing.price || 0}
+                            onChange={(e) => setProformaPurchasePrice(parseFloat(e.target.value) || 0)}
+                            style={{
+                              width: '100%',
+                              padding: 12,
+                              fontSize: 18,
+                              fontWeight: 600,
+                              border: '2px solid #E5E7EB',
+                              borderRadius: 8,
+                              outline: 'none'
+                            }}
+                          />
+                          <div style={{ fontSize: 12, color: '#6B7280', marginTop: 4 }}>
+                            Original: {fmtCurrency(pricing.price)}
+                          </div>
+                        </div>
+                        
+                        <div>
+                          <label style={{ fontSize: 14, color: '#6B7280', marginBottom: 8, display: 'block' }}>
+                            Price Range: {fmtCurrency(proformaPrice)}
+                          </label>
+                          <input
+                            type="range"
+                            min={pricing.price * 0.7}
+                            max={pricing.price * 1.3}
+                            step={10000}
+                            value={proformaPurchasePrice || pricing.price || 0}
+                            onChange={(e) => setProformaPurchasePrice(parseFloat(e.target.value))}
+                            style={{
+                              width: '100%',
+                              height: 8,
+                              borderRadius: 4,
+                              outline: 'none',
+                              cursor: 'pointer'
+                            }}
+                          />
+                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#6B7280', marginTop: 4 }}>
+                            <span>{fmtCurrency(pricing.price * 0.7)}</span>
+                            <span>{fmtCurrency(pricing.price * 1.3)}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Rent Controls */}
+                    <div style={{ marginBottom: 16, paddingTop: 16, borderTop: '1px solid #E5E7EB' }}>
+                      <h4 style={{ fontSize: 14, fontWeight: 600, color: '#374151', marginBottom: 12 }}>Rental Income</h4>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 24, alignItems: 'center' }}>
+                        <div>
+                          <label style={{ fontSize: 14, color: '#6B7280', marginBottom: 8, display: 'block' }}>
+                            Proforma Monthly Rent
+                          </label>
+                          <input
+                            type="number"
+                            value={proformaMonthlyRent || currentMonthlyRent}
+                            onChange={(e) => setProformaMonthlyRent(parseFloat(e.target.value) || 0)}
+                            style={{
+                              width: '100%',
+                              padding: 12,
+                              fontSize: 18,
+                              fontWeight: 600,
+                              border: '2px solid #E5E7EB',
+                              borderRadius: 8,
+                              outline: 'none'
+                            }}
+                          />
+                          <div style={{ fontSize: 12, color: '#6B7280', marginTop: 4 }}>
+                            Original: {fmtCurrency(currentMonthlyRent)}
+                          </div>
+                        </div>
+                        
+                        <div>
+                          <label style={{ fontSize: 14, color: '#6B7280', marginBottom: 8, display: 'block' }}>
+                            Rent Range: {fmtCurrency(proformaMonthlyRentValue)}
+                          </label>
+                          <input
+                            type="range"
+                            min={currentMonthlyRent * 0.8}
+                            max={currentMonthlyRent * 1.3}
+                            step={100}
+                            value={proformaMonthlyRent || currentMonthlyRent}
+                            onChange={(e) => setProformaMonthlyRent(parseFloat(e.target.value))}
+                            style={{
+                              width: '100%',
+                              height: 8,
+                              borderRadius: 4,
+                              outline: 'none',
+                              cursor: 'pointer'
+                            }}
+                          />
+                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#6B7280', marginTop: 4 }}>
+                            <span>{fmtCurrency(currentMonthlyRent * 0.8)}</span>
+                            <span>{fmtCurrency(currentMonthlyRent * 1.3)}</span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Rent Breakdown */}
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginTop: 16 }}>
+                        <div style={{ padding: 12, background: '#F9FAFB', borderRadius: 8 }}>
+                          <div style={{ fontSize: 11, color: '#6B7280', marginBottom: 4 }}>Annual Rent</div>
+                          <div style={{ fontSize: 16, fontWeight: 600 }}>{fmtCurrency(proformaAnnualRent)}</div>
+                        </div>
+                        <div style={{ padding: 12, background: '#F9FAFB', borderRadius: 8 }}>
+                          <div style={{ fontSize: 11, color: '#6B7280', marginBottom: 4 }}>Rent Per Unit/Mo</div>
+                          <div style={{ fontSize: 16, fontWeight: 600 }}>{fmtCurrency(proformaRentPerUnit)}</div>
+                        </div>
+                        <div style={{ padding: 12, background: proformaAnnualRent > (pnl.gross_potential_rent || 0) ? '#ECFDF5' : '#FEF2F2', borderRadius: 8 }}>
+                          <div style={{ fontSize: 11, color: proformaAnnualRent > (pnl.gross_potential_rent || 0) ? '#047857' : '#991B1B', marginBottom: 4 }}>
+                            Rent Change
+                          </div>
+                          <div style={{ fontSize: 16, fontWeight: 600, color: proformaAnnualRent > (pnl.gross_potential_rent || 0) ? '#047857' : '#991B1B' }}>
+                            {proformaAnnualRent > (pnl.gross_potential_rent || 0) ? '+' : ''}{fmtCurrency(rentDifference)}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Change Indicators */}
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 16 }}>
+                      <div style={{ padding: 12, background: proformaPrice < pricing.price ? '#ECFDF5' : '#FEF3C7', borderRadius: 8 }}>
+                        <div style={{ fontSize: 12, fontWeight: 600, color: proformaPrice < pricing.price ? '#047857' : '#92400e' }}>
+                          {proformaPrice < pricing.price ? '✓ ' : '⚠ '}
+                          Price {proformaPrice < pricing.price ? 'Decrease' : 'Increase'}: {fmtCurrency(Math.abs(proformaPrice - pricing.price))} 
+                          ({fmtPct(Math.abs(proformaPrice - pricing.price) / pricing.price)})
+                        </div>
+                      </div>
+                      <div style={{ padding: 12, background: proformaNOI > (pnl.noi || 0) ? '#ECFDF5' : '#FEF2F2', borderRadius: 8 }}>
+                        <div style={{ fontSize: 12, fontWeight: 600, color: proformaNOI > (pnl.noi || 0) ? '#047857' : '#991B1B' }}>
+                          {proformaNOI > (pnl.noi || 0) ? '↑ ' : '↓ '}
+                          NOI Impact: {fmtCurrency(Math.abs(proformaNOI - (pnl.noi || 0)))} 
+                          ({fmtPct(Math.abs(proformaNOI - (pnl.noi || 0)) / (pnl.noi || 1))})
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Proforma Metrics Grid */}
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 20, marginBottom: 24 }}>
+                    <div style={{ background: 'white', borderRadius: 12, padding: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+                      <div style={{ fontSize: 12, color: '#6B7280', marginBottom: 8, fontWeight: 500 }}>Cap Rate</div>
+                      <div style={{ fontSize: 28, fontWeight: 700, color: COLORS.secondary }}>{fmtPct(proformaCapRate)}</div>
+                    </div>
+                    <div style={{ background: 'white', borderRadius: 12, padding: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+                      <div style={{ fontSize: 12, color: '#6B7280', marginBottom: 8, fontWeight: 500 }}>DSCR</div>
+                      <div style={{ fontSize: 28, fontWeight: 700, color: COLORS.dark }}>{fmtNumber(proformaDSCR)}</div>
+                    </div>
+                    <div style={{ background: 'white', borderRadius: 12, padding: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+                      <div style={{ fontSize: 12, color: '#6B7280', marginBottom: 8, fontWeight: 500 }}>Cash Flow</div>
+                      <div style={{ fontSize: 28, fontWeight: 700, color: proformaCashFlow > 0 ? COLORS.secondary : COLORS.danger }}>
+                        {fmtCurrency(proformaCashFlow)}
+                      </div>
+                    </div>
+                    <div style={{ background: 'white', borderRadius: 12, padding: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+                      <div style={{ fontSize: 12, color: '#6B7280', marginBottom: 8, fontWeight: 500 }}>CoC Return</div>
+                      <div style={{ fontSize: 28, fontWeight: 700, color: COLORS.info }}>{fmtPct(proformaCoCReturn)}</div>
+                    </div>
+                  </div>
+
+                  {/* Detailed Proforma Breakdown */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
+                    <div style={{ background: 'white', borderRadius: 12, padding: 24, boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+                      <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 20 }}>Proforma Financials</h3>
+                      <div style={{ display: 'grid', gap: 12 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 0', borderBottom: '1px solid #F3F4F6' }}>
+                          <span style={{ fontSize: 14, color: '#6B7280' }}>Purchase Price</span>
+                          <span style={{ fontSize: 14, fontWeight: 600 }}>{fmtCurrency(proformaPrice)}</span>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 0', borderBottom: '1px solid #F3F4F6' }}>
+                          <span style={{ fontSize: 14, color: '#6B7280' }}>Annual Rent</span>
+                          <span style={{ fontSize: 14, fontWeight: 600 }}>{fmtCurrency(proformaAnnualRent)}</span>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 0', borderBottom: '1px solid #F3F4F6' }}>
+                          <span style={{ fontSize: 14, color: '#6B7280' }}>Operating Expenses</span>
+                          <span style={{ fontSize: 14, fontWeight: 600 }}>{fmtCurrency(proformaOpex)}</span>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 0', borderBottom: '1px solid #F3F4F6' }}>
+                          <span style={{ fontSize: 14, color: '#6B7280' }}>NOI</span>
+                          <span style={{ fontSize: 14, fontWeight: 600 }}>{fmtCurrency(proformaNOI)}</span>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 0', borderBottom: '1px solid #F3F4F6' }}>
+                          <span style={{ fontSize: 14, color: '#6B7280' }}>Loan Amount ({100 - (pricing.down_payment_pct || 20)}%)</span>
+                          <span style={{ fontSize: 14, fontWeight: 600 }}>{fmtCurrency(proformaLoanAmount)}</span>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 0', borderBottom: '1px solid #F3F4F6' }}>
+                          <span style={{ fontSize: 14, color: '#6B7280' }}>Annual Debt Service</span>
+                          <span style={{ fontSize: 14, fontWeight: 600 }}>{fmtCurrency(proformaAnnualDebtService)}</span>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 0', background: '#F9FAFB' }}>
+                          <span style={{ fontSize: 14, fontWeight: 600 }}>Annual Cash Flow</span>
+                          <span style={{ fontSize: 16, fontWeight: 700, color: proformaCashFlow > 0 ? COLORS.secondary : COLORS.danger }}>
+                            {fmtCurrency(proformaCashFlow)}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div style={{ background: 'white', borderRadius: 12, padding: 24, boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+                      <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 20 }}>Proforma Return Metrics</h3>
+                      <div style={{ display: 'grid', gap: 12 }}>
+                        <div style={{ padding: 12, background: '#F9FAFB', borderRadius: 8 }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <span style={{ fontSize: 14, color: '#6B7280' }}>Cap Rate</span>
+                            <span style={{ fontSize: 16, fontWeight: 700, color: COLORS.secondary }}>{fmtPct(proformaCapRate)}</span>
+                          </div>
+                        </div>
+                        <div style={{ padding: 12, background: '#F9FAFB', borderRadius: 8 }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <span style={{ fontSize: 14, color: '#6B7280' }}>Cash on Cash</span>
+                            <span style={{ fontSize: 16, fontWeight: 700, color: COLORS.info }}>{fmtPct(proformaCoCReturn)}</span>
+                          </div>
+                        </div>
+                        <div style={{ padding: 12, background: '#F9FAFB', borderRadius: 8 }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <span style={{ fontSize: 14, color: '#6B7280' }}>DSCR</span>
+                            <span style={{ fontSize: 16, fontWeight: 700 }}>{fmtNumber(proformaDSCR)}</span>
+                          </div>
+                        </div>
+                        <div style={{ padding: 12, background: '#F9FAFB', borderRadius: 8 }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <span style={{ fontSize: 14, color: '#6B7280' }}>GRM</span>
+                            <span style={{ fontSize: 16, fontWeight: 700 }}>{fmtNumber(proformaGRM)}</span>
+                          </div>
+                        </div>
+                        <div style={{ padding: 12, background: '#F9FAFB', borderRadius: 8 }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <span style={{ fontSize: 14, color: '#6B7280' }}>Break-Even Occupancy</span>
+                            <span style={{ fontSize: 16, fontWeight: 700 }}>{fmtPct(proformaBreakEven)}</span>
+                          </div>
+                        </div>
+                        <div style={{ padding: 12, background: '#F9FAFB', borderRadius: 8 }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <span style={{ fontSize: 14, color: '#6B7280' }}>Expense Ratio</span>
+                            <span style={{ fontSize: 16, fontWeight: 700 }}>{fmtPct(proformaExpenseRatio)}</span>
+                          </div>
+                        </div>
+                        <div style={{ padding: 12, background: '#F9FAFB', borderRadius: 8 }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <span style={{ fontSize: 14, color: '#6B7280' }}>Price Per Unit</span>
+                            <span style={{ fontSize: 16, fontWeight: 700 }}>{fmtCurrency(proformaPricePerUnit)}</span>
+                          </div>
+                        </div>
+                        <div style={{ padding: 12, background: '#F9FAFB', borderRadius: 8 }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <span style={{ fontSize: 14, color: '#6B7280' }}>Monthly Cash Flow</span>
+                            <span style={{ fontSize: 16, fontWeight: 700 }}>{fmtCurrency(proformaCashFlow / 12)}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* Comparison Tab */}
+            {resultsTab === 'comparison' && (() => {
+              // Initialize proforma values if not set
+              if (proformaPurchasePrice === 0 && pricing.price) {
+                setProformaPurchasePrice(pricing.price);
+              }
+              if (proformaMonthlyRent === 0 && pnl.gross_potential_rent) {
+                setProformaMonthlyRent(pnl.gross_potential_rent / 12);
+              }
+              
+              // Calculate proforma metrics with adjusted price AND rent
+              const proformaPrice = proformaPurchasePrice || pricing.price || 0;
+              const proformaLoanAmount = proformaPrice * (1 - (pricing.down_payment_pct || 20) / 100);
+              
+              // Proforma rent calculations
+              const currentMonthlyRent = (pnl.gross_potential_rent || 0) / 12;
+              const proformaMonthlyRentValue = proformaMonthlyRent || currentMonthlyRent;
+              const proformaAnnualRent = proformaMonthlyRentValue * 12;
+              const currentAnnualRent = pnl.gross_potential_rent || 0;
+              
+              // Proforma NOI with adjusted rent
+              const rentDifference = proformaAnnualRent - currentAnnualRent;
+              const proformaNOI = (pnl.noi || 0) + rentDifference;
+              const proformaOpex = pnl.operating_expenses || 0;
+              const proformaExpenseRatio = proformaAnnualRent > 0 ? proformaOpex / proformaAnnualRent : 0;
+              const currentExpenseRatio = currentAnnualRent > 0 ? proformaOpex / currentAnnualRent : 0;
+              
+              // Proforma debt service
+              const monthlyRate = (pricing.interest_rate || 0) / 100 / 12;
+              const n = (pricing.amortization_years || 30) * 12;
+              let proformaMonthlyPayment = 0;
+              if (monthlyRate > 0) {
+                proformaMonthlyPayment = proformaLoanAmount * monthlyRate / (1 - Math.pow(1 + monthlyRate, -n));
+              } else {
+                proformaMonthlyPayment = proformaLoanAmount / n;
+              }
+              const proformaAnnualDebtService = proformaMonthlyPayment * 12;
+              
+              // Proforma calculations
+              const proformaCashFlow = proformaNOI - proformaAnnualDebtService;
+              const proformaCapRate = proformaNOI / proformaPrice;
+              const proformaDSCR = proformaNOI / proformaAnnualDebtService;
+              const proformaGRM = proformaPrice / proformaAnnualRent;
+              const proformaBreakEven = proformaAnnualRent > 0 ? (proformaOpex + proformaAnnualDebtService) / proformaAnnualRent : 0;
+              
+              // Current metrics
+              const currentPrice = pricing.price || 0;
+              const currentNOI = pnl.noi || 0;
+              const currentCashFlow = currentNOI - (pricing.annual_debt_service || 0);
+              const currentCapRate = adjustedCapRate;
+              const currentDSCR = underwriting.dscr;
+              const currentGRM = currentPrice / currentAnnualRent;
+              const currentBreakEven = currentAnnualRent > 0 ? (proformaOpex + (pricing.annual_debt_service || 0)) / currentAnnualRent : 0;
+              
+              return (
+                <div>
+                  {/* Price & Rent Adjustment Section */}
+                  <div style={{ background: 'white', borderRadius: 12, padding: 24, marginBottom: 24, boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+                    <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 20, display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <GitCompare size={20} /> Adjust Proforma Assumptions
+                    </h3>
+                    
+                    {/* Purchase Price Controls */}
+                    <div style={{ marginBottom: 24 }}>
+                      <h4 style={{ fontSize: 14, fontWeight: 600, color: '#374151', marginBottom: 12 }}>Purchase Price</h4>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 24, alignItems: 'center' }}>
+                        <div>
+                          <label style={{ fontSize: 14, color: '#6B7280', marginBottom: 8, display: 'block' }}>
+                            Proforma Purchase Price
+                          </label>
+                          <input
+                            type="number"
+                            value={proformaPurchasePrice || pricing.price || 0}
+                            onChange={(e) => setProformaPurchasePrice(parseFloat(e.target.value) || 0)}
+                            style={{
+                              width: '100%',
+                              padding: 12,
+                              fontSize: 18,
+                              fontWeight: 600,
+                              border: '2px solid #E5E7EB',
+                              borderRadius: 8,
+                              outline: 'none'
+                            }}
+                          />
+                        </div>
+                        
+                        <div>
+                          <label style={{ fontSize: 14, color: '#6B7280', marginBottom: 8, display: 'block' }}>
+                            Price Range: {fmtCurrency(proformaPrice)}
+                          </label>
+                          <input
+                            type="range"
+                            min={pricing.price * 0.7}
+                            max={pricing.price * 1.3}
+                            step={10000}
+                            value={proformaPurchasePrice || pricing.price || 0}
+                            onChange={(e) => setProformaPurchasePrice(parseFloat(e.target.value))}
+                            style={{
+                              width: '100%',
+                              height: 8,
+                              borderRadius: 4,
+                              outline: 'none',
+                              cursor: 'pointer'
+                            }}
+                          />
+                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#6B7280', marginTop: 4 }}>
+                            <span>{fmtCurrency(pricing.price * 0.7)}</span>
+                            <span>{fmtCurrency(pricing.price * 1.3)}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Rent Controls */}
+                    <div style={{ paddingTop: 16, borderTop: '1px solid #E5E7EB' }}>
+                      <h4 style={{ fontSize: 14, fontWeight: 600, color: '#374151', marginBottom: 12 }}>Rental Income</h4>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 24, alignItems: 'center' }}>
+                        <div>
+                          <label style={{ fontSize: 14, color: '#6B7280', marginBottom: 8, display: 'block' }}>
+                            Proforma Monthly Rent
+                          </label>
+                          <input
+                            type="number"
+                            value={proformaMonthlyRent || currentMonthlyRent}
+                            onChange={(e) => setProformaMonthlyRent(parseFloat(e.target.value) || 0)}
+                            style={{
+                              width: '100%',
+                              padding: 12,
+                              fontSize: 18,
+                              fontWeight: 600,
+                              border: '2px solid #E5E7EB',
+                              borderRadius: 8,
+                              outline: 'none'
+                            }}
+                          />
+                        </div>
+                        
+                        <div>
+                          <label style={{ fontSize: 14, color: '#6B7280', marginBottom: 8, display: 'block' }}>
+                            Rent Range: {fmtCurrency(proformaMonthlyRentValue)}
+                          </label>
+                          <input
+                            type="range"
+                            min={currentMonthlyRent * 0.8}
+                            max={currentMonthlyRent * 1.3}
+                            step={100}
+                            value={proformaMonthlyRent || currentMonthlyRent}
+                            onChange={(e) => setProformaMonthlyRent(parseFloat(e.target.value))}
+                            style={{
+                              width: '100%',
+                              height: 8,
+                              borderRadius: 4,
+                              outline: 'none',
+                              cursor: 'pointer'
+                            }}
+                          />
+                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#6B7280', marginTop: 4 }}>
+                            <span>{fmtCurrency(currentMonthlyRent * 0.8)}</span>
+                            <span>{fmtCurrency(currentMonthlyRent * 1.3)}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Side-by-Side Comparison */}
+                  <div style={{ background: 'white', borderRadius: 12, padding: 24, boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+                    <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 24 }}>Current vs Proforma Analysis</h3>
+                    
+                    <div style={{ overflowX: 'auto' }}>
+                      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                        <thead>
+                          <tr style={{ borderBottom: '2px solid #E5E7EB', background: '#F9FAFB' }}>
+                            <th style={{ padding: 16, textAlign: 'left', fontSize: 14, fontWeight: 600, color: '#6B7280' }}>Metric</th>
+                            <th style={{ padding: 16, textAlign: 'right', fontSize: 14, fontWeight: 600, color: '#6B7280' }}>Current</th>
+                            <th style={{ padding: 16, textAlign: 'right', fontSize: 14, fontWeight: 600, color: '#6B7280' }}>Proforma</th>
+                            <th style={{ padding: 16, textAlign: 'right', fontSize: 14, fontWeight: 600, color: '#6B7280' }}>Difference</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {/* Purchase Price */}
+                          <tr style={{ borderBottom: '1px solid #F3F4F6' }}>
+                            <td style={{ padding: 16, fontSize: 14, fontWeight: 500 }}>Purchase Price</td>
+                            <td style={{ padding: 16, textAlign: 'right', fontSize: 14, fontWeight: 600 }}>{fmtCurrency(currentPrice)}</td>
+                            <td style={{ padding: 16, textAlign: 'right', fontSize: 14, fontWeight: 600 }}>{fmtCurrency(proformaPrice)}</td>
+                            <td style={{ padding: 16, textAlign: 'right', fontSize: 14, fontWeight: 600, color: proformaPrice < currentPrice ? COLORS.secondary : COLORS.danger }}>
+                              {fmtCurrency(proformaPrice - currentPrice)} ({fmtPct((proformaPrice - currentPrice) / currentPrice)})
+                            </td>
+                          </tr>
+                          
+                          {/* Annual Rent */}
+                          <tr style={{ borderBottom: '1px solid #F3F4F6', background: '#FAFAFA' }}>
+                            <td style={{ padding: 16, fontSize: 14, fontWeight: 500 }}>Annual Rent</td>
+                            <td style={{ padding: 16, textAlign: 'right', fontSize: 14, fontWeight: 600 }}>{fmtCurrency(currentAnnualRent)}</td>
+                            <td style={{ padding: 16, textAlign: 'right', fontSize: 14, fontWeight: 600 }}>{fmtCurrency(proformaAnnualRent)}</td>
+                            <td style={{ padding: 16, textAlign: 'right', fontSize: 14, fontWeight: 600, color: proformaAnnualRent > currentAnnualRent ? COLORS.secondary : COLORS.danger }}>
+                              {fmtCurrency(proformaAnnualRent - currentAnnualRent)} ({fmtPct((proformaAnnualRent - currentAnnualRent) / currentAnnualRent)})
+                            </td>
+                          </tr>
+                          
+                          {/* Monthly Rent */}
+                          <tr style={{ borderBottom: '1px solid #F3F4F6' }}>
+                            <td style={{ padding: 16, fontSize: 14, fontWeight: 500 }}>Monthly Rent</td>
+                            <td style={{ padding: 16, textAlign: 'right', fontSize: 14, fontWeight: 600 }}>{fmtCurrency(currentMonthlyRent)}</td>
+                            <td style={{ padding: 16, textAlign: 'right', fontSize: 14, fontWeight: 600 }}>{fmtCurrency(proformaMonthlyRentValue)}</td>
+                            <td style={{ padding: 16, textAlign: 'right', fontSize: 14, fontWeight: 600, color: proformaMonthlyRentValue > currentMonthlyRent ? COLORS.secondary : COLORS.danger }}>
+                              {fmtCurrency(proformaMonthlyRentValue - currentMonthlyRent)}
+                            </td>
+                          </tr>
+                          
+                          {/* NOI */}
+                          <tr style={{ borderBottom: '1px solid #F3F4F6', background: '#FAFAFA' }}>
+                            <td style={{ padding: 16, fontSize: 14, fontWeight: 500 }}>NOI</td>
+                            <td style={{ padding: 16, textAlign: 'right', fontSize: 14, fontWeight: 600 }}>{fmtCurrency(currentNOI)}</td>
+                            <td style={{ padding: 16, textAlign: 'right', fontSize: 14, fontWeight: 600 }}>{fmtCurrency(proformaNOI)}</td>
+                            <td style={{ padding: 16, textAlign: 'right', fontSize: 14, fontWeight: 600, color: proformaNOI > currentNOI ? COLORS.secondary : COLORS.danger }}>
+                              {fmtCurrency(proformaNOI - currentNOI)} ({fmtPct((proformaNOI - currentNOI) / currentNOI)})
+                            </td>
+                          </tr>
+                          
+                          {/* Cap Rate */}
+                          <tr style={{ borderBottom: '1px solid #F3F4F6' }}>
+                            <td style={{ padding: 16, fontSize: 14, fontWeight: 500 }}>Cap Rate</td>
+                            <td style={{ padding: 16, textAlign: 'right', fontSize: 14, fontWeight: 600 }}>{fmtPct(currentCapRate)}</td>
+                            <td style={{ padding: 16, textAlign: 'right', fontSize: 14, fontWeight: 600 }}>{fmtPct(proformaCapRate)}</td>
+                            <td style={{ padding: 16, textAlign: 'right', fontSize: 14, fontWeight: 600, color: proformaCapRate > currentCapRate ? COLORS.secondary : COLORS.danger }}>
+                              {fmtPct(proformaCapRate - currentCapRate)}
+                            </td>
+                          </tr>
+                          
+                          {/* DSCR */}
+                          <tr style={{ borderBottom: '1px solid #F3F4F6', background: '#FAFAFA' }}>
+                            <td style={{ padding: 16, fontSize: 14, fontWeight: 500 }}>DSCR</td>
+                            <td style={{ padding: 16, textAlign: 'right', fontSize: 14, fontWeight: 600 }}>{fmtNumber(currentDSCR)}</td>
+                            <td style={{ padding: 16, textAlign: 'right', fontSize: 14, fontWeight: 600 }}>{fmtNumber(proformaDSCR)}</td>
+                            <td style={{ padding: 16, textAlign: 'right', fontSize: 14, fontWeight: 600, color: proformaDSCR > currentDSCR ? COLORS.secondary : COLORS.danger }}>
+                              {fmtNumber(proformaDSCR - currentDSCR)}
+                            </td>
+                          </tr>
+                          
+                          {/* GRM */}
+                          <tr style={{ borderBottom: '1px solid #F3F4F6' }}>
+                            <td style={{ padding: 16, fontSize: 14, fontWeight: 500 }}>GRM</td>
+                            <td style={{ padding: 16, textAlign: 'right', fontSize: 14, fontWeight: 600 }}>{fmtNumber(currentGRM)}</td>
+                            <td style={{ padding: 16, textAlign: 'right', fontSize: 14, fontWeight: 600 }}>{fmtNumber(proformaGRM)}</td>
+                            <td style={{ padding: 16, textAlign: 'right', fontSize: 14, fontWeight: 600, color: proformaGRM < currentGRM ? COLORS.secondary : COLORS.danger }}>
+                              {fmtNumber(proformaGRM - currentGRM)}
+                            </td>
+                          </tr>
+                          
+                          {/* Break-Even Occupancy */}
+                          <tr style={{ borderBottom: '1px solid #F3F4F6', background: '#FAFAFA' }}>
+                            <td style={{ padding: 16, fontSize: 14, fontWeight: 500 }}>Break-Even Occupancy</td>
+                            <td style={{ padding: 16, textAlign: 'right', fontSize: 14, fontWeight: 600 }}>{fmtPct(currentBreakEven)}</td>
+                            <td style={{ padding: 16, textAlign: 'right', fontSize: 14, fontWeight: 600 }}>{fmtPct(proformaBreakEven)}</td>
+                            <td style={{ padding: 16, textAlign: 'right', fontSize: 14, fontWeight: 600, color: proformaBreakEven < currentBreakEven ? COLORS.secondary : COLORS.danger }}>
+                              {fmtPct(proformaBreakEven - currentBreakEven)}
+                            </td>
+                          </tr>
+                          
+                          {/* Expense Ratio */}
+                          <tr style={{ borderBottom: '1px solid #F3F4F6' }}>
+                            <td style={{ padding: 16, fontSize: 14, fontWeight: 500 }}>Expense Ratio</td>
+                            <td style={{ padding: 16, textAlign: 'right', fontSize: 14, fontWeight: 600 }}>{fmtPct(currentExpenseRatio)}</td>
+                            <td style={{ padding: 16, textAlign: 'right', fontSize: 14, fontWeight: 600 }}>{fmtPct(proformaExpenseRatio)}</td>
+                            <td style={{ padding: 16, textAlign: 'right', fontSize: 14, fontWeight: 600, color: proformaExpenseRatio < currentExpenseRatio ? COLORS.secondary : COLORS.danger }}>
+                              {fmtPct(proformaExpenseRatio - currentExpenseRatio)}
+                            </td>
+                          </tr>
+                          
+                          {/* Annual Cash Flow */}
+                          <tr style={{ borderBottom: '1px solid #F3F4F6', background: '#FAFAFA' }}>
+                            <td style={{ padding: 16, fontSize: 14, fontWeight: 500 }}>Annual Cash Flow</td>
+                            <td style={{ padding: 16, textAlign: 'right', fontSize: 14, fontWeight: 600 }}>{fmtCurrency(currentCashFlow)}</td>
+                            <td style={{ padding: 16, textAlign: 'right', fontSize: 14, fontWeight: 600 }}>{fmtCurrency(proformaCashFlow)}</td>
+                            <td style={{ padding: 16, textAlign: 'right', fontSize: 14, fontWeight: 600, color: proformaCashFlow > currentCashFlow ? COLORS.secondary : COLORS.danger }}>
+                              {fmtCurrency(proformaCashFlow - currentCashFlow)}
+                            </td>
+                          </tr>
+                          
+                          {/* Monthly Cash Flow */}
+                          <tr style={{ borderBottom: '1px solid #F3F4F6' }}>
+                            <td style={{ padding: 16, fontSize: 14, fontWeight: 500 }}>Monthly Cash Flow</td>
+                            <td style={{ padding: 16, textAlign: 'right', fontSize: 14, fontWeight: 600 }}>{fmtCurrency(currentCashFlow / 12)}</td>
+                            <td style={{ padding: 16, textAlign: 'right', fontSize: 14, fontWeight: 600 }}>{fmtCurrency(proformaCashFlow / 12)}</td>
+                            <td style={{ padding: 16, textAlign: 'right', fontSize: 14, fontWeight: 600, color: proformaCashFlow > currentCashFlow ? COLORS.secondary : COLORS.danger }}>
+                              {fmtCurrency((proformaCashFlow - currentCashFlow) / 12)}
+                            </td>
+                          </tr>
+                          
+                          {/* Debt Service */}
+                          <tr style={{ borderBottom: '1px solid #F3F4F6', background: '#FAFAFA' }}>
+                            <td style={{ padding: 16, fontSize: 14, fontWeight: 500 }}>Annual Debt Service</td>
+                            <td style={{ padding: 16, textAlign: 'right', fontSize: 14, fontWeight: 600 }}>{fmtCurrency(pricing.annual_debt_service)}</td>
+                            <td style={{ padding: 16, textAlign: 'right', fontSize: 14, fontWeight: 600 }}>{fmtCurrency(proformaAnnualDebtService)}</td>
+                            <td style={{ padding: 16, textAlign: 'right', fontSize: 14, fontWeight: 600, color: proformaAnnualDebtService < pricing.annual_debt_service ? COLORS.secondary : COLORS.danger }}>
+                              {fmtCurrency(proformaAnnualDebtService - pricing.annual_debt_service)}
+                            </td>
+                          </tr>
+                          
+                          {/* Loan Amount */}
+                          <tr style={{ borderBottom: '1px solid #F3F4F6' }}>
+                            <td style={{ padding: 16, fontSize: 14, fontWeight: 500 }}>Loan Amount</td>
+                            <td style={{ padding: 16, textAlign: 'right', fontSize: 14, fontWeight: 600 }}>{fmtCurrency(pricing.loan_amount)}</td>
+                            <td style={{ padding: 16, textAlign: 'right', fontSize: 14, fontWeight: 600 }}>{fmtCurrency(proformaLoanAmount)}</td>
+                            <td style={{ padding: 16, textAlign: 'right', fontSize: 14, fontWeight: 600 }}>
+                              {fmtCurrency(proformaLoanAmount - pricing.loan_amount)}
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                    
+                    {/* Summary Cards */}
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginTop: 24 }}>
+                      <div style={{ padding: 16, background: proformaCashFlow > currentCashFlow ? '#ECFDF5' : '#FEF2F2', borderRadius: 8, border: `1px solid ${proformaCashFlow > currentCashFlow ? '#86EFAC' : '#FECACA'}` }}>
+                        <div style={{ fontSize: 12, color: proformaCashFlow > currentCashFlow ? '#047857' : '#991B1B', marginBottom: 4, fontWeight: 600 }}>
+                          CASH FLOW IMPACT
+                        </div>
+                        <div style={{ fontSize: 20, fontWeight: 700, color: proformaCashFlow > currentCashFlow ? '#047857' : '#991B1B' }}>
+                          {proformaCashFlow > currentCashFlow ? '↑' : '↓'} {fmtCurrency(Math.abs(proformaCashFlow - currentCashFlow))}
+                        </div>
+                      </div>
+                      
+                      <div style={{ padding: 16, background: proformaCapRate > currentCapRate ? '#ECFDF5' : '#FEF2F2', borderRadius: 8, border: `1px solid ${proformaCapRate > currentCapRate ? '#86EFAC' : '#FECACA'}` }}>
+                        <div style={{ fontSize: 12, color: proformaCapRate > currentCapRate ? '#047857' : '#991B1B', marginBottom: 4, fontWeight: 600 }}>
+                          CAP RATE IMPACT
+                        </div>
+                        <div style={{ fontSize: 20, fontWeight: 700, color: proformaCapRate > currentCapRate ? '#047857' : '#991B1B' }}>
+                          {proformaCapRate > currentCapRate ? '↑' : '↓'} {fmtPct(Math.abs(proformaCapRate - currentCapRate))}
+                        </div>
+                      </div>
+                      
+                      <div style={{ padding: 16, background: proformaNOI > currentNOI ? '#ECFDF5' : '#FEF2F2', borderRadius: 8, border: `1px solid ${proformaNOI > currentNOI ? '#86EFAC' : '#FECACA'}` }}>
+                        <div style={{ fontSize: 12, color: proformaNOI > currentNOI ? '#047857' : '#991B1B', marginBottom: 4, fontWeight: 600 }}>
+                          NOI IMPACT
+                        </div>
+                        <div style={{ fontSize: 20, fontWeight: 700, color: proformaNOI > currentNOI ? '#047857' : '#991B1B' }}>
+                          {proformaNOI > currentNOI ? '↑' : '↓'} {fmtCurrency(Math.abs(proformaNOI - currentNOI))}
+                        </div>
+                      </div>
+                      
+                      <div style={{ padding: 16, background: proformaPrice < currentPrice ? '#ECFDF5' : '#FEF3C7', borderRadius: 8, border: `1px solid ${proformaPrice < currentPrice ? '#86EFAC' : '#FCD34D'}` }}>
+                        <div style={{ fontSize: 12, color: proformaPrice < currentPrice ? '#047857' : '#92400e', marginBottom: 4, fontWeight: 600 }}>
+                          PRICE SAVINGS
+                        </div>
+                        <div style={{ fontSize: 20, fontWeight: 700, color: proformaPrice < currentPrice ? '#047857' : '#92400e' }}>
+                          {proformaPrice < currentPrice ? '✓ ' : '⚠ '}{fmtCurrency(Math.abs(currentPrice - proformaPrice))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
           </div>
         </div>
+
+        {/* Upgrade Modal */}
+        {showUpgradeModal && (
+          <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 9999,
+          }}>
+            <div style={{
+              background: '#fff',
+              borderRadius: 16,
+              padding: 32,
+              maxWidth: 500,
+              width: '90%',
+              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+            }}>
+              <div style={{ textAlign: 'center', marginBottom: 24 }}>
+                <div style={{ fontSize: 48, marginBottom: 16 }}>📄</div>
+                <h2 style={{ fontSize: 24, fontWeight: 700, color: '#111827', marginBottom: 12 }}>
+                  60-Page Limit Reached
+                </h2>
+                <p style={{ fontSize: 16, color: '#6b7280', lineHeight: 1.6 }}>
+                  You've processed 60 pages this month. Purchase 60 more pages to continue analyzing deals.
+                </p>
+              </div>
+
+              <div style={{ 
+                background: 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)',
+                border: '2px solid #0ea5e9',
+                borderRadius: 12,
+                padding: 24,
+                marginBottom: 24,
+                textAlign: 'center',
+              }}>
+                <div style={{ fontSize: 14, color: '#0369a1', fontWeight: 600, marginBottom: 8 }}>
+                  60 PAGE PACK
+                </div>
+                <div style={{ fontSize: 36, fontWeight: 800, color: '#0369a1' }}>
+                  $29
+                </div>
+                <div style={{ fontSize: 14, color: '#0369a1', marginTop: 4 }}>
+                  One-time purchase • No subscription
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: 12 }}>
+                <button
+                  onClick={() => {
+                    const userId = currentUser?.id;
+                    window.location.href = `https://buy.stripe.com/test_aFacMY6Btb4Sd2RcLFf3a01?client_reference_id=${userId}&redirect=underwrite`;
+                  }}
+                  style={{
+                    flex: 1,
+                    padding: '14px 28px',
+                    background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: 10,
+                    fontSize: 16,
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    boxShadow: '0 4px 6px -1px rgba(37, 99, 235, 0.3)',
+                  }}
+                >
+                  Buy 60 Pages - $29
+                </button>
+              </div>
+              <button
+                onClick={() => window.location.href = '/'}
+                style={{
+                  width: '100%',
+                  marginTop: 12,
+                  padding: '10px',
+                  background: 'transparent',
+                  color: '#6b7280',
+                  border: 'none',
+                  fontSize: 14,
+                  cursor: 'pointer',
+                  textDecoration: 'underline',
+                }}
+              >
+                Go to Dashboard
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     );
   }

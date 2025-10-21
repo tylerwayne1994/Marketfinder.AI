@@ -18,7 +18,7 @@ if (typeof document !== 'undefined') {
   }
 }
 
-const RentalMarketAnalysis = ({ onBack }) => {
+const RentalMarketAnalysis = ({ setCurrentPage }) => {
   const [formData, setFormData] = useState({
     location: '',
   });
@@ -562,7 +562,7 @@ const RentalMarketAnalysis = ({ onBack }) => {
       <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
         <div style={{ marginBottom: '32px' }}>
           <button 
-            onClick={() => window.location.href = '/'}
+            onClick={() => setCurrentPage ? setCurrentPage('home') : window.history.back()}
             style={{
               background: 'none',
               border: '1px solid #e5e7eb',

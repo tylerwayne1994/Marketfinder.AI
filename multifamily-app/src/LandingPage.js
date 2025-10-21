@@ -13,7 +13,7 @@ function VideoWithHover({ src, description }) {
     if (videoRef.current) {
       videoRef.current.loop = true;
       // Only play if paused
-      if (videoRef.current.paused) {
+      if (videoRef.current && videoRef.current.paused) {
         videoRef.current.play().catch(() => {});
       }
     }
@@ -23,10 +23,12 @@ function VideoWithHover({ src, description }) {
     if (videoRef.current) {
       timeoutRef.current = setTimeout(() => {
         // Only pause if not already paused
-        if (!videoRef.current.paused) {
+        if (videoRef.current && !videoRef.current.paused) {
           videoRef.current.pause();
         }
-        videoRef.current.currentTime = 0;
+        if (videoRef.current) {
+          videoRef.current.currentTime = 0;
+        }
       }, 5000); // 5 seconds
     }
   };

@@ -101,7 +101,7 @@ const HomePage = ({ setCurrentPage, isAuthenticated = false, currentUser = null 
     },
     {
       icon: FileText,
-      label: 'Document Generator',
+      label: 'Deal Structure',
       page: 'documentGenerator',
       color: '#6366f1',
       description: 'AI contract generation'
@@ -153,7 +153,7 @@ const HomePage = ({ setCurrentPage, isAuthenticated = false, currentUser = null 
     },
     {
       icon: FileText,
-      title: 'Legal Document Generator',
+      title: 'Deal Structure',
       subtitle: 'AI-Powered Contracts',
       description: 'Generate professional legal documents instantly with our AI contract generator. Create LOIs, Purchase Agreements, and more.',
       highlights: [
