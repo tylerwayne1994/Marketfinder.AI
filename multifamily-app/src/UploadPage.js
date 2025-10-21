@@ -561,10 +561,28 @@ const EnhancedUploadPage = ({ setCurrentPage }) => {
       console.log("[DEBUG] User ID being sent:", currentUser?.id);
       console.log("[DEBUG] Selected pages:", selectedPages.size);
 
-      const res = await fetch(`${API_BASE}/ocr/underwrite`, {
-        method: "POST",
-        body: fd,
-      });
+
+      // Add a timeout to the fetch request (60 seconds)
+      const fetchWithTimeout = (url, options, timeout = 60000) => {
+        return Promise.race([
+          fetch(url, options),
+          new Promise((_, reject) =>
+            setTimeout(() => reject(new Error("Request timed out. The backend may be sleeping or slow. Please retry in 30 seconds or check system status.")), timeout)
+          )
+        ]);
+      };
+
+      let res;
+      try {
+        res = await fetchWithTimeout(`${API_BASE}/ocr/underwrite`, {
+          method: "POST",
+          body: fd,
+        });
+      } catch (timeoutErr) {
+        setError(timeoutErr.message || "Request timed out. Please try again later.");
+        setStep("pageSelect");
+        return;
+      }
 
       setProgress(60);
       setProcessingMsg("AI analyzing deal with Claude...");
@@ -910,7 +928,7 @@ const EnhancedUploadPage = ({ setCurrentPage }) => {
         <div style={styles.container}>
           <div style={{ padding: "20px 0" }}>
             <button 
-              onClick={() => setCurrentPage ? setCurrentPage('underwrite') : window.location.href = '/'} 
+              onClick={() => setCurrentPage ? setCurrentPage('home') : window.location.href = '/'} 
               style={styles.homeButton}
               onMouseEnter={(e) => {
                 e.target.style.background = '#f9fafb';

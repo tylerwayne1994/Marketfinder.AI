@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { supabase } from './lib/supabase';
 import propertyImage from './IMG_0108 (4).jpg';
+import signupImage from '../public/IMG_1658.jpg';
 
 const SignupPage = ({ setCurrentPage, setIsAuthenticated, setCurrentUser }) => {
   const [formData, setFormData] = useState({
@@ -494,7 +495,7 @@ const SignupPage = ({ setCurrentPage, setIsAuthenticated, setCurrentUser }) => {
       <div
         style={{
           flex: 65,
-          backgroundImage: `url(${propertyImage})`,
+          backgroundImage: `url(${signupImage})`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           position: 'relative',

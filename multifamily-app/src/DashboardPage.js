@@ -58,6 +58,28 @@ const DashboardPage = ({ setCurrentPage, currentUser }) => {
   const [activeTab, setActiveTab] = useState('overview');
   const [feedbackType, setFeedbackType] = useState('recommendation');
   const [feedbackMessage, setFeedbackMessage] = useState('');
+  const [showChangePassword, setShowChangePassword] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
+  const [changePwError, setChangePwError] = useState(null);
+  const [changePwSuccess, setChangePwSuccess] = useState(false);
+  const [isChangingPw, setIsChangingPw] = useState(false);
+
+  const handleChangePassword = async (e) => {
+    e.preventDefault();
+    setChangePwError(null);
+    setChangePwSuccess(false);
+    setIsChangingPw(true);
+    try {
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      if (error) throw error;
+      setChangePwSuccess(true);
+      setNewPassword('');
+    } catch (err) {
+      setChangePwError(err?.message || 'Failed to change password');
+    } finally {
+      setIsChangingPw(false);
+    }
+  };
   const [showFeedbackSuccess, setShowFeedbackSuccess] = useState(false);
   const [userData, setUserData] = useState(null);
   const [profileForm, setProfileForm] = useState({
@@ -1887,6 +1909,7 @@ const DashboardPage = ({ setCurrentPage, currentUser }) => {
                       cursor: 'pointer',
                       transition: 'all 0.2s ease'
                     }}
+                    onClick={() => setShowChangePassword(true)}
                     onMouseEnter={(e) => {
                       e.currentTarget.style.backgroundColor = '#000000';
                       e.currentTarget.style.color = 'white';
@@ -1898,6 +1921,59 @@ const DashboardPage = ({ setCurrentPage, currentUser }) => {
                   >
                     Change Password
                   </button>
+
+                  {showChangePassword && (
+                    <div style={{
+                      position: 'fixed',
+                      top: 0,
+                      left: 0,
+                      width: '100vw',
+                      height: '100vh',
+                      background: 'rgba(0,0,0,0.3)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      zIndex: 1000
+                    }}>
+                      <div style={{
+                        background: 'white',
+                        padding: '2rem',
+                        borderRadius: '8px',
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                        minWidth: '320px',
+                        maxWidth: '90vw',
+                        position: 'relative'
+                      }}>
+                        <h3 style={{ marginBottom: '1rem' }}>Change Password</h3>
+                        <form onSubmit={handleChangePassword}>
+                          <input
+                            type="password"
+                            placeholder="New Password"
+                            value={newPassword}
+                            onChange={e => setNewPassword(e.target.value)}
+                            required
+                            minLength={6}
+                            style={{ width: '100%', padding: '0.75rem', border: '1px solid #ddd', borderRadius: '0.25rem', fontSize: '1rem', marginBottom: '1rem' }}
+                          />
+                          <button
+                            type="submit"
+                            disabled={isChangingPw || newPassword.length < 6}
+                            style={{ width: '100%', padding: '0.75rem', backgroundColor: '#1a73e8', color: 'white', border: 'none', borderRadius: '0.25rem', fontSize: '1rem', cursor: isChangingPw ? 'not-allowed' : 'pointer', opacity: isChangingPw ? 0.7 : 1 }}
+                          >
+                            {isChangingPw ? 'Changing...' : 'Change Password'}
+                          </button>
+                        </form>
+                        {changePwError && <p style={{ color: '#dc3545', marginTop: '1rem' }}>{changePwError}</p>}
+                        {changePwSuccess && <p style={{ color: '#155724', marginTop: '1rem' }}>Password changed successfully!</p>}
+                        <button onClick={() => {
+                          setShowChangePassword(false);
+                          setChangePwError(null);
+                          setChangePwSuccess(false);
+                          setNewPassword('');
+                        }} style={{ position: 'absolute', top: 12, right: 12, background: 'none', border: 'none', fontSize: '1.5rem', color: '#666', cursor: 'pointer' }}>×</button>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <div>
