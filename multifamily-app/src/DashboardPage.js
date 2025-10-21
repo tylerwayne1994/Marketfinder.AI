@@ -327,16 +327,17 @@ const DashboardPage = ({ setCurrentPage, currentUser }) => {
         ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {})
       };
       
-      // Use direct backend URL for local development, proxy for production
+      // Always POST directly to backend route, send user_id in JSON body
       const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
       const baseUrl = isLocal ? 'http://127.0.0.1:8010' : '';
       const url = isLocal 
-        ? `${baseUrl}/api/cancel-subscription?user_id=${currentUser.id}`
-        : `/api/proxy?endpoint=/cancel-subscription&user_id=${currentUser.id}`;
+        ? `${baseUrl}/api/cancel-subscription`
+        : `/api/cancel-subscription`;
       
       const response = await fetch(url, {
         method: 'POST',
-        headers
+        headers,
+        body: JSON.stringify({ user_id: currentUser.id })
       });
       let raw, data;
       try {
