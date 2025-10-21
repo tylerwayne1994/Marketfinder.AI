@@ -17,6 +17,7 @@ import SignupPage from './SignupPage'; // <-- ensure file/path matches
 import DashboardPage from './DashboardPage';
 import CheckoutReturnPage from './CheckoutReturnPage';
 import { supabase } from './lib/supabase';
+import ForgotPasswordPage from './ForgotPasswordPage'; // Import ForgotPasswordPage
 
 // Local storage keys
 const AUTH_STATE_KEY = 'terra_auth_state';
@@ -507,6 +508,9 @@ function App() {
               <button onClick={() => handlePageChange('home')} style={{ marginTop: '20px', padding: '10px 20px', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}>Back to Home</button>
             </div>
           );
+
+        case 'forgot-password':
+          return <ForgotPasswordPage setCurrentPage={handlePageChange} />;
 
         case 'docsigner':
           return (

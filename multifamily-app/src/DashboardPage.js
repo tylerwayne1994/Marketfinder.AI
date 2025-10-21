@@ -74,6 +74,12 @@ const DashboardPage = ({ setCurrentPage, currentUser }) => {
       if (error) throw error;
       setChangePwSuccess(true);
       setNewPassword('');
+      setTimeout(() => {
+        setShowChangePassword(false);
+        setChangePwError(null);
+        setChangePwSuccess(false);
+        setNewPassword('');
+      }, 2000);
     } catch (err) {
       setChangePwError(err?.message || 'Failed to change password');
     } finally {
