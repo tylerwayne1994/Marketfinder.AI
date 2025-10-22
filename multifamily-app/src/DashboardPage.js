@@ -66,26 +66,34 @@ const DashboardPage = ({ setCurrentPage, currentUser }) => {
 
   const handleChangePassword = async (e) => {
     e.preventDefault();
+    if (newPassword.length < 6) {
+      setChangePwError('Password must be at least 6 characters');
+      return;
+    }
+    
     setChangePwError(null);
     setChangePwSuccess(false);
     setIsChangingPw(true);
+    
     try {
       const { error } = await supabase.auth.updateUser({ password: newPassword });
       if (error) throw error;
+      
       setChangePwSuccess(true);
       setNewPassword('');
-      setIsChangingPw(false);
-      // Auto-close modal after 2 seconds on success
+      
+      // Auto-close after 2 seconds on success
       setTimeout(() => {
         setShowChangePassword(false);
-        setChangePwError(null);
         setChangePwSuccess(false);
-        setNewPassword('');
+        setIsChangingPw(false);
+        setChangePwError(null);
       }, 2000);
     } catch (err) {
       setChangePwError(err?.message || 'Failed to change password');
       setIsChangingPw(false);
-      // Auto-close modal after 3 seconds on error too
+      
+      // Auto-close after 3 seconds on error
       setTimeout(() => {
         setShowChangePassword(false);
         setChangePwError(null);
@@ -1972,9 +1980,20 @@ const DashboardPage = ({ setCurrentPage, currentUser }) => {
                           <button
                             type="submit"
                             disabled={isChangingPw || newPassword.length < 6}
-                            style={{ width: '100%', padding: '0.75rem', backgroundColor: '#1a73e8', color: 'white', border: 'none', borderRadius: '0.25rem', fontSize: '1rem', cursor: isChangingPw ? 'not-allowed' : 'pointer', opacity: isChangingPw ? 0.7 : 1 }}
+                            style={{ 
+                              width: '100%', 
+                              padding: '0.75rem', 
+                              backgroundColor: changePwSuccess ? '#10b981' : isChangingPw ? '#94a3b8' : '#1a73e8',
+                              color: 'white', 
+                              border: 'none', 
+                              borderRadius: '0.25rem', 
+                              fontSize: '1rem', 
+                              cursor: (isChangingPw || newPassword.length < 6) ? 'not-allowed' : 'pointer', 
+                              opacity: (isChangingPw || newPassword.length < 6) ? 0.7 : 1,
+                              transition: 'all 0.2s'
+                            }}
                           >
-                            {isChangingPw ? 'Changing...' : 'Change Password'}
+                            {changePwSuccess ? 'Password Changed!' : isChangingPw ? 'Changing...' : 'Change Password'}
                           </button>
                         </form>
                         {changePwError && <p style={{ color: '#dc3545', marginTop: '1rem' }}>{changePwError}</p>}

@@ -18,6 +18,7 @@ import DashboardPage from './DashboardPage';
 import CheckoutReturnPage from './CheckoutReturnPage';
 import { supabase } from './lib/supabase';
 import ForgotPasswordPage from './ForgotPasswordPage'; // Import ForgotPasswordPage
+import ResetPasswordPage from './ResetPasswordPage'; // Import ResetPasswordPage
 
 // Local storage keys
 const AUTH_STATE_KEY = 'terra_auth_state';
@@ -509,6 +510,9 @@ function App() {
 
         case 'forgot-password':
           return <ForgotPasswordPage setCurrentPage={handlePageChange} />;
+
+        case 'reset-password':
+          return <ResetPasswordPage setCurrentPage={handlePageChange} />;
 
         case 'docsigner':
           return (
