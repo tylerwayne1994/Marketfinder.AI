@@ -39,6 +39,13 @@ function App() {
   useEffect(() => {
     // Check if returning from Stripe (has subscription=success in URL)
     const urlParams = new URLSearchParams(window.location.search);
+    // If Supabase sent a recovery link, route to reset-password page
+    if (urlParams.get('type') === 'recovery' || urlParams.get('access_token')) {
+      console.log('Detected Supabase password recovery link, routing to reset-password');
+      setCurrentPage('reset-password');
+      // Do not clear the URL since Supabase expects query params present for getSessionFromUrl
+      return;
+    }
     // Always show landing page on fresh visit to root URL
     if (window.location.pathname === '/' && !window.location.search && !window.location.hash) {
       localStorage.removeItem('terra_last_page');

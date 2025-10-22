@@ -1967,19 +1967,19 @@ const DashboardPage = ({ setCurrentPage, currentUser }) => {
                         position: 'relative'
                       }}>
                         <h3 style={{ marginBottom: '1rem' }}>Change Password</h3>
-                        <form onSubmit={handleChangePassword}>
+                        {/* Use JS validation instead of HTML constraint validation to avoid browser blocking the submit button */}
+                        <form onSubmit={(e) => e.preventDefault()} noValidate>
                           <input
                             type="password"
                             placeholder="New Password"
                             value={newPassword}
                             onChange={e => setNewPassword(e.target.value)}
-                            required
-                            minLength={6}
                             style={{ width: '100%', padding: '0.75rem', border: '1px solid #ddd', borderRadius: '0.25rem', fontSize: '1rem', marginBottom: '1rem' }}
                           />
                           <button
-                            type="submit"
-                            disabled={isChangingPw || newPassword.length < 6}
+                            type="button"
+                            onClick={handleChangePassword}
+                            disabled={isChangingPw}
                             style={{ 
                               width: '100%', 
                               padding: '0.75rem', 
@@ -1988,8 +1988,8 @@ const DashboardPage = ({ setCurrentPage, currentUser }) => {
                               border: 'none', 
                               borderRadius: '0.25rem', 
                               fontSize: '1rem', 
-                              cursor: (isChangingPw || newPassword.length < 6) ? 'not-allowed' : 'pointer', 
-                              opacity: (isChangingPw || newPassword.length < 6) ? 0.7 : 1,
+                              cursor: isChangingPw ? 'not-allowed' : 'pointer', 
+                              opacity: isChangingPw ? 0.7 : 1,
                               transition: 'all 0.2s'
                             }}
                           >

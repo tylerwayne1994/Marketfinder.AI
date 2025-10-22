@@ -9,13 +9,21 @@ const ResetPasswordPage = ({ setCurrentPage }) => {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'PASSWORD_RECOVERY') {
-        console.log('Password recovery session detected');
+    // If user opened the link from email, Supabase may include the access_token in the URL.
+    // Try to capture session from URL so the recovery flow works in SPA.
+    (async () => {
+      try {
+        const { data, error } = await supabase.auth.getSessionFromUrl();
+        if (error) {
+          // Not fatal; user may still be able to reset via landing flow
+          console.warn('getSessionFromUrl error:', error.message);
+        } else if (data?.session) {
+          console.log('Recovered session from URL for password recovery');
+        }
+      } catch (err) {
+        console.warn('getSessionFromUrl failed:', err?.message || err);
       }
-    });
-
-    return () => subscription.unsubscribe();
+    })();
   }, []);
 
   const handleResetPassword = async (e) => {
