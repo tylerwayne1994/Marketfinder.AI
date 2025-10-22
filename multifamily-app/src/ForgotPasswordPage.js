@@ -13,10 +13,14 @@ const ForgotPasswordPage = ({ setCurrentPage }) => {
     setSuccess(false);
     setIsLoading(true);
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email);
+      const redirectTo = `${window.location.origin}/reset-password`;
+      console.log('Sending reset email, redirectTo=', redirectTo);
+      const { data, error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo });
+      console.log('resetPasswordForEmail response:', { data, error });
       if (error) throw error;
       setSuccess(true);
     } catch (err) {
+      console.error('Failed to send reset email:', err);
       setError(err?.message || 'Failed to send password reset email');
     } finally {
       setIsLoading(false);
