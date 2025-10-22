@@ -60,12 +60,13 @@ const DashboardPage = ({ setCurrentPage, currentUser }) => {
   const [feedbackMessage, setFeedbackMessage] = useState('');
   const [showChangePassword, setShowChangePassword] = useState(false);
   const [newPassword, setNewPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [changePwError, setChangePwError] = useState(null);
   const [changePwSuccess, setChangePwSuccess] = useState(false);
   const [isChangingPw, setIsChangingPw] = useState(false);
 
   const handleChangePassword = async (e) => {
-    e.preventDefault();
+    if (e && e.preventDefault) e.preventDefault();
     if (newPassword.length < 6) {
       setChangePwError('Password must be at least 6 characters');
       return;
@@ -77,22 +78,36 @@ const DashboardPage = ({ setCurrentPage, currentUser }) => {
     
     try {
       const { error } = await supabase.auth.updateUser({ password: newPassword });
-      if (error) throw error;
-      
+      if (error) {
+        console.error('supabase.updateUser error:', error);
+        // Make sure we present a helpful message
+        const msg = error.message || (typeof error === 'string' ? error : JSON.stringify(error));
+        setChangePwError(msg || 'Failed to change password');
+        setIsChangingPw(false);
+        // Auto-close after 3 seconds on error
+        setTimeout(() => {
+          setShowChangePassword(false);
+          setChangePwError(null);
+        }, 3000);
+        return;
+      }
+
+      // Success path
+      console.log('Password updated successfully');
       setChangePwSuccess(true);
       setNewPassword('');
-      
+      setIsChangingPw(false);
       // Auto-close after 2 seconds on success
       setTimeout(() => {
         setShowChangePassword(false);
         setChangePwSuccess(false);
-        setIsChangingPw(false);
         setChangePwError(null);
       }, 2000);
     } catch (err) {
-      setChangePwError(err?.message || 'Failed to change password');
+      console.error('Unexpected error changing password:', err);
+      const msg = err?.message || (typeof err === 'string' ? err : JSON.stringify(err));
+      setChangePwError(msg || 'Failed to change password');
       setIsChangingPw(false);
-      
       // Auto-close after 3 seconds on error
       setTimeout(() => {
         setShowChangePassword(false);
@@ -355,22 +370,42 @@ const DashboardPage = ({ setCurrentPage, currentUser }) => {
         ? `${baseUrl}/api/cancel-subscription`
         : `/api/cancel-subscription`;
       
-      const response = await fetch(url, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({ user_id: currentUser.id })
-      });
-      let raw, data;
-      try {
-        raw = await response.text();
-        data = raw ? JSON.parse(raw) : {};
-      } catch {
-        data = {};
+      // Try the primary endpoint first
+      const makeRequest = async (endpoint) => {
+        const res = await fetch(endpoint, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({ user_id: currentUser.id })
+        });
+        let raw = await res.text().catch(() => '');
+        let data = {};
+        try { data = raw ? JSON.parse(raw) : {}; } catch (_) { data = {}; }
+        return { res, raw, data };
+      };
+
+      let attemptUrl = url;
+      let result = await makeRequest(attemptUrl).catch(err => ({ error: err }));
+
+      // If primary returned 404 or network error, try proxy fallback (useful in some deployments)
+      if ((result && result.res && result.res.status === 404) || result?.error) {
+        console.warn('Cancel subscription primary endpoint failed, trying proxy fallback', result);
+        const proxyUrl = `/api/proxy?endpoint=/cancel-subscription&user_id=${currentUser.id}`;
+        attemptUrl = proxyUrl;
+        result = await makeRequest(attemptUrl).catch(err => ({ error: err }));
       }
-      if (!response.ok) {
-        throw new Error(data.detail || raw || 'Failed to cancel subscription');
+
+      if (result?.error) {
+        throw result.error;
       }
-      setSubscriptionSuccess(data.message);
+
+      const { res, raw, data } = result;
+      if (!res.ok) {
+        const detail = data?.detail || raw || `Failed to cancel subscription (status ${res.status})`;
+        throw new Error(detail);
+      }
+
+      // Success: update UI and refresh dashboard data
+      setSubscriptionSuccess(data.message || 'Subscription cancelled');
       setShowCancelConfirm(false);
       await fetchDashboardData();
       setTimeout(() => setSubscriptionSuccess(null), 5000);
@@ -1969,13 +2004,18 @@ const DashboardPage = ({ setCurrentPage, currentUser }) => {
                         <h3 style={{ marginBottom: '1rem' }}>Change Password</h3>
                         {/* Use JS validation instead of HTML constraint validation to avoid browser blocking the submit button */}
                         <form onSubmit={(e) => e.preventDefault()} noValidate>
-                          <input
-                            type="password"
-                            placeholder="New Password"
-                            value={newPassword}
-                            onChange={e => setNewPassword(e.target.value)}
-                            style={{ width: '100%', padding: '0.75rem', border: '1px solid #ddd', borderRadius: '0.25rem', fontSize: '1rem', marginBottom: '1rem' }}
-                          />
+                          <div style={{ position: 'relative' }}>
+                            <input
+                              type={showPassword ? 'text' : 'password'}
+                              placeholder="New Password"
+                              value={newPassword}
+                              onChange={e => setNewPassword(e.target.value)}
+                              style={{ width: '100%', padding: '0.75rem', border: '1px solid #ddd', borderRadius: '0.25rem', fontSize: '1rem', marginBottom: '1rem' }}
+                            />
+                            <button type="button" onClick={() => setShowPassword(!showPassword)} style={{ position: 'absolute', right: 12, top: 12, background: 'none', border: 'none', cursor: 'pointer', color: '#666' }}>
+                              {showPassword ? 'Hide' : 'Show'}
+                            </button>
+                          </div>
                           <button
                             type="button"
                             onClick={handleChangePassword}
@@ -1996,7 +2036,7 @@ const DashboardPage = ({ setCurrentPage, currentUser }) => {
                             {changePwSuccess ? 'Password Changed!' : isChangingPw ? 'Changing...' : 'Change Password'}
                           </button>
                         </form>
-                        {changePwError && <p style={{ color: '#dc3545', marginTop: '1rem' }}>{changePwError}</p>}
+                        {changePwError && <p style={{ color: '#dc3545', marginTop: '1rem', whiteSpace: 'pre-wrap' }}>{changePwError}</p>}
                         {changePwSuccess && <p style={{ color: '#155724', marginTop: '1rem' }}>Password changed successfully!</p>}
                         <button onClick={() => {
                           setShowChangePassword(false);
