@@ -144,25 +144,23 @@ function App() {
                 console.log("Error parsing user data:", e);
                 localStorage.removeItem(AUTH_STATE_KEY);
                 localStorage.removeItem(USER_DATA_KEY);
-                setCurrentPage('landing');
+                setCurrentPage('login');
                 setIsLoading(false);
                 return;
               }
-              
-              // Restore last visited page if available, otherwise landing
+              // Restore last visited page if available, otherwise dashboard
               const lastPage = localStorage.getItem('terra_last_page');
               setCurrentUser(userData);
               setIsAuthenticated(true);
-              if (lastPage) {
-                setCurrentPage(lastPage);
-              } else {
-                setCurrentPage('landing');
-              }
+              setCurrentPage(lastPage || 'dashboard');
             } else {
-              console.log("No user found in session");
+              // No valid Supabase session, force logout
+              console.log("No user found in session, forcing logout");
               localStorage.removeItem(AUTH_STATE_KEY);
               localStorage.removeItem(USER_DATA_KEY);
-              setCurrentPage('landing');
+              setCurrentUser(null);
+              setIsAuthenticated(false);
+              setCurrentPage('login');
             }
           } catch (error) {
             console.error('Error checking saved auth state:', error);

@@ -74,12 +74,20 @@ const DashboardPage = ({ setCurrentPage, currentUser }) => {
       if (error) throw error;
       setChangePwSuccess(true);
       setNewPassword('');
+      // Auto-close modal after 2 seconds on success
       setTimeout(() => {
         setShowChangePassword(false);
         setChangePwError(null);
         setChangePwSuccess(false);
         setNewPassword('');
       }, 2000);
+      // Failsafe: auto-close modal after 5 seconds regardless
+      setTimeout(() => {
+        setShowChangePassword(false);
+        setChangePwError(null);
+        setChangePwSuccess(false);
+        setNewPassword('');
+      }, 5000);
     } catch (err) {
       setChangePwError(err?.message || 'Failed to change password');
     } finally {
