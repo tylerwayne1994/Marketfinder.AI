@@ -7,21 +7,32 @@ const ResetPasswordPage = ({ setCurrentPage }) => {
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
+  // Debug helpers to surface current URL and Supabase session-from-url result
+  const [debugUrl, setDebugUrl] = useState('');
+  const [sessionDebug, setSessionDebug] = useState(null);
 
   useEffect(() => {
     // If user opened the link from email, Supabase may include the access_token in the URL.
     // Try to capture session from URL so the recovery flow works in SPA.
     (async () => {
+      const current = window.location.href;
+      setDebugUrl(current);
+      console.log('ResetPasswordPage - current URL:', current);
       try {
         const { data, error } = await supabase.auth.getSessionFromUrl();
         if (error) {
-          // Not fatal; user may still be able to reset via landing flow
           console.warn('getSessionFromUrl error:', error.message);
+          setSessionDebug({ ok: false, error: error.message, data: null });
         } else if (data?.session) {
           console.log('Recovered session from URL for password recovery');
+          setSessionDebug({ ok: true, data: data.session, error: null });
+        } else {
+          console.log('getSessionFromUrl returned no session');
+          setSessionDebug({ ok: false, data: null, error: 'no session' });
         }
       } catch (err) {
         console.warn('getSessionFromUrl failed:', err?.message || err);
+        setSessionDebug({ ok: false, error: err?.message || String(err), data: null });
       }
     })();
   }, []);
@@ -90,6 +101,12 @@ const ResetPasswordPage = ({ setCurrentPage }) => {
             </p>
           </div>
         ) : (
+          <div style={{ marginBottom: '12px', fontSize: '0.75rem', color: '#6b7280' }}>
+            <div><strong>Debug URL:</strong> {debugUrl || '—'}</div>
+            <div><strong>Session Debug:</strong> {sessionDebug ? JSON.stringify(sessionDebug) : ' — '}</div>
+          </div>
+        )}
+        {!success && (
           <form onSubmit={handleResetPassword}>
             <div style={{ marginBottom: '16px' }}>
               <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '8px' }}>
