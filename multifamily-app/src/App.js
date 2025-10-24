@@ -25,6 +25,8 @@ const AUTH_STATE_KEY = 'terra_auth_state';
 const USER_DATA_KEY = 'terra_user_data';
 const RECOVERY_LOCK_KEY = 'terra_recovery_lock';
 
+const isResetRoute = () => window.location.pathname === '/reset-password';
+
 function App() {
   const [currentPage, setCurrentPage] = useState('landing');
   const [propertyData, setPropertyData] = useState(null);
@@ -185,6 +187,11 @@ function App() {
     const checkSavedAuthState = async () => {
       try {
         console.log("Starting auth state check...");
+        if (isResetRoute()) {
+          setCurrentPage('reset-password');
+          setIsLoading(false);
+          return;
+        }
         const savedAuthState = localStorage.getItem(AUTH_STATE_KEY);
         const savedUserData = localStorage.getItem(USER_DATA_KEY);
 
@@ -229,11 +236,11 @@ function App() {
             console.error('Error checking saved auth state:', error);
             localStorage.removeItem(AUTH_STATE_KEY);
             localStorage.removeItem(USER_DATA_KEY);
-            setCurrentPage('landing');
+            if (!isResetRoute()) setCurrentPage('landing');
           }
         } else {
           console.log("No saved auth state found");
-          setCurrentPage('landing');
+          if (!isResetRoute()) setCurrentPage('landing');
         }
       } catch (err) {
         console.error("Unexpected error in auth check:", err);
@@ -253,6 +260,11 @@ function App() {
     const handleAuthChange = async (_event, session) => {
       if (!isMounted) return;
       console.log('Auth event:', _event, session ? 'with session' : 'no session');
+
+      if (isResetRoute()) {
+        setIsLoading(false);
+        return;
+      }
 
       // If we’re in recovery, force stay on reset-password
       const recoveryLocked = localStorage.getItem(RECOVERY_LOCK_KEY) === '1';
@@ -329,7 +341,7 @@ function App() {
           localStorage.removeItem(USER_DATA_KEY);
           setCurrentUser(null);
           setIsAuthenticated(false);
-          setCurrentPage('landing');
+          if (!isResetRoute()) setCurrentPage('landing');
 
           // Clear cached page data
           setPropertyData(null);
@@ -345,7 +357,7 @@ function App() {
         console.error('Auth handler error:', error);
         setCurrentUser(null);
         setIsAuthenticated(false);
-        setCurrentPage('landing');
+        if (!isResetRoute()) setCurrentPage('landing');
       } finally {
         if (isMounted) setIsLoading(false);
       }

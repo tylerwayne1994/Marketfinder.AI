@@ -1,181 +1,67 @@
-import React, { useState, useEffect } from 'react';
+// src/ResetPasswordPage.js
+import React, { useEffect, useState } from 'react';
 import { supabase } from './lib/supabase';
 
-const ResetPasswordPage = ({ setCurrentPage }) => {
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(false);
-  const [loading, setLoading] = useState(false);
-  // Debug helpers to surface current URL and Supabase session-from-url result
-  const [debugUrl, setDebugUrl] = useState('');
-  const [sessionDebug, setSessionDebug] = useState(null);
+export default function ResetPasswordPage({ setCurrentPage }) {
+  const [ready, setReady] = useState(false);   // show form only when session is valid
+  const [pw1, setPw1] = useState('');
+  const [pw2, setPw2] = useState('');
+  const [err, setErr] = useState('');
+  const [ok, setOk] = useState('');
 
   useEffect(() => {
-    (async () => {
-      const current = window.location.href;
-      setDebugUrl(current);
-      try {
-        const { data, error } = await supabase.auth.getSession();
-        if (error) setSessionDebug({ ok: false, error: error.message, data: null });
-        else if (data?.session) setSessionDebug({ ok: true, data: { user: data.session.user }, error: null });
-        else setSessionDebug({ ok: false, error: "no session", data: null });
-      } catch (err) {
-        setSessionDebug({ ok: false, error: err?.message || String(err), data: null });
-      }
-    })();
+    let unsub = supabase.auth.onAuthStateChange((event, session) => {
+      // Supabase fires this when the user opens the email reset link
+      if (event === 'PASSWORD_RECOVERY' || session) setReady(!!session);
+    }).data.subscription;
+
+    // Also handle refresh / direct load (session might already be present)
+    supabase.auth.getSession().then(({ data }) => setReady(!!data.session));
+
+    return () => unsub?.unsubscribe();
   }, []);
 
-  const handleResetPassword = async (e) => {
+  const submit = async (e) => {
     e.preventDefault();
-    setError(null);
-    
-    if (newPassword !== confirmPassword) {
-      setError('Passwords do not match');
-      return;
-    }
-    
-    if (newPassword.length < 6) {
-      setError('Password must be at least 6 characters');
-      return;
-    }
+    setErr(''); setOk('');
+    if (!pw1 || pw1.length < 6) { setErr('Password must be at least 6 characters'); return; }
+    if (pw1 !== pw2) { setErr('Passwords do not match'); return; }
 
-    setLoading(true);
-    
-    try {
-      const { error } = await supabase.auth.updateUser({ password: newPassword });
-      if (error) throw error;
-      
-      setSuccess(true);
-      // ***** Clear the lock & last page so normal routing resumes *****
-      localStorage.removeItem('terra_recovery_lock');
-      localStorage.setItem('terra_last_page', 'login');
+    // Extra guard—make sure session exists
+    const { data } = await supabase.auth.getSession();
+    if (!data?.session) { setErr('Session missing. Open the password reset email link again.'); return; }
 
-      setTimeout(() => {
-        setCurrentPage('login');
-      }, 1500);
-    } catch (err) {
-      setError(err?.message || 'Failed to reset password');
-    } finally {
-      setLoading(false);
-    }
+    const { error } = await supabase.auth.updateUser({ password: pw1 });
+    if (error) { setErr(error.message); return; }
+
+    setOk('Password updated. Redirecting to login…');
+    setTimeout(() => setCurrentPage?.('login'), 1200);
   };
 
-  return (
-    <div style={{
-      minHeight: '100vh',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      backgroundColor: '#f8f8f8'
-    }}>
-      <div style={{
-        backgroundColor: 'white',
-        padding: '32px',
-        borderRadius: '12px',
-        maxWidth: '400px',
-        width: '90%',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-      }}>
-        <h2 style={{ fontSize: '1.5rem', fontWeight: '600', marginBottom: '24px', textAlign: 'center' }}>
-          Reset Your Password
-        </h2>
-        
-        {success ? (
-          <div style={{
-            padding: '16px',
-            backgroundColor: '#f0fdf4',
-            border: '1px solid #10b981',
-            borderRadius: '8px',
-            textAlign: 'center'
-          }}>
-            <p style={{ color: '#065f46', margin: 0 }}>
-              Password reset successfully! Redirecting to login...
-            </p>
-          </div>
-        ) : (
-          <div style={{ marginBottom: '12px', fontSize: '0.75rem', color: '#6b7280' }}>
-            <div><strong>Debug URL:</strong> {debugUrl || '—'}</div>
-            <div><strong>Session Debug:</strong> {sessionDebug ? JSON.stringify(sessionDebug) : ' — '}</div>
-          </div>
-        )}
-        {!success && (
-          <form onSubmit={handleResetPassword}>
-            <div style={{ marginBottom: '16px' }}>
-              <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '8px' }}>
-                New Password
-              </label>
-              <input
-                type="password"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                required
-                minLength={6}
-                style={{
-                  width: '100%',
-                  padding: '10px 12px',
-                  border: '1px solid #e5e5e5',
-                  borderRadius: '8px',
-                  fontSize: '0.875rem'
-                }}
-              />
-            </div>
-            
-            <div style={{ marginBottom: '24px' }}>
-              <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '8px' }}>
-                Confirm Password
-              </label>
-              <input
-                type="password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                required
-                minLength={6}
-                style={{
-                  width: '100%',
-                  padding: '10px 12px',
-                  border: '1px solid #e5e5e5',
-                  borderRadius: '8px',
-                  fontSize: '0.875rem'
-                }}
-              />
-            </div>
-            
-            {error && (
-              <div style={{
-                padding: '12px',
-                backgroundColor: '#fef2f2',
-                border: '1px solid #ef4444',
-                borderRadius: '8px',
-                marginBottom: '16px'
-              }}>
-                <p style={{ color: '#991b1b', margin: 0, fontSize: '0.875rem' }}>{error}</p>
-              </div>
-            )}
-            
-            <button
-              type="submit"
-              disabled={loading}
-              style={{
-                width: '100%',
-                padding: '12px',
-                backgroundColor: loading ? '#94a3b8' : '#000000',
-                color: 'white',
-                border: 'none',
-                borderRadius: '8px',
-                fontSize: '0.875rem',
-                fontWeight: '600',
-                cursor: loading ? 'not-allowed' : 'pointer',
-                opacity: loading ? 0.7 : 1
-              }}
-            >
-              {loading ? 'Resetting...' : 'Reset Password'}
-            </button>
-          </form>
-        )}
+  if (!ready) {
+    // If you see this after clicking the email link, your Supabase Redirect URLs are wrong.
+    return (
+      <div style={{display:'grid',placeItems:'center',minHeight:'100vh',background:'#fff',color:'#000'}}>
+        <div>
+          <h2>Reset Password</h2>
+          <p>Open this page from the reset email link. If you already did and still see this, fix Supabase Redirect URLs.</p>
+        </div>
       </div>
+    );
+  }
+
+  return (
+    <div style={{display:'grid',placeItems:'center',minHeight:'100vh',background:'#fff',color:'#000'}}>
+      <form onSubmit={submit} style={{width:360, padding:24, border:'1px solid #eee', borderRadius:8}}>
+        <h2 style={{marginBottom:16}}>Set a New Password</h2>
+        <label>New password</label>
+        <input type="password" value={pw1} onChange={e=>setPw1(e.target.value)} minLength={6} required style={{width:'100%',margin:'6px 0 12px'}} />
+        <label>Confirm password</label>
+        <input type="password" value={pw2} onChange={e=>setPw2(e.target.value)} minLength={6} required style={{width:'100%',margin:'6px 0 12px'}} />
+        {err && <div style={{color:'#b91c1c', marginBottom:8}}>{err}</div>}
+        {ok && <div style={{color:'#065f46', marginBottom:8}}>{ok}</div>}
+        <button type="submit" style={{width:'100%', padding:'10px 12px'}}>Update Password</button>
+      </form>
     </div>
   );
-};
-
-export default ResetPasswordPage;
+}
