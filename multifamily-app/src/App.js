@@ -56,7 +56,12 @@ function App() {
         } catch (e) {
           console.warn("setSession (recovery) threw:", e?.message || e);
         }
-        // clean the URL but keep the path
+        // ***** LOCK to reset page so other effects can't hijack *****
+        localStorage.setItem(RECOVERY_LOCK_KEY, '1');
+        localStorage.setItem('terra_last_page', 'reset-password');
+        setCurrentPage('reset-password');
+
+        // Clean URL but keep path
         window.history.replaceState({}, document.title, "/reset-password");
       }
     };
@@ -76,6 +81,9 @@ function App() {
 
       // 2) If user deep-linked /refresh to /reset-password without tokens, still show reset UI
       if (window.location.pathname === "/reset-password") {
+        // Keep it locked if they reload so other listeners don't redirect away
+        localStorage.setItem(RECOVERY_LOCK_KEY, '1');
+        localStorage.setItem('terra_last_page', 'reset-password');
         setCurrentPage("reset-password");
         return;
       }
