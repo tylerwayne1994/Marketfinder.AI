@@ -1,5 +1,5 @@
 # backend/protected_routes.py
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Request
 import logging
 
 router = APIRouter()
@@ -194,7 +194,7 @@ async def cancel_subscription_options():
     )
 
 @router.post("/cancel-subscription")
-async def cancel_subscription(user_id: str = Query(...)):
+async def cancel_subscription(request: Request, user_id: str = Query(None)):
     """Cancel user's Stripe subscription"""
     import os
     import stripe
@@ -213,6 +213,17 @@ async def cancel_subscription(user_id: str = Query(...)):
     supabase = create_client(supabase_url, supabase_key)
     
     try:
+        # If user_id not provided as query param, try to read JSON body
+        if not user_id:
+            try:
+                body = await request.json()
+                user_id = body.get('user_id') or body.get('userId') or body.get('user')
+            except Exception:
+                user_id = None
+
+        if not user_id:
+            raise HTTPException(status_code=400, detail="user_id required")
+
         # Get user's stripe_customer_id from profiles
         result = supabase.table("profiles").select("stripe_customer_id").eq("id", user_id).single().execute()
         

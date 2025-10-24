@@ -37,92 +37,130 @@ function App() {
 
   // URL-based routing (path/hash/query param)
   useEffect(() => {
-    // Check if returning from Stripe (has subscription=success in URL)
-    const urlParams = new URLSearchParams(window.location.search);
-    // If Supabase sent a recovery link, route to reset-password page
-    if (urlParams.get('type') === 'recovery' || urlParams.get('access_token')) {
-      console.log('Detected Supabase password recovery link, routing to reset-password');
-      setCurrentPage('reset-password');
-      // Do not clear the URL since Supabase expects query params present for getSessionFromUrl
-      return;
-    }
-    // Always show landing page on fresh visit to root URL
-    if (window.location.pathname === '/' && !window.location.search && !window.location.hash) {
-      localStorage.removeItem('terra_last_page');
-      setCurrentPage('landing');
-      return;
-    }
-    if (urlParams.get('subscription') === 'success') {
-      // Check if user is authenticated
-      const savedAuthState = localStorage.getItem(AUTH_STATE_KEY);
-      const savedUserData = localStorage.getItem(USER_DATA_KEY);
-      
-      if (savedAuthState === 'true' && savedUserData) {
-        // User is logged in - redirect to appropriate page
+    // This effect handles a few responsibilities:
+    // 1) If Supabase returned a recovery link with tokens in the URL, install
+    //    the session via `setSession` so updateUser() will be authorized.
+    // 2) Handle Stripe redirect params (subscription success) and other
+    //    page-based routing (page=, direct paths, hash paths).
+    (async () => {
+      const urlParams = new URLSearchParams(window.location.search);
+  const hash = window.location.hash || '';
+
+      // Try to extract tokens from query or hash
+      const accessTokenFromQuery = urlParams.get('access_token');
+      const refreshTokenFromQuery = urlParams.get('refresh_token');
+      const typeFromQuery = urlParams.get('type');
+
+      const accessTokenFromHash = (hash.match(/access_token=([^&]+)/) || [])[1];
+      const refreshTokenFromHash = (hash.match(/refresh_token=([^&]+)/) || [])[1];
+      const typeFromHash = (hash.match(/type=([^&]+)/) || [])[1];
+
+      const access_token = accessTokenFromQuery || accessTokenFromHash;
+      const refresh_token = refreshTokenFromQuery || refreshTokenFromHash;
+      const type = (typeFromQuery || typeFromHash || '').toLowerCase();
+
+      // If this is a Supabase recovery link, try to install the session
+      if (type === 'recovery' || access_token) {
+        console.log('Detected Supabase recovery link — attempting to install session');
         try {
-          const userData = JSON.parse(savedUserData);
-          setCurrentUser(userData);
-          setIsAuthenticated(true);
-          
-          const redirectTo = urlParams.get('redirect');
-          if (redirectTo === 'underwrite') {
-            console.log('Detected 60 page pack purchase, redirecting to underwrite');
-            setCurrentPage('underwrite');
-            localStorage.setItem('terra_last_page', 'underwrite');
-          } else {
-            // Monthly subscription - go to dashboard
-            console.log('Detected monthly subscription, redirecting to dashboard');
-            setCurrentPage('dashboard');
-            localStorage.setItem('terra_last_page', 'dashboard');
+          // Use setSession to install the access/refresh tokens in the SPA
+          await supabase.auth.setSession({ access_token, refresh_token });
+
+          // Replace the URL to a clean reset-password path (no tokens)
+          const resetPath = `${window.location.origin}/reset-password`;
+          window.history.replaceState({}, document.title, resetPath);
+
+          // Show the reset page UI
+          setCurrentPage('reset-password');
+          return;
+        } catch (err) {
+          console.warn('Failed to setSession from URL tokens:', err);
+          // Fall back to routing to reset-password and let getSessionFromUrl try
+          setCurrentPage('reset-password');
+          return;
+        }
+      }
+
+      // Default behavior: handle Stripe redirects, path/hash, and page query
+      // Always show landing page on fresh visit to root URL
+      if (window.location.pathname === '/' && !window.location.search && !window.location.hash) {
+        localStorage.removeItem('terra_last_page');
+        setCurrentPage('landing');
+        return;
+      }
+
+      if (urlParams.get('subscription') === 'success') {
+        // Check if user is authenticated
+        const savedAuthState = localStorage.getItem(AUTH_STATE_KEY);
+        const savedUserData = localStorage.getItem(USER_DATA_KEY);
+
+        if (savedAuthState === 'true' && savedUserData) {
+          // User is logged in - redirect to appropriate page
+          try {
+            const userData = JSON.parse(savedUserData);
+            setCurrentUser(userData);
+            setIsAuthenticated(true);
+
+            const redirectTo = urlParams.get('redirect');
+            if (redirectTo === 'underwrite') {
+              console.log('Detected 60 page pack purchase, redirecting to underwrite');
+              setCurrentPage('underwrite');
+              localStorage.setItem('terra_last_page', 'underwrite');
+            } else {
+              // Monthly subscription - go to dashboard
+              console.log('Detected monthly subscription, redirecting to dashboard');
+              setCurrentPage('dashboard');
+              localStorage.setItem('terra_last_page', 'dashboard');
+            }
+          } catch (e) {
+            console.error('Error parsing user data:', e);
+            setCurrentPage('login');
           }
-        } catch (e) {
-          console.error('Error parsing user data:', e);
+        } else {
+          // User not logged in - save redirect intent and go to login
+          const redirectTo = urlParams.get('redirect');
+          localStorage.setItem('stripe_payment_complete', 'true');
+          localStorage.setItem('stripe_redirect_to', redirectTo || 'dashboard');
+          console.log('Payment complete but user not logged in - redirecting to login');
           setCurrentPage('login');
         }
-      } else {
-        // User not logged in - save redirect intent and go to login
-        const redirectTo = urlParams.get('redirect');
-        localStorage.setItem('stripe_payment_complete', 'true');
-        localStorage.setItem('stripe_redirect_to', redirectTo || 'dashboard');
-        console.log('Payment complete but user not logged in - redirecting to login');
-        setCurrentPage('login');
-      }
-      
-      // Clean up URL
-      const newUrl = window.location.pathname;
-      window.history.replaceState({}, document.title, newUrl);
-      return;
-    }
 
-    // direct path
-    if (window.location.pathname === '/dashboard') {
-      setCurrentPage('dashboard');
-      localStorage.setItem('terra_last_page', 'dashboard');
-      return;
-    }
-    // hash
-    if (window.location.hash) {
-      const hashPath = window.location.hash.substring(1);
-      if (hashPath === '/dashboard') {
+        // Clean up URL
+        const newUrl = window.location.pathname;
+        window.history.replaceState({}, document.title, newUrl);
+        return;
+      }
+
+      // direct path
+      if (window.location.pathname === '/dashboard') {
         setCurrentPage('dashboard');
         localStorage.setItem('terra_last_page', 'dashboard');
         return;
       }
-    }
-    // query ?page=
-    const pageParam = urlParams.get('page');
-    if (pageParam) {
-      setCurrentPage(pageParam);
-      localStorage.setItem('terra_last_page', pageParam);
-      const newUrl = window.location.pathname;
-      window.history.replaceState({}, document.title, newUrl);
-      return;
-    }
-    // Restore last visited page if available
-    const lastPage = localStorage.getItem('terra_last_page');
-    if (lastPage) {
-      setCurrentPage(lastPage);
-    }
+      // hash
+      if (window.location.hash) {
+        const hashPath = window.location.hash.substring(1);
+        if (hashPath === '/dashboard') {
+          setCurrentPage('dashboard');
+          localStorage.setItem('terra_last_page', 'dashboard');
+          return;
+        }
+      }
+      // query ?page=
+      const pageParam = urlParams.get('page');
+      if (pageParam) {
+        setCurrentPage(pageParam);
+        localStorage.setItem('terra_last_page', pageParam);
+        const newUrl = window.location.pathname;
+        window.history.replaceState({}, document.title, newUrl);
+        return;
+      }
+      // Restore last visited page if available
+      const lastPage = localStorage.getItem('terra_last_page');
+      if (lastPage) {
+        setCurrentPage(lastPage);
+      }
+    })();
   }, []);
 
   // Restore saved state if Supabase session is still valid

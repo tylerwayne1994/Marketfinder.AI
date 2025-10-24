@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { supabase } from './lib/supabase';
-import propertyImage from './IMG_0108 (4).jpg';
 // Use public folder path for signup image
 const signupImage = process.env.PUBLIC_URL + '/IMG_1658.jpg';
 

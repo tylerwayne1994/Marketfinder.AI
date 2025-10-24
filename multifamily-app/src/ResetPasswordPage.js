@@ -12,26 +12,28 @@ const ResetPasswordPage = ({ setCurrentPage }) => {
   const [sessionDebug, setSessionDebug] = useState(null);
 
   useEffect(() => {
-    // If user opened the link from email, Supabase may include the access_token in the URL.
-    // Try to capture session from URL so the recovery flow works in SPA.
+    // Verify whether a Supabase session is already installed in the SPA.
+    // This is simpler and more robust for our SPA: just call getSession()
+    // and surface the result for debugging instead of trying to parse
+    // tokens directly from the URL here.
     (async () => {
       const current = window.location.href;
       setDebugUrl(current);
       console.log('ResetPasswordPage - current URL:', current);
       try {
-        const { data, error } = await supabase.auth.getSessionFromUrl();
+        const { data, error } = await supabase.auth.getSession();
         if (error) {
-          console.warn('getSessionFromUrl error:', error.message);
+          console.warn('getSession error:', error.message);
           setSessionDebug({ ok: false, error: error.message, data: null });
         } else if (data?.session) {
-          console.log('Recovered session from URL for password recovery');
+          console.log('Active session present via getSession');
           setSessionDebug({ ok: true, data: data.session, error: null });
         } else {
-          console.log('getSessionFromUrl returned no session');
+          console.log('No active session returned from getSession');
           setSessionDebug({ ok: false, data: null, error: 'no session' });
         }
       } catch (err) {
-        console.warn('getSessionFromUrl failed:', err?.message || err);
+        console.warn('getSession failed:', err?.message || err);
         setSessionDebug({ ok: false, error: err?.message || String(err), data: null });
       }
     })();

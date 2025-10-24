@@ -1135,7 +1135,7 @@ const EnhancedUploadPage = ({ setCurrentPage }) => {
         <div style={styles.container}>
           <div style={{ display: "flex", gap: 12, marginBottom: 20 }}>
             <button 
-              onClick={() => window.location.href = '/'} 
+              onClick={() => setCurrentPage ? setCurrentPage('home') : window.location.href = '/'} 
               style={styles.homeButton}
             >
               <Home size={16} /> Home
