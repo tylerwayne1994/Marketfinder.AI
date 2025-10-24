@@ -23,6 +23,7 @@ import ResetPasswordPage from './ResetPasswordPage'; // Import ResetPasswordPage
 // Local storage keys
 const AUTH_STATE_KEY = 'terra_auth_state';
 const USER_DATA_KEY = 'terra_user_data';
+const RECOVERY_LOCK_KEY = 'terra_recovery_lock';
 
 function App() {
   const [currentPage, setCurrentPage] = useState('landing');
@@ -93,6 +94,14 @@ function App() {
         // Check if user is authenticated
         const savedAuthState = localStorage.getItem(AUTH_STATE_KEY);
         const savedUserData = localStorage.getItem(USER_DATA_KEY);
+
+        const recoveryLocked = localStorage.getItem(RECOVERY_LOCK_KEY) === '1';
+        if (recoveryLocked) {
+          console.log('Recovery lock: skipping saved-auth redirects');
+          setCurrentPage('reset-password');
+          setIsLoading(false);
+          return;
+        }
 
         if (savedAuthState === 'true' && savedUserData) {
           // User is logged in - redirect to appropriate page
@@ -236,7 +245,17 @@ function App() {
     const handleAuthChange = async (_event, session) => {
       if (!isMounted) return;
       console.log('Auth event:', _event, session ? 'with session' : 'no session');
-      
+
+      // If we’re in recovery, force stay on reset-password
+      const recoveryLocked = localStorage.getItem(RECOVERY_LOCK_KEY) === '1';
+      if (recoveryLocked) {
+        console.log('Recovery lock active — ignoring auth redirect:', _event);
+        setIsLoading(false);
+        setIsAuthenticated(!!session?.user);
+        setCurrentPage('reset-password');
+        return;
+      }
+
       // Always make sure we're not stuck in loading state
       setIsLoading(false);
       

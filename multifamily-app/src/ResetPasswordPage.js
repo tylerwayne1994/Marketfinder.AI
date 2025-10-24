@@ -47,9 +47,13 @@ const ResetPasswordPage = ({ setCurrentPage }) => {
       if (error) throw error;
       
       setSuccess(true);
+      // ***** Clear the lock & last page so normal routing resumes *****
+      localStorage.removeItem('terra_recovery_lock');
+      localStorage.setItem('terra_last_page', 'login');
+
       setTimeout(() => {
         setCurrentPage('login');
-      }, 2000);
+      }, 1500);
     } catch (err) {
       setError(err?.message || 'Failed to reset password');
     } finally {
