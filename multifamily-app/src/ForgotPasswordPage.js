@@ -30,7 +30,7 @@ const ForgotPasswordPage = ({ setCurrentPage }) => {
   return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f6f6f6' }}>
       <div style={{ background: 'white', padding: '2rem', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', width: '100%', maxWidth: '400px' }}>
-        <h2 style={{ marginBottom: '1rem' }}>Reset Your Password</h2>
+  <h2 style={{ marginBottom: '1rem' }}>Send Password Reset Link</h2>
         <form onSubmit={handleSubmit}>
           <label htmlFor="email" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Email Address</label>
           <input type="email" id="email" name="email" value={email} onChange={e => setEmail(e.target.value)} required style={{ width: '100%', padding: '0.75rem', border: '1px solid #ddd', borderRadius: '0.25rem', fontSize: '1rem', marginBottom: '1rem' }} />

@@ -12,28 +12,15 @@ const ResetPasswordPage = ({ setCurrentPage }) => {
   const [sessionDebug, setSessionDebug] = useState(null);
 
   useEffect(() => {
-    // Verify whether a Supabase session is already installed in the SPA.
-    // This is simpler and more robust for our SPA: just call getSession()
-    // and surface the result for debugging instead of trying to parse
-    // tokens directly from the URL here.
     (async () => {
       const current = window.location.href;
       setDebugUrl(current);
-      console.log('ResetPasswordPage - current URL:', current);
       try {
         const { data, error } = await supabase.auth.getSession();
-        if (error) {
-          console.warn('getSession error:', error.message);
-          setSessionDebug({ ok: false, error: error.message, data: null });
-        } else if (data?.session) {
-          console.log('Active session present via getSession');
-          setSessionDebug({ ok: true, data: data.session, error: null });
-        } else {
-          console.log('No active session returned from getSession');
-          setSessionDebug({ ok: false, data: null, error: 'no session' });
-        }
+        if (error) setSessionDebug({ ok: false, error: error.message, data: null });
+        else if (data?.session) setSessionDebug({ ok: true, data: { user: data.session.user }, error: null });
+        else setSessionDebug({ ok: false, error: "no session", data: null });
       } catch (err) {
-        console.warn('getSession failed:', err?.message || err);
         setSessionDebug({ ok: false, error: err?.message || String(err), data: null });
       }
     })();

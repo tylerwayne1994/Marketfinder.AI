@@ -37,51 +37,51 @@ function App() {
 
   // URL-based routing (path/hash/query param)
   useEffect(() => {
-    // This effect handles a few responsibilities:
-    // 1) If Supabase returned a recovery link with tokens in the URL, install
-    //    the session via `setSession` so updateUser() will be authorized.
-    // 2) Handle Stripe redirect params (subscription success) and other
-    //    page-based routing (page=, direct paths, hash paths).
-    (async () => {
-      const urlParams = new URLSearchParams(window.location.search);
-  const hash = window.location.hash || '';
+    const url = new URL(window.location.href);
+    const search = new URLSearchParams(url.search);
+    const hashStr = window.location.hash || "";
+    const hash = new URLSearchParams(hashStr.startsWith("#") ? hashStr.slice(1) : hashStr);
 
-      // Try to extract tokens from query or hash
-      const accessTokenFromQuery = urlParams.get('access_token');
-      const refreshTokenFromQuery = urlParams.get('refresh_token');
-      const typeFromQuery = urlParams.get('type');
+    const tryInstallRecoverySession = async () => {
+      const type = (hash.get("type") || search.get("type") || "").toLowerCase();
+      const access_token = hash.get("access_token") || search.get("access_token");
+      const refresh_token = hash.get("refresh_token") || search.get("refresh_token");
 
-      const accessTokenFromHash = (hash.match(/access_token=([^&]+)/) || [])[1];
-      const refreshTokenFromHash = (hash.match(/refresh_token=([^&]+)/) || [])[1];
-      const typeFromHash = (hash.match(/type=([^&]+)/) || [])[1];
-
-      const access_token = accessTokenFromQuery || accessTokenFromHash;
-      const refresh_token = refreshTokenFromQuery || refreshTokenFromHash;
-      const type = (typeFromQuery || typeFromHash || '').toLowerCase();
-
-      // If this is a Supabase recovery link, try to install the session
-      if (type === 'recovery' || access_token) {
-        console.log('Detected Supabase recovery link — attempting to install session');
+      if (type === "recovery" && access_token && refresh_token) {
         try {
-          // Use setSession to install the access/refresh tokens in the SPA
-          await supabase.auth.setSession({ access_token, refresh_token });
-
-          // Replace the URL to a clean reset-password path (no tokens)
-          const resetPath = `${window.location.origin}/reset-password`;
-          window.history.replaceState({}, document.title, resetPath);
-
-          // Show the reset page UI
-          setCurrentPage('reset-password');
-          return;
-        } catch (err) {
-          console.warn('Failed to setSession from URL tokens:', err);
-          // Fall back to routing to reset-password and let getSessionFromUrl try
-          setCurrentPage('reset-password');
-          return;
+          const { error } = await supabase.auth.setSession({ access_token, refresh_token });
+          if (error) console.warn("setSession (recovery) error:", error.message);
+          else console.log("Recovery session installed");
+        } catch (e) {
+          console.warn("setSession (recovery) threw:", e?.message || e);
         }
+        // clean the URL but keep the path
+        window.history.replaceState({}, document.title, "/reset-password");
+      }
+    };
+
+    (async () => {
+      // 1) Handle recovery tokens
+      const hasRecovery =
+        (search.get("type") === "recovery" || search.get("access_token")) ||
+        (hash.get("type")?.toLowerCase() === "recovery" || hash.get("access_token"));
+
+      if (hasRecovery) {
+        console.log("Detected recovery tokens");
+        await tryInstallRecoverySession();
+        setCurrentPage("reset-password");
+        return;
       }
 
-      // Default behavior: handle Stripe redirects, path/hash, and page query
+      // 2) If user deep-linked /refresh to /reset-password without tokens, still show reset UI
+      if (window.location.pathname === "/reset-password") {
+        setCurrentPage("reset-password");
+        return;
+      }
+
+      // --- keep your existing Stripe/dashboard/page logic below unchanged ---
+      const urlParams = new URLSearchParams(window.location.search);
+
       // Always show landing page on fresh visit to root URL
       if (window.location.pathname === '/' && !window.location.search && !window.location.hash) {
         localStorage.removeItem('terra_last_page');
