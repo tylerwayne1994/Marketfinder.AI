@@ -8,10 +8,10 @@ import { useDocumentAccess } from './hooks/useDocumentAccess';
 // Works with Vite AND CRA, plus sane localhost defaults
 export const UPLOAD_API = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_UPLOAD_API)
   ? import.meta.env.VITE_UPLOAD_API
-  : (process.env.REACT_APP_UPLOAD_API || 'http://127.0.0.1:8010');
+  : (process.env.REACT_APP_UPLOAD_API || 'https://marketfinder-ai.onrender.com');
 export const PFA_API = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_PFA_API)
   ? import.meta.env.VITE_PFA_API
-  : (process.env.REACT_APP_PFA_API || 'http://127.0.0.1:8011');
+  : (process.env.REACT_APP_PFA_API || 'https://marketfinder-ai.onrender.com');
 
 const UnderwritePage = ({ setCurrentPage }) => {
   const [hoveredCard, setHoveredCard] = useState(null);
