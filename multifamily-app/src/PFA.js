@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 import { supabase } from './lib/supabase';
 
-const API_BASE = (typeof import.meta !== "undefined" && import.meta.env?.VITE_API_BASE_URL) || "http://localhost:8011";
+const API_BASE = (typeof import.meta !== "undefined" && import.meta.env?.VITE_API_BASE_URL) || "https://marketfinder-ai.onrender.com";
 
 const styles = {
  page: { minHeight: "100vh", background: "linear-gradient(to bottom, #f8fafc, #ffffff)" },
