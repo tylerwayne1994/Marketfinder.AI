@@ -54,6 +54,12 @@ async def dashboard_summary(user_id: str = Query(...)):
         # Get current month in YYYY-MM format
         current_month = datetime.now().strftime("%Y-%m")
         
+        # Get user profile for additional pages purchased
+        profile_response = supabase.table("profiles").select("additional_pages_purchased").eq("id", user_id).execute()
+        additional_pages = 0
+        if profile_response.data and len(profile_response.data) > 0:
+            additional_pages = profile_response.data[0].get("additional_pages_purchased", 0) or 0
+        
         # Query user_usage table for current month
         response = supabase.table("user_usage").select("*").eq("user_id", user_id).eq("month_year", current_month).execute()
         
@@ -69,9 +75,12 @@ async def dashboard_summary(user_id: str = Query(...)):
             om_pdfs_parsed = 0
             underwriting_sessions = 0
         
+        # Calculate total pages limit: base plan (50) + additional pages purchased
+        base_pages_limit = 50
+        total_pages_limit = base_pages_limit + additional_pages
+        
         # Calculate remaining pages
-        pages_limit = 50
-        pages_remaining = max(0, pages_limit - pages_processed)
+        pages_remaining = max(0, total_pages_limit - pages_processed)
         
         return {
             "plan": "starter",
@@ -134,6 +143,12 @@ async def user_usage(user_id: str = Query(...)):
         # Get current month in YYYY-MM format
         current_month = datetime.now().strftime("%Y-%m")
         
+        # Get user profile for additional pages purchased
+        profile_response = supabase.table("profiles").select("additional_pages_purchased").eq("id", user_id).execute()
+        additional_pages = 0
+        if profile_response.data and len(profile_response.data) > 0:
+            additional_pages = profile_response.data[0].get("additional_pages_purchased", 0) or 0
+        
         # Query user_usage table for current month
         response = supabase.table("user_usage").select("*").eq("user_id", user_id).eq("month_year", current_month).execute()
         
@@ -149,9 +164,12 @@ async def user_usage(user_id: str = Query(...)):
             om_pdfs_parsed = 0
             underwriting_sessions = 0
         
+        # Calculate total pages limit: base plan (50) + additional pages purchased
+        base_pages_limit = 50
+        total_pages_limit = base_pages_limit + additional_pages
+        
         # Calculate remaining pages
-        pages_limit = 50
-        pages_remaining = max(0, pages_limit - pages_processed)
+        pages_remaining = max(0, total_pages_limit - pages_processed)
         
         return {
             "usage": {
@@ -162,7 +180,7 @@ async def user_usage(user_id: str = Query(...)):
             },
             "plan": "starter",
             "status": "active",
-            "limits": {"pages_per_month": pages_limit, "max_pages_per_pdf": 25},
+            "limits": {"pages_per_month": total_pages_limit, "max_pages_per_pdf": 25},
             "remaining": {"pages": pages_remaining},
         }
     except Exception as e:
