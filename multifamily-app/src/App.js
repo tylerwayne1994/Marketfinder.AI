@@ -95,10 +95,28 @@ function App() {
 
       // Always show landing page on fresh visit to root URL
       if (window.location.pathname === '/' && !window.location.search && !window.location.hash) {
+        console.log('Fresh visit detected, redirecting to landing page');
+        localStorage.removeItem(RECOVERY_LOCK_KEY); // Clear recovery lock on fresh visit
         localStorage.removeItem('terra_last_page');
         setCurrentPage('landing');
         return;
       }
+
+      // Clear recovery lock after successful password reset
+      const recoveryLocked = localStorage.getItem(RECOVERY_LOCK_KEY) === '1';
+      if (recoveryLocked && (urlParams.get('type') !== 'recovery' || !urlParams.get('access_token'))) {
+        console.log('Clearing stale recovery lock');
+        localStorage.removeItem(RECOVERY_LOCK_KEY);
+      }
+
+      // Failsafe timeout logic
+      setTimeout(() => {
+        if (isLoading) {
+          console.log('Failsafe timeout triggered, resetting to landing page');
+          setCurrentPage('landing');
+          setIsLoading(false);
+        }
+      }, 3000);
 
       if (urlParams.get('subscription') === 'success') {
         // Check if user is authenticated
