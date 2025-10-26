@@ -266,14 +266,20 @@ function App() {
         return;
       }
 
-      // If we’re in recovery, force stay on reset-password
+      // If we're in recovery, force stay on reset-password UNLESS password was successfully updated
       const recoveryLocked = localStorage.getItem(RECOVERY_LOCK_KEY) === '1';
-      if (recoveryLocked) {
+      if (recoveryLocked && _event !== 'USER_UPDATED') {
         console.log('Recovery lock active — ignoring auth redirect:', _event);
         setIsLoading(false);
         setIsAuthenticated(!!session?.user);
         setCurrentPage('reset-password');
         return;
+      }
+
+      // Clear recovery lock after successful password update
+      if (_event === 'USER_UPDATED' && recoveryLocked) {
+        console.log('Password updated - clearing recovery lock');
+        localStorage.removeItem(RECOVERY_LOCK_KEY);
       }
 
       // Always make sure we're not stuck in loading state
