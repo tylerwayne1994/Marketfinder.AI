@@ -32,12 +32,15 @@ const UnderwritePage = ({ setCurrentPage }) => {
   // Get current user, subscription plan, limits, and usage
   useEffect(() => {
     let timeoutId;
+    let isCancelled = false;
     
     const getCurrentUser = async () => {
       try {
         console.log('UnderwritePage: Starting to load user data...');
         
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        
+        if (isCancelled) return;
         
         if (sessionError) {
           console.error('UnderwritePage: Session error:', sessionError);
@@ -61,6 +64,8 @@ const UnderwritePage = ({ setCurrentPage }) => {
           .select('*')
           .eq('id', session.user.id)
           .single();
+
+        if (isCancelled) return;
 
         if (profileError) {
           console.error('UnderwritePage: Profile error:', profileError);
@@ -109,8 +114,14 @@ const UnderwritePage = ({ setCurrentPage }) => {
         console.error('UnderwritePage: Error loading user data:', err);
         setError('Error loading user data. Please try refreshing the page.');
       } finally {
-        setLoading(false);
-        console.log('UnderwritePage: Loading state set to false');
+        if (!isCancelled) {
+          setLoading(false);
+          console.log('UnderwritePage: Loading state set to false');
+          // Clear the timeout when loading completes successfully
+          if (timeoutId) {
+            clearTimeout(timeoutId);
+          }
+        }
       }
     };
 
@@ -125,6 +136,7 @@ const UnderwritePage = ({ setCurrentPage }) => {
     
     // Cleanup function
     return () => {
+      isCancelled = true;
       if (timeoutId) {
         clearTimeout(timeoutId);
       }
