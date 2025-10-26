@@ -109,15 +109,6 @@ function App() {
         localStorage.removeItem(RECOVERY_LOCK_KEY);
       }
 
-      // Failsafe timeout logic
-      setTimeout(() => {
-        if (isLoading) {
-          console.log('Failsafe timeout triggered, resetting to landing page');
-          setCurrentPage('landing');
-          setIsLoading(false);
-        }
-      }, 3000);
-
       if (urlParams.get('subscription') === 'success') {
         // Check if user is authenticated
         const savedAuthState = localStorage.getItem(AUTH_STATE_KEY);
@@ -212,14 +203,6 @@ function App() {
         }
         const savedAuthState = localStorage.getItem(AUTH_STATE_KEY);
         const savedUserData = localStorage.getItem(USER_DATA_KEY);
-
-        // Force exit loading state after 3 seconds as a failsafe
-        setTimeout(() => {
-          console.log("Failsafe timeout triggered");
-          if (isLoading) {
-            setIsLoading(false);
-          }
-        }, 3000);
 
         if (savedAuthState === 'true' && savedUserData) {
           try {
@@ -436,13 +419,7 @@ function App() {
 
   // Initial loading screen
   useEffect(() => {
-    // Force exit loading state after 3 seconds as a global failsafe
-    const timer = setTimeout(() => {
-      console.log("Global failsafe timeout triggered");
-      setIsLoading(false);
-    }, 3000);
-    
-    return () => clearTimeout(timer);
+    // No global failsafe timeout - let auth flow complete naturally
   }, []);
   
   if (isLoading) {
