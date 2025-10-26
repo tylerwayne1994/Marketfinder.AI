@@ -1,4 +1,10 @@
 // Vercel serverless function to proxy Stripe webhooks to backend
+export const config = {
+  api: {
+    bodyParser: false, // Disable body parsing to get raw body
+  },
+};
+
 export default async function handler(req, res) {
   // Only accept POST requests
   if (req.method !== 'POST') {
@@ -6,10 +12,17 @@ export default async function handler(req, res) {
   }
 
   try {
+    // Get the raw body as a buffer
+    const chunks = [];
+    for await (const chunk of req) {
+      chunks.push(chunk);
+    }
+    const rawBody = Buffer.concat(chunks);
+    
     // Get the Stripe signature from headers
     const stripeSignature = req.headers['stripe-signature'];
     
-    // Forward the webhook to the backend
+    // Forward the webhook to the backend with raw body
     const backendUrl = 'https://marketfinder-ai.onrender.com/webhook/stripe';
     
     const response = await fetch(backendUrl, {
@@ -18,7 +31,7 @@ export default async function handler(req, res) {
         'Content-Type': 'application/json',
         'stripe-signature': stripeSignature,
       },
-      body: JSON.stringify(req.body),
+      body: rawBody, // Send raw body, not JSON stringified
     });
 
     const data = await response.json();

@@ -1588,15 +1588,16 @@ async def stripe_webhook(request: Request):
         # Other event types
         return {"status": "ignored", "event_type": event.get("type")}
         
-    except stripe.error.SignatureVerificationError as e:
-        print(f"❌ [STRIPE WEBHOOK] Signature verification failed: {e}")
-        raise HTTPException(status_code=400, detail="Invalid signature")
-    
     except Exception as e:
-        print(f"❌ [STRIPE WEBHOOK] Error: {e}")
-        import traceback
-        traceback.print_exc()
-        raise HTTPException(status_code=500, detail=str(e))
+        error_message = str(e)
+        if "signature" in error_message.lower():
+            print(f"❌ [STRIPE WEBHOOK] Signature verification failed: {e}")
+            raise HTTPException(status_code=400, detail="Invalid signature")
+        else:
+            print(f"❌ [STRIPE WEBHOOK] Error: {e}")
+            import traceback
+            traceback.print_exc()
+            raise HTTPException(status_code=500, detail=str(e))
 
 # ============================================================================
 # HEALTH CHECK ENDPOINTS (from health_check_app.py)
