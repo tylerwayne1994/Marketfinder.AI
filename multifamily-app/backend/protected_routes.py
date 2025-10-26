@@ -303,8 +303,7 @@ async def create_checkout_session(user_id: str = Query(...)):
     import os
     import stripe
     
-    stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
-    frontend_url = os.getenv("FRONTEND_URL", "http://localhost:3000")
+   
     
     # LIVE Monthly subscription price ID ($1/month for testing)
     MONTHLY_SUBSCRIPTION_PRICE_ID = "price_1SMa3C2Xp6FKKwINynG52E6N"
