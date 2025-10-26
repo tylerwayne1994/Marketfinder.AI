@@ -303,10 +303,16 @@ async def create_checkout_session(user_id: str = Query(...)):
     import os
     import stripe
     
-   
+    stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
+    frontend_url = os.getenv("FRONTEND_URL", "http://localhost:3000")
+    
+    key_preview = f"{stripe.api_key[:8]}..." if stripe.api_key else "None"
+    log.info("[CHECKOUT] Stripe key prefix: %s", key_preview)
+    log.info("[CHECKOUT] Frontend URL: %s", frontend_url)
     
     # LIVE Monthly subscription price ID ($1/month for testing)
     MONTHLY_SUBSCRIPTION_PRICE_ID = "price_1SMa3C2Xp6FKKwINynG52E6N"
+    log.info("[CHECKOUT] Price ID: %s", MONTHLY_SUBSCRIPTION_PRICE_ID)
     
     try:
         session = stripe.checkout.Session.create(
@@ -330,7 +336,6 @@ async def create_checkout_session(user_id: str = Query(...)):
             "url": session.url
         }
         
-    except stripe.error.StripeError as e:
-        raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
+        log.exception("[CHECKOUT] Stripe session creation failed: %s", e)
         raise HTTPException(status_code=500, detail=str(e))
