@@ -9,8 +9,8 @@ import {
 import { supabase } from './lib/supabase';
 
 const API_BASE = process.env.REACT_APP_API_BASE_URL || "https://marketfinder-ai.onrender.com";
-// Health check endpoints are on the same backend server (port 8011 locally, same domain deployed)
-const HEALTH_CHECK_API = process.env.REACT_APP_HEALTH_CHECK_API || "https://marketfinder-ai.onrender.com";
+// Health check endpoints are on a SEPARATE Render service (health_check_app.py)
+const HEALTH_CHECK_API = process.env.REACT_APP_HEALTH_CHECK_API || "https://marketfinder-ai-1.onrender.com";
 
 const styles = {
  page: { minHeight: "100vh", background: "linear-gradient(to bottom, #f8fafc, #ffffff)" },
