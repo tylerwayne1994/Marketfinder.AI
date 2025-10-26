@@ -1507,29 +1507,32 @@ async def stripe_webhook(request: Request):
                 }
             
             else:
-                # One-time 60 Page Pack purchase - reset counter
+                # One-time 60 Page Pack purchase - add to additional_pages_purchased
                 from usage_tracker import get_supabase_client
-                from datetime import datetime
                 
-                current_month = datetime.now().strftime("%Y-%m")
                 supabase = get_supabase_client()
                 
-                # Reset pages_processed to 0
-                result = supabase.table("user_usage") \
-                    .upsert({
-                        "user_id": user_id,
-                        "month_year": current_month,
-                        "pages_processed": 0
-                    }, on_conflict="user_id,month_year") \
-                    .execute()
+                # Get current additional_pages_purchased
+                profile_response = supabase.table("profiles").select("additional_pages_purchased").eq("id", user_id).single().execute()
+                current_additional = 0
+                if profile_response.data:
+                    current_additional = profile_response.data.get("additional_pages_purchased", 0) or 0
                 
-                print(f"✅ [STRIPE WEBHOOK] Reset pages_processed to 0 for user {user_id}")
+                # Add 60 pages to the total
+                new_additional = current_additional + 60
+                
+                # Update the profile
+                supabase.table("profiles").update({
+                    "additional_pages_purchased": new_additional
+                }).eq("id", user_id).execute()
+                
+                print(f"✅ [STRIPE WEBHOOK] Added 60 pages to user {user_id}. Total additional pages: {new_additional}")
                 
                 return {
                     "status": "success",
                     "user_id": user_id,
-                    "pages_reset": True,
-                    "month": current_month
+                    "pages_added": 60,
+                    "total_additional_pages": new_additional
                 }
         
         # Handle subscription cancelled
