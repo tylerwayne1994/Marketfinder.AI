@@ -1595,6 +1595,143 @@ async def stripe_webhook(request: Request):
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
 
+# ============================================================================
+# HEALTH CHECK ENDPOINTS (from health_check_app.py)
+# ============================================================================
+
+@app.post("/api/health-check/verify")
+async def health_check_verify(
+   file: UploadFile = File(...),
+   pages: Optional[str] = Form(default=""),
+   user_fixes: Optional[str] = Form(default="{}"),
+   user_id: Optional[str] = Form(default=None)
+):
+   """Proxy to health check service - extract and verify property data"""
+   # Import health check functions
+   try:
+       from health_check_parser import parse_document_with_claude as health_parse
+       from health_check_parser import normalize_and_compute, validate_data
+   except ImportError:
+       raise HTTPException(status_code=501, detail="Health check parser not available")
+   
+   mime = (file.content_type or "").lower()
+   if mime not in ALLOWED_UPLOAD_MIMES:
+       raise HTTPException(status_code=415, detail=f"Unsupported content type: {mime}")
+   
+   data = await file.read()
+   orig_data = data
+   orig_mime = mime
+   
+   if not data:
+       raise HTTPException(status_code=400, detail="Empty upload")
+   if len(data) > MAX_BYTES:
+       raise HTTPException(status_code=413, detail="File too large")
+   
+   # Handle PDF page selection
+   if mime == "application/pdf" and pages:
+       try:
+           data = _slice_pdf(data, pages)
+       except ValueError as e:
+           raise HTTPException(status_code=400, detail=str(e))
+   
+   # OCR the document
+   markdown_text = ""
+   if mime in {"application/pdf", "image/png", "image/jpeg", "image/jpg", "image/webp"}:
+       try:
+           ocr_json = _call_mistral_ocr(data, mime)
+           for page in ocr_json.get("pages", []):
+               if isinstance(page, dict) and "markdown" in page:
+                   markdown_text += page["markdown"] + "\n\n"
+       except Exception as e:
+           print(f"OCR error: {e}")
+           raise HTTPException(status_code=502, detail=f"OCR failed: {str(e)}")
+   else:
+       try:
+           markdown_text = data.decode("utf-8", errors="ignore")
+       except:
+           markdown_text = str(data)[:100000]
+   
+   if not markdown_text:
+       raise HTTPException(status_code=400, detail="No text extracted from document")
+   
+   # Parse with health check parser
+   try:
+       extracted_data = health_parse(markdown_text)
+       extracted_data = normalize_and_compute(extracted_data)
+       
+       # Apply user corrections if any
+       try:
+           user_fixes_dict = json.loads(user_fixes) if user_fixes != "{}" else {}
+           for key_path, value in user_fixes_dict.items():
+               keys = key_path.split('.')
+               target = extracted_data
+               for key in keys[:-1]:
+                   target = target.setdefault(key, {})
+               target[keys[-1]] = float(value) if isinstance(value, str) and value.replace('.','',1).isdigit() else value
+           extracted_data = normalize_and_compute(extracted_data)
+       except Exception as e:
+           print(f"Error applying user fixes: {e}")
+       
+       validation = validate_data(extracted_data)
+       
+       # Track page usage
+       if user_id:
+           try:
+               pages_count = count_pages_from_file(orig_data, orig_mime)
+               await increment_page_usage(user_id, pages_count, "pfa")
+               print(f"[Usage] Tracked {pages_count} pages for user {user_id} (PFA)")
+           except Exception as e:
+               print(f"[Usage] Error tracking usage: {str(e)}")
+       
+       return {
+           "ok": True,
+           "verification": validation,
+           "file_name": file.filename
+       }
+   except Exception as e:
+       print(f"Health check parsing error: {e}")
+       raise HTTPException(status_code=500, detail=f"Health check parsing failed: {str(e)}")
+
+@app.post("/api/health-check/analyze")
+async def health_check_analyze(request: Request):
+   """Generate health check analysis"""
+   try:
+       data = await request.json()
+       verified_payload = data.get("verified_payload", {})
+       if not verified_payload:
+           raise HTTPException(status_code=400, detail="Missing verified_payload")
+       
+       # Import health check analysis function
+       try:
+           from health_check_parser import generate_health_check_analysis
+       except ImportError:
+           raise HTTPException(status_code=501, detail="Health check analysis not available")
+       
+       health_check_result = generate_health_check_analysis(verified_payload)
+       return {
+           "ok": True,
+           "health_check": health_check_result
+       }
+   except HTTPException:
+       raise
+   except Exception as e:
+       print(f"Analysis error: {e}")
+       return {
+           "ok": True,
+           "health_check": {
+               "snapshot": {"property_name": "Analysis Error", "error": str(e)},
+               "operational_issues": [],
+               "noi_levers": {"revenue": [], "expenses": []},
+               "market_position": {"competitive_advantages": [], "competitive_disadvantages": []},
+               "strengths": [],
+               "weak_spots": [],
+               "force_appreciation": [],
+               "tenant_retention": [],
+               "missing_items": ["Analysis failed"],
+               "source_check": f"Error: {str(e)}"
+           }
+       }
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=int(os.getenv("PORT", "8010")))

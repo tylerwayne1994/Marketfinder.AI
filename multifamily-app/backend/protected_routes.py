@@ -92,7 +92,7 @@ async def dashboard_summary(user_id: str = Query(...)):
                 "pages_processed": pages_processed,
                 "underwriting_sessions": underwriting_sessions
             },
-            "limits": {"pages_per_month": pages_limit, "max_pages_per_pdf": 25},
+            "limits": {"pages_per_month": total_pages_limit, "max_pages_per_pdf": 25},
             "remaining": {"pages": pages_remaining},
         }
     except Exception as e:
