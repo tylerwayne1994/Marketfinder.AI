@@ -198,6 +198,8 @@ async def user_usage(user_id: str = Query(...)):
 # STRIPE SUBSCRIPTION MANAGEMENT
 # ============================================================================
 
+print("[PROTECTED ROUTES] Registering cancel-subscription endpoint")
+
 @router.options("/cancel-subscription")
 async def cancel_subscription_options():
     """Handle OPTIONS preflight for cancel-subscription"""
