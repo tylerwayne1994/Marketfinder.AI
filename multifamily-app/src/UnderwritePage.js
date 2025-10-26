@@ -31,8 +31,8 @@ const UnderwritePage = ({ setCurrentPage }) => {
 
   // Get current user, subscription plan, limits, and usage
   useEffect(() => {
-    let timeoutId;
     let isCancelled = false;
+    let timeoutId;
     
     const getCurrentUser = async () => {
       try {
@@ -117,7 +117,7 @@ const UnderwritePage = ({ setCurrentPage }) => {
         if (!isCancelled) {
           setLoading(false);
           console.log('UnderwritePage: Loading state set to false');
-          // Clear the timeout when loading completes successfully
+          // Clear the timeout when loading completes
           if (timeoutId) {
             clearTimeout(timeoutId);
           }
@@ -127,9 +127,11 @@ const UnderwritePage = ({ setCurrentPage }) => {
 
     // Set a timeout to prevent infinite loading
     timeoutId = setTimeout(() => {
-      console.error('UnderwritePage: Loading timeout reached');
-      setError('Loading timeout. Please try refreshing the page.');
-      setLoading(false);
+      if (!isCancelled) {
+        console.error('UnderwritePage: Loading timeout reached');
+        setError('Loading timeout. Please try refreshing the page.');
+        setLoading(false);
+      }
     }, 10000); // 10 second timeout
 
     getCurrentUser();
@@ -137,9 +139,6 @@ const UnderwritePage = ({ setCurrentPage }) => {
     // Cleanup function
     return () => {
       isCancelled = true;
-      if (timeoutId) {
-        clearTimeout(timeoutId);
-      }
     };
   }, []);
 
