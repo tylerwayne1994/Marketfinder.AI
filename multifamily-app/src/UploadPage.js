@@ -240,15 +240,15 @@ const EnhancedUploadPage = ({ setCurrentPage }) => {
 
           if (limits) setUserLimits(limits);
 
-          const currentMonth = new Date().toISOString().slice(0, 7);
-          const { data: usage } = await supabase
-            .from('user_usage')
-            .select('*')
-            .eq('user_id', userId)
-            .eq('month_year', currentMonth)
-            .single();
-
-          setUserUsage(usage || { om_pdfs_parsed: 0, pages_processed: 0, underwriting_sessions: 0 });
+          // Fetch usage data from backend API instead of direct Supabase query
+          try {
+            const usageResponse = await fetch(`${API_BASE}/api/user/usage?user_id=${userId}`);
+            const usageData = await usageResponse.json();
+            setUserUsage(usageData.usage || { om_pdfs_parsed: 0, pages_processed: 0, underwriting_sessions: 0 });
+          } catch (err) {
+            console.error('Error fetching usage:', err);
+            setUserUsage({ om_pdfs_parsed: 0, pages_processed: 0, underwriting_sessions: 0 });
+          }
         }
         setSubscriptionLoading(false);
       } catch (err) {
@@ -263,20 +263,11 @@ const EnhancedUploadPage = ({ setCurrentPage }) => {
   // Check 60-page limit before processing
   const checkPageLimit = async () => {
     try {
-      const currentMonth = new Date().toISOString().slice(0, 7);
-      const { data: usage, error } = await supabase
-        .from('user_usage')
-        .select('pages_processed')
-        .eq('user_id', currentUser.id)
-        .eq('month_year', currentMonth)
-        .single();
+      // Fetch usage data from backend API instead of direct Supabase query
+      const usageResponse = await fetch(`${API_BASE}/api/user/usage?user_id=${currentUser.id}`);
+      const usageData = await usageResponse.json();
 
-      if (error && error.code !== 'PGRST116') {
-        console.error('Error checking usage:', error);
-        return { allowed: true }; // Allow if can't check
-      }
-
-      const pagesUsed = usage?.pages_processed || 0;
+      const pagesUsed = usageData.usage?.pages_processed || 0;
       const pagesRemaining = 60 - pagesUsed;
 
       if (pagesRemaining <= 0) {
