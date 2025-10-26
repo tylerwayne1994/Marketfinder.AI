@@ -42,7 +42,7 @@ const autoCalculateFinancing = (pricing, setVerifiedData) => {
   }
 };
 
-const API_BASE = (typeof import.meta !== "undefined" && import.meta.env?.VITE_API_BASE_URL) || "https://marketfinder-ai.onrender.com";
+const API_BASE = (typeof import.meta !== "undefined" && import.meta.env?.VITE_API_BASE_URL) || process.env.REACT_APP_API_BASE_URL || "https://marketfinder-ai.onrender.com";
 
 const COLORS = {
   primary: '#4F46E5',

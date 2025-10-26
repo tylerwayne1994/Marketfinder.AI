@@ -8,7 +8,9 @@ import {
 } from "lucide-react";
 import { supabase } from './lib/supabase';
 
-const API_BASE = (typeof import.meta !== "undefined" && import.meta.env?.VITE_API_BASE_URL) || "https://marketfinder-ai.onrender.com";
+const API_BASE = process.env.REACT_APP_API_BASE_URL || "https://marketfinder-ai.onrender.com";
+// Health check endpoints are on the same backend server (port 8011 locally, same domain deployed)
+const HEALTH_CHECK_API = process.env.REACT_APP_HEALTH_CHECK_API || "https://marketfinder-ai.onrender.com";
 
 const styles = {
  page: { minHeight: "100vh", background: "linear-gradient(to bottom, #f8fafc, #ffffff)" },
@@ -323,7 +325,7 @@ const PropertyAnalyzerPage = ({ setCurrentPage }) => {
      setProgress(30);
      setProcessingMsg("Extracting and verifying property data...");
 
-     const verifyRes = await fetch(`${API_BASE}/api/health-check/verify`, {
+     const verifyRes = await fetch(`${HEALTH_CHECK_API}/api/health-check/verify`, {
        method: "POST",
        body: fd,
      });
@@ -352,7 +354,7 @@ const PropertyAnalyzerPage = ({ setCurrentPage }) => {
      setProcessingMsg("Generating health check analysis...");
 
      // Run health check analysis
-     const analysisRes = await fetch(`${API_BASE}/api/health-check/analyze`, {
+     const analysisRes = await fetch(`${HEALTH_CHECK_API}/api/health-check/analyze`, {
        method: "POST",
        headers: {
          "Content-Type": "application/json",
@@ -399,7 +401,7 @@ const PropertyAnalyzerPage = ({ setCurrentPage }) => {
      fd.append("user_fixes", JSON.stringify(userFixes));
      fd.append("user_id", currentUser.id);
 
-     const verifyRes = await fetch(`${API_BASE}/api/health-check/verify`, {
+     const verifyRes = await fetch(`${HEALTH_CHECK_API}/api/health-check/verify`, {
        method: "POST",
        body: fd,
      });
@@ -420,7 +422,7 @@ const PropertyAnalyzerPage = ({ setCurrentPage }) => {
      setProgress(60);
      setProcessingMsg("Running health check analysis...");
 
-     const analysisRes = await fetch(`${API_BASE}/api/health-check/analyze`, {
+     const analysisRes = await fetch(`${HEALTH_CHECK_API}/api/health-check/analyze`, {
        method: "POST",
        headers: {
          "Content-Type": "application/json",
