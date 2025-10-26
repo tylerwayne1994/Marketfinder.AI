@@ -363,42 +363,22 @@ const DashboardPage = ({ setCurrentPage, currentUser }) => {
         ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {})
       };
       
-      // Always POST directly to backend route, send user_id in JSON body
+      // Call backend directly
       const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-      const baseUrl = isLocal ? 'http://127.0.0.1:8010' : '';
-      const url = isLocal 
-        ? `${baseUrl}/api/cancel-subscription`
-        : `/api/cancel-subscription`;
+      const backendUrl = isLocal ? 'http://127.0.0.1:8010' : 'https://marketfinder-ai.onrender.com';
+      const url = `${backendUrl}/api/cancel-subscription`;
       
-      // Try the primary endpoint first
-      const makeRequest = async (endpoint) => {
-        const res = await fetch(endpoint, {
-          method: 'POST',
-          headers,
-          body: JSON.stringify({ user_id: currentUser.id })
-        });
-        let raw = await res.text().catch(() => '');
-        let data = {};
-        try { data = raw ? JSON.parse(raw) : {}; } catch (_) { data = {}; }
-        return { res, raw, data };
-      };
+      const res = await fetch(url, {
+        method: 'POST',
+        headers,
+        credentials: 'include',
+        body: JSON.stringify({ user_id: currentUser.id })
+      });
+      
+      let raw = await res.text().catch(() => '');
+      let data = {};
+      try { data = raw ? JSON.parse(raw) : {}; } catch (_) { data = {}; }
 
-      let attemptUrl = url;
-      let result = await makeRequest(attemptUrl).catch(err => ({ error: err }));
-
-      // If primary returned 404 or network error, try proxy fallback (useful in some deployments)
-      if ((result && result.res && result.res.status === 404) || result?.error) {
-        console.warn('Cancel subscription primary endpoint failed, trying proxy fallback', result);
-        const proxyUrl = `/api/proxy?endpoint=/cancel-subscription&user_id=${currentUser.id}`;
-        attemptUrl = proxyUrl;
-        result = await makeRequest(attemptUrl).catch(err => ({ error: err }));
-      }
-
-      if (result?.error) {
-        throw result.error;
-      }
-
-      const { res, raw, data } = result;
       if (!res.ok) {
         const detail = data?.detail || raw || `Failed to cancel subscription (status ${res.status})`;
         throw new Error(detail);
