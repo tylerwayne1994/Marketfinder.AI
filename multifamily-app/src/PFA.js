@@ -151,7 +151,7 @@ const PropertyAnalyzerPage = ({ setCurrentPage }) => {
 
        // Get usage data from backend API
        try {
-         const response = await fetch(`${API_BASE}/user/usage?user_id=${userId}`);
+         const response = await fetch(`${API_BASE}/api/user/usage?user_id=${userId}`);
          if (response.ok) {
            const usageData = await response.json();
            setUserLimits(usageData.limits);
