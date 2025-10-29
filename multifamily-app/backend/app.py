@@ -79,6 +79,17 @@ import logging
 log = logging.getLogger("app")
 logging.basicConfig(level=logging.INFO)
 
+
+def _preview(key: str, length: int = 8) -> str:
+    if not key:
+        return "None"
+    return f"{key[:length]}..."
+
+
+log.info("[ENV] Stripe key prefix: %s", _preview(os.getenv("STRIPE_SECRET_KEY")))
+log.info("[ENV] Frontend URL: %s", os.getenv("FRONTEND_URL"))
+log.info("[ENV] Stripe webhook secret prefix: %s", _preview(os.getenv("STRIPE_WEBHOOK_SECRET")))
+
 @app.on_event("startup")
 async def _init_clients():
     global MISTRAL, ANTHROPIC

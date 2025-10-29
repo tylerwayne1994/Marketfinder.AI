@@ -299,6 +299,7 @@ async def cancel_subscription(request: Request, user_id: str = Query(None)):
 
 @router.post("/create-checkout-session")
 async def create_checkout_session(request: Request, user_id: str = Query(None)):
+    
     """Create a live Stripe checkout session for the $1/month subscription."""
     import os
     import stripe
