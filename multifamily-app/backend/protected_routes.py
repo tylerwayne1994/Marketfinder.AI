@@ -298,28 +298,55 @@ async def cancel_subscription(request: Request, user_id: str = Query(None)):
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/create-checkout-session")
-async def create_checkout_session(user_id: str = Query(...)):
-    """Create Stripe checkout session for $60/month subscription"""
+async def create_checkout_session(request: Request, user_id: str = Query(None)):
+    """Create a live Stripe checkout session for the $1/month subscription."""
     import os
     import stripe
-    
+
     stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
     frontend_url = os.getenv("FRONTEND_URL", "http://localhost:3000")
-    
+
     key_preview = f"{stripe.api_key[:8]}..." if stripe.api_key else "None"
     log.info("[CHECKOUT] Stripe key prefix: %s", key_preview)
     log.info("[CHECKOUT] Frontend URL: %s", frontend_url)
-    
-    # LIVE Monthly subscription price ID ($1/month for testing)
+
+    # Allow the frontend/body to override the price id (helps us debug easily)
     MONTHLY_SUBSCRIPTION_PRICE_ID = "price_1SMa3C2Xp6FKKwINynG52E6N"
-    log.info("[CHECKOUT] Price ID: %s", MONTHLY_SUBSCRIPTION_PRICE_ID)
-    
+
+    body = {}
+    try:
+        body = await request.json()
+    except Exception:
+        body = {}
+
+    # Accept user ID from query or body to support both callers
+    user_id = user_id or body.get("user_id") or body.get("userId") or body.get("user")
+    if not user_id:
+        raise HTTPException(status_code=400, detail="user_id is required")
+
+    requested_price_id = body.get("priceId") or body.get("price_id")
+    price_id = requested_price_id or MONTHLY_SUBSCRIPTION_PRICE_ID
+
+    try:
+        price_obj = stripe.Price.retrieve(price_id)
+        log.info(
+            "[CHECKOUT] Using price %s | amount=%s %s | livemode=%s | product=%s",
+            price_id,
+            price_obj.unit_amount,
+            price_obj.currency,
+            price_obj.livemode,
+            price_obj.product,
+        )
+    except Exception as price_error:
+        log.exception("[CHECKOUT] Failed to retrieve price %s: %s", price_id, price_error)
+        raise HTTPException(status_code=400, detail=f"Unable to retrieve Stripe price {price_id}: {price_error}")
+
     try:
         session = stripe.checkout.Session.create(
             mode="subscription",
             payment_method_types=["card"],
             line_items=[{
-                "price": MONTHLY_SUBSCRIPTION_PRICE_ID,
+                "price": price_id,
                 "quantity": 1
             }],
             success_url=f"{frontend_url}/dashboard?subscription=success",
@@ -330,12 +357,21 @@ async def create_checkout_session(user_id: str = Query(...)):
                 "subscription_type": "monthly"
             }
         )
-        
+
+        log.info("[CHECKOUT] Session created id=%s url=%s", session.id, session.url)
+
         return {
             "sessionId": session.id,
-            "url": session.url
+            "url": session.url,
+            "checkout_url": session.url,
+            "price": {
+                "id": price_obj.id,
+                "amount": price_obj.unit_amount,
+                "currency": price_obj.currency,
+                "livemode": price_obj.livemode,
+            }
         }
-        
+
     except Exception as e:
         log.exception("[CHECKOUT] Stripe session creation failed: %s", e)
         raise HTTPException(status_code=500, detail=str(e))
