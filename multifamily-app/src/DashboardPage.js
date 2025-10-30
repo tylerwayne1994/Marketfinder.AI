@@ -324,7 +324,7 @@ const DashboardPage = ({ setCurrentPage, currentUser }) => {
         'Content-Type': 'application/json',
         ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {})
       };
-      const response = await fetch(`/api/proxy?endpoint=/api/checkout`, {
+      const response = await fetch(`/api/proxy?endpoint=/api/create-checkout-session`, {
         method: 'POST',
         headers,
         body: JSON.stringify({ userId: userData.id, priceId })
