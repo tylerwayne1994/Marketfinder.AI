@@ -299,7 +299,7 @@ async def cancel_subscription(request: Request, user_id: str = Query(None)):
 
 @router.post("/create-checkout-session")
 async def create_checkout_session(request: Request, user_id: str = Query(None)):
-    
+
     """Create a live Stripe checkout session for the $1/month subscription."""
     import os
     import stripe
@@ -312,7 +312,17 @@ async def create_checkout_session(request: Request, user_id: str = Query(None)):
     log.info("[CHECKOUT] Frontend URL: %s", frontend_url)
 
     # Allow the frontend/body to override the price id (helps us debug easily)
-    MONTHLY_SUBSCRIPTION_PRICE_ID = "price_1SMa3C2Xp6FKKwINynG52E6N"
+    env_price_id = os.getenv("STRIPE_STANDARD_MONTHLY_PRICE_ID")
+    hardcoded_live_price_id = "price_1SNgjJ2Xp6fFKkWlNaMjlC7Hc"  # $1 live monthly starter plan
+
+    if env_price_id:
+        log.info("[CHECKOUT] Loaded price id from env STRIPE_STANDARD_MONTHLY_PRICE_ID=%s", env_price_id)
+    else:
+        env_price_id = hardcoded_live_price_id
+        log.warning(
+            "[CHECKOUT] STRIPE_STANDARD_MONTHLY_PRICE_ID not set; using fallback live price %s",
+            hardcoded_live_price_id,
+        )
 
     body = {}
     try:
@@ -326,21 +336,54 @@ async def create_checkout_session(request: Request, user_id: str = Query(None)):
         raise HTTPException(status_code=400, detail="user_id is required")
 
     requested_price_id = body.get("priceId") or body.get("price_id")
-    price_id = requested_price_id or MONTHLY_SUBSCRIPTION_PRICE_ID
+    price_candidates = []
+    if requested_price_id:
+        price_candidates.append(("requested", requested_price_id))
+    price_candidates.append(("default", env_price_id))
 
-    try:
-        price_obj = stripe.Price.retrieve(price_id)
-        log.info(
-            "[CHECKOUT] Using price %s | amount=%s %s | livemode=%s | product=%s",
-            price_id,
-            price_obj.unit_amount,
-            price_obj.currency,
-            price_obj.livemode,
-            price_obj.product,
-        )
-    except Exception as price_error:
-        log.exception("[CHECKOUT] Failed to retrieve price %s: %s", price_id, price_error)
-        raise HTTPException(status_code=400, detail=f"Unable to retrieve Stripe price {price_id}: {price_error}")
+    price_obj = None
+    price_id = None
+    last_error = None
+
+    for source, candidate in price_candidates:
+        try:
+            current_price = stripe.Price.retrieve(candidate)
+            log.info(
+                "[CHECKOUT] Using %s price %s | amount=%s %s | livemode=%s | product=%s",
+                source,
+                current_price.id,
+                current_price.unit_amount,
+                current_price.currency,
+                current_price.livemode,
+                current_price.product,
+            )
+            price_obj = current_price
+            price_id = current_price.id
+            if source == "requested" and not current_price.livemode:
+                log.warning(
+                    "[CHECKOUT] Requested price %s is in test mode; falling back to default live price",
+                    current_price.id,
+                )
+                price_obj = None
+                price_id = None
+                continue
+            break
+        except Exception as price_error:
+            last_error = price_error
+            log.warning(
+                "[CHECKOUT] Unable to use %s price %s: %s",
+                source,
+                candidate,
+                price_error,
+            )
+
+    if not price_obj or not price_id:
+        detail = "Unable to retrieve a valid Stripe price"
+        if requested_price_id:
+            detail += f" (tried override `{requested_price_id}`)"
+        if last_error:
+            detail += f": {last_error}"
+        raise HTTPException(status_code=400, detail=detail)
 
     try:
         session = stripe.checkout.Session.create(
