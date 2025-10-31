@@ -304,11 +304,24 @@ async def create_checkout_session(request: Request, user_id: str = Query(None)):
     import os
     import stripe
 
-    stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
+    stripe_key = os.getenv("STRIPE_SECRET_KEY")
+    if not stripe_key:
+        raise HTTPException(status_code=500, detail="STRIPE_SECRET_KEY not configured")
+    
+    # CRITICAL: Verify we're using a LIVE key
+    if stripe_key.startswith("sk_test_"):
+        log.error("[CHECKOUT] FATAL: Using test key when live key expected!")
+        raise HTTPException(status_code=500, detail="Stripe test key detected; live key required")
+    
+    if not stripe_key.startswith("sk_live_"):
+        log.error("[CHECKOUT] FATAL: Stripe key has unexpected prefix: %s", stripe_key[:10])
+        raise HTTPException(status_code=500, detail="Invalid Stripe key format")
+    
+    stripe.api_key = stripe_key
     frontend_url = os.getenv("FRONTEND_URL", "http://localhost:3000")
 
-    key_preview = f"{stripe.api_key[:8]}..." if stripe.api_key else "None"
-    log.info("[CHECKOUT] Stripe key prefix: %s", key_preview)
+    key_preview = f"{stripe_key[:15]}...{stripe_key[-4:]}"
+    log.info("[CHECKOUT] Using LIVE Stripe key: %s", key_preview)
     log.info("[CHECKOUT] Frontend URL: %s", frontend_url)
 
     # Allow the frontend/body to override the price id (helps us debug easily)
@@ -402,7 +415,15 @@ async def create_checkout_session(request: Request, user_id: str = Query(None)):
             }
         )
 
-        log.info("[CHECKOUT] Session created id=%s url=%s", session.id, session.url)
+        log.info("[CHECKOUT] Session created id=%s url=%s livemode=%s", session.id, session.url, session.livemode)
+        
+        # CRITICAL: Block test-mode sessions
+        if not session.livemode:
+            log.error("[CHECKOUT] FATAL: Created session in TEST mode despite live key! session_id=%s", session.id)
+            raise HTTPException(
+                status_code=500, 
+                detail=f"Stripe returned test-mode session {session.id} despite live API key. Check Stripe account configuration."
+            )
 
         return {
             "sessionId": session.id,
