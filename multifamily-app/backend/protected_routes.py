@@ -326,7 +326,7 @@ async def create_checkout_session(request: Request, user_id: str = Query(None)):
 
     # Allow the frontend/body to override the price id (helps us debug easily)
     env_price_id = os.getenv("STRIPE_STANDARD_MONTHLY_PRICE_ID")
-    hardcoded_live_price_id = "price_1SNgjJ2Xp6fFKkWlNaMjlC7Hc"  # $1 live monthly starter plan
+    hardcoded_live_price_id = "price_1SNgiJ2Xp6FKKwINaMjLC7Hc"  # $1 live monthly starter plan
 
     if env_price_id:
         log.info("[CHECKOUT] Loaded price id from env STRIPE_STANDARD_MONTHLY_PRICE_ID=%s", env_price_id)
