@@ -107,28 +107,36 @@ const SignupPage = ({ setCurrentPage, setIsAuthenticated, setCurrentUser }) => {
         
         // Redirect to Stripe checkout for $1/month subscription via backend API
         console.log('✅ Account created, creating checkout session...');
+        console.log('User ID:', authData.user.id);
         
         try {
           const response = await fetch('/api/proxy?endpoint=/api/create-checkout-session', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              user_id: authData.user.id,
-              plan: 'starter',
-              success_url: `${window.location.origin}/return-to-dashboard.html`,
-              cancel_url: `${window.location.origin}/signup`
+              user_id: authData.user.id
             })
           });
           
           if (!response.ok) {
-            throw new Error(`Failed to create checkout session: ${response.statusText}`);
+            const errorData = await response.json().catch(() => ({}));
+            console.error('Checkout session error response:', errorData);
+            throw new Error(`Failed to create checkout session: ${errorData.detail || response.statusText}`);
           }
           
-          const { url } = await response.json();
+          const data = await response.json();
+          console.log('Checkout session response:', data);
+          
+          if (!data.url && !data.checkout_url) {
+            throw new Error('No checkout URL returned from server');
+          }
+          
+          const checkoutUrl = data.url || data.checkout_url;
+          console.log('Redirecting to Stripe checkout:', checkoutUrl);
           
           // Show success message briefly, then redirect to Stripe
           setTimeout(() => {
-            window.location.href = url;
+            window.location.href = checkoutUrl;
           }, 1500);
         } catch (checkoutError) {
           console.error('Checkout session error:', checkoutError);
