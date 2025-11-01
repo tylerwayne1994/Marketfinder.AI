@@ -110,7 +110,8 @@ const SignupPage = ({ setCurrentPage, setIsAuthenticated, setCurrentUser }) => {
         console.log('User ID:', authData.user.id);
         
         try {
-          const response = await fetch('/api/proxy?endpoint=/api/create-checkout-session', {
+          // Send user_id as query parameter since backend accepts it from query OR body
+          const response = await fetch(`/api/proxy?endpoint=/api/create-checkout-session&user_id=${encodeURIComponent(authData.user.id)}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -118,10 +119,14 @@ const SignupPage = ({ setCurrentPage, setIsAuthenticated, setCurrentUser }) => {
             })
           });
           
+          console.log('Response status:', response.status);
+          console.log('Response ok:', response.ok);
+          
           if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
             console.error('Checkout session error response:', errorData);
-            throw new Error(`Failed to create checkout session: ${errorData.detail || response.statusText}`);
+            console.error('Full error:', JSON.stringify(errorData, null, 2));
+            throw new Error(`Failed to create checkout session: ${errorData.detail || errorData.error || response.statusText}`);
           }
           
           const data = await response.json();
