@@ -1839,9 +1839,35 @@ const DashboardPage = ({ setCurrentPage, currentUser }) => {
 
               <div style={{ display: 'flex', gap: '12px' }}>
                 <button
-                  onClick={() => {
+                  onClick={async () => {
                     const userId = currentUser?.id;
-                    window.location.href = `https://buy.stripe.com/test_aFacMY6Btb4Sd2RcLFf3a01?client_reference_id=${userId}`;
+                    if (!userId) {
+                      alert('Please log in to purchase additional pages');
+                      return;
+                    }
+                    
+                    try {
+                      const response = await fetch('/api/proxy?endpoint=/api/purchase-additional-pages', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ user_id: userId })
+                      });
+                      
+                      if (!response.ok) {
+                        const errorData = await response.json().catch(() => ({}));
+                        throw new Error(errorData.detail || 'Failed to create checkout session');
+                      }
+                      
+                      const data = await response.json();
+                      if (data.url || data.checkout_url) {
+                        window.location.href = data.url || data.checkout_url;
+                      } else {
+                        throw new Error('No checkout URL returned');
+                      }
+                    } catch (error) {
+                      console.error('Purchase error:', error);
+                      alert('Failed to start purchase. Please try again.');
+                    }
                   }}
                   style={{
                     padding: '12px 24px',
