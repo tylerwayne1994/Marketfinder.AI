@@ -105,16 +105,35 @@ const SignupPage = ({ setCurrentPage, setIsAuthenticated, setCurrentUser }) => {
         
         setSuccess(true);
         
-        // Redirect to Stripe checkout for $60/month subscription
-        console.log('✅ Account created, redirecting to Stripe checkout...');
+        // Redirect to Stripe checkout for $1/month subscription via backend API
+        console.log('✅ Account created, creating checkout session...');
         
-        // Use the monthly subscription payment link with user ID
-        const stripeCheckoutUrl = `https://buy.stripe.com/test_7sY28k0d5fl82od12Xf3a00?client_reference_id=${authData.user.id}`;
-        
-        // Show success message briefly, then redirect
-        setTimeout(() => {
-          window.location.href = stripeCheckoutUrl;
-        }, 1500);
+        try {
+          const response = await fetch('/api/proxy?endpoint=/api/create-checkout-session', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              user_id: authData.user.id,
+              plan: 'starter',
+              success_url: `${window.location.origin}/return-to-dashboard.html`,
+              cancel_url: `${window.location.origin}/signup`
+            })
+          });
+          
+          if (!response.ok) {
+            throw new Error(`Failed to create checkout session: ${response.statusText}`);
+          }
+          
+          const { url } = await response.json();
+          
+          // Show success message briefly, then redirect to Stripe
+          setTimeout(() => {
+            window.location.href = url;
+          }, 1500);
+        } catch (checkoutError) {
+          console.error('Checkout session error:', checkoutError);
+          setError('Account created but failed to start subscription. Please try again from your dashboard.');
+        }
       }
     } catch (err) {
       setError(err?.message || 'An unexpected error occurred during registration');
@@ -195,9 +214,9 @@ const SignupPage = ({ setCurrentPage, setIsAuthenticated, setCurrentUser }) => {
               }}
             >
               <h3 style={{ fontWeight: '600', marginBottom: '0.5rem' }}>Account Created Successfully! 🎉</h3>
-              <p>Redirecting you to complete your $60/month subscription...</p>
+              <p>Redirecting you to complete your $1/month subscription...</p>
               <p style={{ fontSize: '0.875rem', marginTop: '0.5rem', opacity: 0.8 }}>
-                Your subscription includes full platform access + 60 pages per month.
+                Your subscription includes full platform access.
               </p>
             </div>
           ) : (
