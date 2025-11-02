@@ -1,11 +1,5 @@
-# Create router = APIRouter()
-log = logging.getLogger("purchase_pages")
-
-# LIVE 60-page pack price ID - fallback if env var not set
-DEFAULT_SIXTY_PAGE_PACK_PRICE_ID = "price_1SOoIO2Xp6FKKwINoJmmZtAM"  # $25 one-timeendpoint in protected_routes.py to handle purchasing additional pages
-# Integrated with Stripe for LIVE mode
-
-from fastapi import APIRouter, Request, Depends, HTTPException
+# Backend endpoint for purchasing additional pages
+from fastapi import APIRouter, Request, HTTPException
 from typing import Dict, Any
 import json
 import os
@@ -14,8 +8,8 @@ import logging
 router = APIRouter()
 log = logging.getLogger("purchase_pages")
 
-# LIVE 60-page pack price ID - fallback if env var not set
-DEFAULT_SIXTY_PAGE_PACK_PRICE_ID = "price_1SOoIO2Xp6FKKwINoJmmZtAM"  # $25/month recurring
+# LIVE 60-page pack price ID
+DEFAULT_SIXTY_PAGE_PACK_PRICE_ID = "price_1SOoIO2Xp6FKKwINoJmmZtAM"  # $25 one-time
 
 @router.post("/purchase-additional-pages")
 async def purchase_additional_pages(request: Request):
