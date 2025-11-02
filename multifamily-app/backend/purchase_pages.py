@@ -11,7 +11,7 @@ router = APIRouter()
 log = logging.getLogger("purchase_pages")
 
 # LIVE 60-page pack price ID - fallback if env var not set
-DEFAULT_SIXTY_PAGE_PACK_PRICE_ID = "price_1SOjGl2Xp6FKKwINfRfWWmGz"  # $1.00 one-time
+DEFAULT_SIXTY_PAGE_PACK_PRICE_ID = "price_1SOo1O2Xp6FKKwUNoJmmZtAN"  # $25 one-time
 
 @router.post("/purchase-additional-pages")
 async def purchase_additional_pages(request: Request):
