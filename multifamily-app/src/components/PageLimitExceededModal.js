@@ -23,24 +23,18 @@ const PageLimitExceededModal = ({
     setError(null);
     
     try {
-      // Call the backend API to purchase additional pages
+      // Call the backend API to get Stripe checkout session
       const response = await axios.post(`${BACKEND_URL}/api/purchase-additional-pages`, {
         user_id: currentUser?.id
       });
       
-      if (response.data.success) {
-        setSuccess(true);
-        
-        // Wait 2 seconds before closing the modal to show success message
-        setTimeout(() => {
-          onPurchaseComplete();
-          onClose();
-        }, 2000);
+      if (response.data.success && response.data.url) {
+        // Redirect to Stripe checkout
+        window.location.href = response.data.url;
       }
     } catch (err) {
       console.error('Error purchasing additional pages:', err);
       setError('Failed to process your purchase. Please try again.');
-    } finally {
       setIsLoading(false);
     }
   };
@@ -115,7 +109,7 @@ const PageLimitExceededModal = ({
             }}>
               <h3 style={{ marginBottom: '8px', fontSize: '18px' }}>Add More Pages</h3>
               <p style={{ marginBottom: '16px', color: '#555' }}>
-                Get 50 additional pages for $25 to continue analyzing documents.
+                Get 60 additional pages for $25 to continue analyzing documents.
               </p>
               
               <div style={{
@@ -126,7 +120,7 @@ const PageLimitExceededModal = ({
                 borderBottom: '1px solid #e1e7ff'
               }}>
                 <span style={{ fontWeight: '500' }}>Package:</span>
-                <span>50 Additional Pages</span>
+                <span>60 Additional Pages</span>
               </div>
               
               <div style={{

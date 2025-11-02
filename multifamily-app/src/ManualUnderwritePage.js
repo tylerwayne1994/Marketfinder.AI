@@ -28,7 +28,7 @@ const styles = {
     boxShadow: "0 4px 6px rgba(0,0,0,.04)", 
     borderRadius: 16, 
     padding: 20,
-    marginBottom: 16
+    marginBottom: 10
   },
   sectionTitle: {
     fontSize: "1rem",
@@ -803,7 +803,7 @@ const ManualUnderwritePage = ({ setCurrentPage }) => {
       boxShadow: "0 4px 6px rgba(0,0,0,.04)", 
       borderRadius: 16, 
       padding: 24,
-      marginBottom: 20
+      marginBottom: 12
     },
     smallCard: { 
       background: "#fff", 
@@ -873,7 +873,7 @@ const ManualUnderwritePage = ({ setCurrentPage }) => {
       fontSize: 16,
       fontWeight: 600,
       color: "#111827",
-      marginBottom: 16,
+      marginBottom: 10,
       display: "flex",
       alignItems: "center",
       gap: 8
@@ -919,7 +919,7 @@ const ManualUnderwritePage = ({ setCurrentPage }) => {
       <div style={styles.container}>
         {/* Header */}
         <div style={{ marginBottom: 24 }}>
-          <div style={{ display: "flex", gap: 12, marginBottom: 20 }}>
+          <div style={{ display: "flex", gap: 12, marginBottom: 12 }}>
             <button 
               onClick={() => setCurrentPage('underwrite')} 
               style={styles.homeButton}
@@ -985,7 +985,7 @@ const ManualUnderwritePage = ({ setCurrentPage }) => {
               <DollarSign size={18} /> Price
             </h3>
             
-            <div style={{ marginBottom: 16 }}>
+            <div style={{ marginBottom: 10 }}>
               <label style={styles.label}>Purchase Price</label>
               <input
                 type="number"
@@ -995,7 +995,7 @@ const ManualUnderwritePage = ({ setCurrentPage }) => {
               />
             </div>
             
-            <div style={{ marginBottom: 16 }}>
+            <div style={{ marginBottom: 10 }}>
               <label style={styles.label}>Down Payment %</label>
               <input
                 type="number"
@@ -1005,7 +1005,7 @@ const ManualUnderwritePage = ({ setCurrentPage }) => {
               />
             </div>
             
-            <div style={{ marginBottom: 16 }}>
+            <div style={{ marginBottom: 10 }}>
               <label style={styles.label}>Interest Rate %</label>
               <input
                 type="number"
@@ -1016,7 +1016,7 @@ const ManualUnderwritePage = ({ setCurrentPage }) => {
               />
             </div>
             
-            <div style={{ marginBottom: 16 }}>
+            <div style={{ marginBottom: 10 }}>
               <label style={styles.label}>Term (Years)</label>
               <input
                 type="number"
@@ -1026,7 +1026,7 @@ const ManualUnderwritePage = ({ setCurrentPage }) => {
               />
             </div>
             
-            <div style={{ marginBottom: 16 }}>
+            <div style={{ marginBottom: 10 }}>
               <label style={styles.label}>Financing</label>
               <input
                 type="text"
@@ -1036,7 +1036,7 @@ const ManualUnderwritePage = ({ setCurrentPage }) => {
               />
             </div>
             
-            <div style={{ marginBottom: 16 }}>
+            <div style={{ marginBottom: 10 }}>
               <label style={styles.label}>Monthly Payment</label>
               <div style={{ ...styles.readOnlyInput, fontWeight: 600, background: "#fef3c7", border: "2px solid #f59e0b" }}>
                 ${calculations.monthlyPayment.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
@@ -1060,7 +1060,7 @@ const ManualUnderwritePage = ({ setCurrentPage }) => {
               <Building size={18} /> Seller Finance
             </h3>
             
-            <div style={{ marginBottom: 16 }}>
+            <div style={{ marginBottom: 10 }}>
               <label style={styles.label}>Seller Fin. Prop</label>
               <input
                 type="number"
@@ -1070,7 +1070,7 @@ const ManualUnderwritePage = ({ setCurrentPage }) => {
               />
             </div>
             
-            <div style={{ marginBottom: 16 }}>
+            <div style={{ marginBottom: 10 }}>
               <label style={styles.label}>Down Payment %</label>
               <input
                 type="number"
@@ -1080,7 +1080,7 @@ const ManualUnderwritePage = ({ setCurrentPage }) => {
               />
             </div>
             
-            <div style={{ marginBottom: 16 }}>
+            <div style={{ marginBottom: 10 }}>
               <label style={styles.label}>Interest Rate %</label>
               <input
                 type="number"
@@ -1091,7 +1091,7 @@ const ManualUnderwritePage = ({ setCurrentPage }) => {
               />
             </div>
             
-            <div style={{ marginBottom: 16 }}>
+            <div style={{ marginBottom: 10 }}>
               <label style={styles.label}>Term</label>
               <input
                 type="number"
@@ -1101,7 +1101,7 @@ const ManualUnderwritePage = ({ setCurrentPage }) => {
               />
             </div>
             
-            <div style={{ marginBottom: 16 }}>
+            <div style={{ marginBottom: 10 }}>
               <label style={styles.label}>Financing</label>
               <input
                 type="text"
@@ -1125,14 +1125,14 @@ const ManualUnderwritePage = ({ setCurrentPage }) => {
               <TrendingUp size={18} /> Current
             </h3>
             
-            <div style={{ marginBottom: 16 }}>
+            <div style={{ marginBottom: 10 }}>
               <label style={styles.label}>Gross Rents</label>
               <div style={styles.readOnlyInput}>
                 ${calculations.currentRentRoll.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </div>
             </div>
             
-            <div style={{ marginBottom: 16 }}>
+            <div style={{ marginBottom: 10 }}>
               <label style={styles.label}>PMI</label>
               <input
                 type="number"
@@ -1142,7 +1142,7 @@ const ManualUnderwritePage = ({ setCurrentPage }) => {
               />
             </div>
             
-            <div style={{ marginBottom: 16 }}>
+            <div style={{ marginBottom: 10 }}>
               <label style={styles.label}>Taxes</label>
               <input
                 type="number"
@@ -1152,7 +1152,7 @@ const ManualUnderwritePage = ({ setCurrentPage }) => {
               />
             </div>
             
-            <div style={{ marginBottom: 16 }}>
+            <div style={{ marginBottom: 10 }}>
               <label style={styles.label}>Insurance</label>
               <input
                 type="number"
@@ -1162,7 +1162,7 @@ const ManualUnderwritePage = ({ setCurrentPage }) => {
               />
             </div>
             
-            <div style={{ marginBottom: 16 }}>
+            <div style={{ marginBottom: 10 }}>
               <label style={styles.label}>Utilities</label>
               <input
                 type="number"
@@ -1172,7 +1172,7 @@ const ManualUnderwritePage = ({ setCurrentPage }) => {
               />
             </div>
             
-            <div style={{ marginBottom: 16 }}>
+            <div style={{ marginBottom: 10 }}>
               <label style={styles.label}>Vacancy Reserve %</label>
               <input
                 type="number"
@@ -1183,7 +1183,7 @@ const ManualUnderwritePage = ({ setCurrentPage }) => {
               />
             </div>
             
-            <div style={{ marginBottom: 16 }}>
+            <div style={{ marginBottom: 10 }}>
               <label style={styles.label}>Maintenance</label>
               <input
                 type="number"
@@ -1193,7 +1193,7 @@ const ManualUnderwritePage = ({ setCurrentPage }) => {
               />
             </div>
             
-            <div style={{ marginBottom: 16 }}>
+            <div style={{ marginBottom: 10 }}>
               <label style={styles.label}>Monthly NOI</label>
               <div style={{ ...styles.readOnlyInput, fontWeight: 600, background: "#dcfce7", border: "2px solid #10b981" }}>
                 ${(calculations.effectiveGrossIncome - (calculations.totalMonthlyExpenses - calculations.monthlyVacancy)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
@@ -1214,14 +1214,14 @@ const ManualUnderwritePage = ({ setCurrentPage }) => {
               <BarChart3 size={18} /> Proforma
             </h3>
             
-            <div style={{ marginBottom: 16 }}>
+            <div style={{ marginBottom: 10 }}>
               <label style={styles.label}>Gross Rents</label>
               <div style={styles.readOnlyInput}>
                 ${calculations.marketRentRoll.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </div>
             </div>
             
-            <div style={{ marginBottom: 16 }}>
+            <div style={{ marginBottom: 10 }}>
               <label style={styles.label}>PMI</label>
               <input
                 type="number"
@@ -1231,42 +1231,42 @@ const ManualUnderwritePage = ({ setCurrentPage }) => {
               />
             </div>
             
-            <div style={{ marginBottom: 16 }}>
+            <div style={{ marginBottom: 10 }}>
               <label style={styles.label}>Taxes</label>
               <div style={styles.readOnlyInput}>
                 ${formData.taxes}
               </div>
             </div>
             
-            <div style={{ marginBottom: 16 }}>
+            <div style={{ marginBottom: 10 }}>
               <label style={styles.label}>Insurance</label>
               <div style={styles.readOnlyInput}>
                 ${formData.insurance}
               </div>
             </div>
             
-            <div style={{ marginBottom: 16 }}>
+            <div style={{ marginBottom: 10 }}>
               <label style={styles.label}>Utilities</label>
               <div style={styles.readOnlyInput}>
                 ${formData.utilities}
               </div>
             </div>
             
-            <div style={{ marginBottom: 16 }}>
+            <div style={{ marginBottom: 10 }}>
               <label style={styles.label}>Vacancy Reserve</label>
               <div style={styles.readOnlyInput}>
                 ${(calculations.marketRentRoll * formData.vacancyRate / 100).toFixed(2)}
               </div>
             </div>
             
-            <div style={{ marginBottom: 16 }}>
+            <div style={{ marginBottom: 10 }}>
               <label style={styles.label}>Maintenance</label>
               <div style={styles.readOnlyInput}>
                 ${formData.maintenance}
               </div>
             </div>
             
-            <div style={{ marginBottom: 16 }}>
+            <div style={{ marginBottom: 10 }}>
               <label style={styles.label}>Monthly NOI</label>
               <div style={{ ...styles.readOnlyInput, fontWeight: 600, background: "#dcfce7", border: "2px solid #10b981" }}>
                 ${((calculations.marketRentRoll - (calculations.marketRentRoll * formData.vacancyRate / 100)) - 
@@ -1639,7 +1639,7 @@ const ManualUnderwritePage = ({ setCurrentPage }) => {
           <div style={styles.smallCard}>
             <h3 style={styles.sectionHeader}>Loan Factor Rate</h3>
             
-            <div style={{ overflowX: 'auto', marginBottom: 16 }}>
+            <div style={{ overflowX: 'auto', marginBottom: 10 }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
                 <tbody>
                   <tr>
@@ -1702,7 +1702,7 @@ const ManualUnderwritePage = ({ setCurrentPage }) => {
           border: '2px solid #f59e0b',
           padding: 24
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
             <h3 style={{ fontSize: 24, fontWeight: 700, color: '#1e293b', margin: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
               <TrendingUp size={28} color="#f59e0b" />
               Value Add Calculator
@@ -1895,7 +1895,7 @@ const ManualUnderwritePage = ({ setCurrentPage }) => {
           border: "2px solid #0ea5e9",
           marginTop: 16
         }}>
-          <h3 style={{ fontSize: 24, fontWeight: 700, marginBottom: 20, color: "#1e293b", textAlign: "center" }}>
+          <h3 style={{ fontSize: 24, fontWeight: 700, marginBottom: 12, color: "#1e293b", textAlign: "center" }}>
             Cash Flow - Cash on Cash Return
           </h3>
           
@@ -1929,7 +1929,7 @@ const ManualUnderwritePage = ({ setCurrentPage }) => {
             
             {/* Right side - Detailed breakdown */}
             <div>
-              <div style={{ marginBottom: 20, padding: 16, background: '#fff', borderRadius: 12, border: '1px solid #e2e8f0' }}>
+              <div style={{ marginBottom: 12, padding: 16, background: '#fff', borderRadius: 12, border: '1px solid #e2e8f0' }}>
                 <h4 style={{ fontSize: 16, fontWeight: 600, marginBottom: 12, color: '#475569' }}>
                   Debt Reduction
                 </h4>
@@ -1938,7 +1938,7 @@ const ManualUnderwritePage = ({ setCurrentPage }) => {
                 </div>
               </div>
               
-              <div style={{ marginBottom: 20, padding: 16, background: '#fff', borderRadius: 12, border: '1px solid #e2e8f0' }}>
+              <div style={{ marginBottom: 12, padding: 16, background: '#fff', borderRadius: 12, border: '1px solid #e2e8f0' }}>
                 <h4 style={{ fontSize: 16, fontWeight: 600, marginBottom: 12, color: '#475569' }}>
                   Appreciation
                 </h4>
@@ -1951,7 +1951,7 @@ const ManualUnderwritePage = ({ setCurrentPage }) => {
               </div>
               
               <div style={{ padding: 20, background: 'linear-gradient(135deg, #dcfce7, #bbf7d0)', borderRadius: 12, border: '2px solid #16a34a' }}>
-                <h4 style={{ fontSize: 18, fontWeight: 700, marginBottom: 16, color: '#1e293b' }}>
+                <h4 style={{ fontSize: 18, fontWeight: 700, marginBottom: 10, color: '#1e293b' }}>
                   Summarized Return on Investment After Year 1
                 </h4>
                 <table style={{ width: '100%', fontSize: 13 }}>
@@ -2241,7 +2241,7 @@ const ManualUnderwritePage = ({ setCurrentPage }) => {
             <h3 style={styles.sectionHeader}>
               Cap Rate vs Loan Constant
             </h3>
-            <div style={{ marginBottom: 20 }}>
+            <div style={{ marginBottom: 12 }}>
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
                   <tr style={{ background: '#f8fafc' }}>

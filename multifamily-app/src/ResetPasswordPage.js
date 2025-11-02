@@ -35,6 +35,10 @@ export default function ResetPasswordPage({ setCurrentPage }) {
     if (error) { setErr(error.message); return; }
 
     setOk('Password updated. Redirecting to login…');
+    
+    // Clear recovery lock to prevent redirect loop
+    localStorage.removeItem('terra_recovery_lock');
+    
     setTimeout(() => setCurrentPage?.('login'), 1200);
   };
 
