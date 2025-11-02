@@ -27,36 +27,52 @@ const styles = {
     border: "1px solid #e5e7eb", 
     boxShadow: "0 4px 6px rgba(0,0,0,.04)", 
     borderRadius: 16, 
-    padding: 24,
-    marginBottom: 20
+    padding: 20,
+    marginBottom: 16
   },
   sectionTitle: {
-    fontSize: "1.25rem",
+    fontSize: "1rem",
     fontWeight: 700,
     color: "#111827",
-    marginBottom: 16,
+    marginBottom: 12,
     display: "flex",
     alignItems: "center",
     gap: 8
   },
   inputGroup: {
-    marginBottom: 16
+    marginBottom: 12
   },
   label: {
     display: "block",
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: 600,
     color: "#374151",
-    marginBottom: 6
+    marginBottom: 4
   },
   input: {
     width: "100%",
-    padding: "10px 14px",
-    border: "2px solid #e5e7eb",
-    borderRadius: 8,
-    fontSize: 14,
+    padding: "8px 10px",
+    border: "1px solid #e5e7eb",
+    borderRadius: 6,
+    fontSize: 13,
     transition: "border-color 0.2s",
     outline: "none",
+  },
+  smallCard: {
+    background: "#fff",
+    border: "1px solid #e5e7eb",
+    borderRadius: 12,
+    padding: 16,
+    boxShadow: "0 1px 3px rgba(0,0,0,0.05)"
+  },
+  sectionHeader: {
+    fontSize: 14,
+    fontWeight: 700,
+    color: "#111827",
+    marginBottom: 12,
+    display: "flex",
+    alignItems: "center",
+    gap: 6
   },
   button: {
     display: "inline-flex",
