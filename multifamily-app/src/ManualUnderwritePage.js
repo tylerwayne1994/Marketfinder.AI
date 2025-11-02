@@ -1,7 +1,93 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Calculator, DollarSign, Building, TrendingUp, FileText, BarChart3, Download, Home, MessageCircle, Send, Bot, User } from 'lucide-react';
-import { PieChart, Pie, Cell, BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, RadialBarChart, RadialBar } from 'recharts';
+import { ArrowLeft, Calculator, DollarSign, Building, TrendingUp, FileText, BarChart3, Download, Home, MessageCircle, Send, Bot, User, PieChart as PieChartIcon } from 'lucide-react';
+import { PieChart, Pie, Cell, BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, RadialBarChart, RadialBar, Area, AreaChart } from 'recharts';
 import { supabase } from './lib/supabase';
+
+// Modern color palette matching Upload Page
+const COLORS = {
+  primary: '#4F46E5',
+  secondary: '#10B981',
+  danger: '#EF4444',
+  warning: '#F59E0B',
+  info: '#3B82F6',
+  dark: '#111827',
+  light: '#F9FAFB',
+  border: '#E5E7EB'
+};
+
+const CHART_COLORS = ['#4F46E5', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899', '#14B8A6', '#F97316'];
+
+// Modern styling consistent with Upload Page
+const styles = {
+  page: { minHeight: "100vh", background: "linear-gradient(to bottom, #f8fafc, #ffffff)" },
+  container: { maxWidth: 1400, margin: "0 auto", padding: 20 },
+  h1: { fontSize: "2.5rem", fontWeight: 800, color: "#111827", marginBottom: 8, textAlign: "center" },
+  card: { 
+    background: "#fff", 
+    border: "1px solid #e5e7eb", 
+    boxShadow: "0 4px 6px rgba(0,0,0,.04)", 
+    borderRadius: 16, 
+    padding: 24,
+    marginBottom: 20
+  },
+  sectionTitle: {
+    fontSize: "1.25rem",
+    fontWeight: 700,
+    color: "#111827",
+    marginBottom: 16,
+    display: "flex",
+    alignItems: "center",
+    gap: 8
+  },
+  inputGroup: {
+    marginBottom: 16
+  },
+  label: {
+    display: "block",
+    fontSize: 14,
+    fontWeight: 600,
+    color: "#374151",
+    marginBottom: 6
+  },
+  input: {
+    width: "100%",
+    padding: "10px 14px",
+    border: "2px solid #e5e7eb",
+    borderRadius: 8,
+    fontSize: 14,
+    transition: "border-color 0.2s",
+    outline: "none",
+  },
+  button: {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: 8,
+    padding: "12px 24px",
+    background: "linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)",
+    color: "#fff",
+    border: "none",
+    borderRadius: 10,
+    fontSize: 15,
+    fontWeight: 600,
+    cursor: "pointer",
+    transition: "all 0.2s ease",
+  },
+  homeButton: {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: 8,
+    padding: "10px 18px",
+    background: "#ffffff",
+    color: "#374151",
+    border: "1px solid #e5e7eb",
+    borderRadius: 10,
+    fontSize: 14,
+    fontWeight: 600,
+    cursor: "pointer",
+    transition: "all 0.2s ease",
+    boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
+  },
+};
 
 const ManualUnderwritePage = ({ setCurrentPage }) => {
   // User tracking state
@@ -101,6 +187,17 @@ const ManualUnderwritePage = ({ setCurrentPage }) => {
     annualizedAmount: 0,
     annualizedROIPercent: 0
   });
+
+  // Value Add Calculator state
+  const [valueAddScenarios, setValueAddScenarios] = useState([
+    {
+      id: 1,
+      raisedRent: 100,
+      capRate: 13,
+      unitCount: 6,
+      rehabCostPerUnit: 10000
+    }
+  ]);
 
   // AI Chat state
   const [showAIChat, setShowAIChat] = useState(false);
@@ -1578,6 +1675,200 @@ const ManualUnderwritePage = ({ setCurrentPage }) => {
                 </tbody>
               </table>
             </div>
+          </div>
+        </div>
+
+        {/* VALUE ADD CALCULATOR - Full Width Section */}
+        <div style={{
+          ...styles.card,
+          marginTop: 24,
+          background: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)',
+          border: '2px solid #f59e0b',
+          padding: 24
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+            <h3 style={{ fontSize: 24, fontWeight: 700, color: '#1e293b', margin: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <TrendingUp size={28} color="#f59e0b" />
+              Value Add Calculator
+            </h3>
+            <button
+              onClick={() => setValueAddScenarios([...valueAddScenarios, {
+                id: Date.now(),
+                raisedRent: 100,
+                capRate: 13,
+                unitCount: 6,
+                rehabCostPerUnit: 10000
+              }])}
+              style={{
+                padding: '10px 20px',
+                background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+                color: 'white',
+                border: 'none',
+                borderRadius: 8,
+                fontWeight: 600,
+                cursor: 'pointer',
+                fontSize: 14
+              }}
+            >
+              + Add Scenario
+            </button>
+          </div>
+
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: 0, background: 'white', borderRadius: 12, overflow: 'hidden' }}>
+              <thead>
+                <tr style={{ background: 'linear-gradient(135deg, #374151 0%, #1f2937 100%)' }}>
+                  <th style={{ padding: 16, fontSize: 13, fontWeight: 700, color: 'white', textAlign: 'left' }}>Raised Rent ($/Unit)</th>
+                  <th style={{ padding: 16, fontSize: 13, fontWeight: 700, color: 'white', textAlign: 'left' }}>Cap Rate (%)</th>
+                  <th style={{ padding: 16, fontSize: 13, fontWeight: 700, color: 'white', textAlign: 'left' }}>Unit Count</th>
+                  <th style={{ padding: 16, fontSize: 13, fontWeight: 700, color: 'white', textAlign: 'left' }}>Rehab Cost/Unit ($)</th>
+                  <th style={{ padding: 16, fontSize: 13, fontWeight: 700, color: 'white', textAlign: 'right' }}>Value Add/Unit ($)</th>
+                  <th style={{ padding: 16, fontSize: 13, fontWeight: 700, color: 'white', textAlign: 'right' }}>Total Value Add ($)</th>
+                  <th style={{ padding: 16, fontSize: 13, fontWeight: 700, color: 'white', textAlign: 'right' }}>Total Rehab Cost ($)</th>
+                  <th style={{ padding: 16, fontSize: 13, fontWeight: 700, color: 'white', textAlign: 'right' }}>Equity Created ($)</th>
+                  <th style={{ padding: 16, fontSize: 13, fontWeight: 700, color: 'white', textAlign: 'right' }}>ROI on Rehab (%)</th>
+                  <th style={{ padding: 16, fontSize: 13, fontWeight: 700, color: 'white', textAlign: 'center' }}>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {valueAddScenarios.map((scenario, index) => {
+                  // Calculate Value Add per Unit: (Monthly Rent Increase × 12) ÷ Cap Rate
+                  const valueAddPerUnit = (scenario.raisedRent * 12) / (scenario.capRate / 100);
+                  
+                  // Calculate Total Value Add: Value Add per Unit × Unit Count
+                  const totalValueAdd = valueAddPerUnit * scenario.unitCount;
+                  
+                  // Calculate Total Rehab Cost: Cost per Unit × Unit Count
+                  const totalRehabCost = scenario.rehabCostPerUnit * scenario.unitCount;
+                  
+                  // Calculate Equity Created: Total Value Add - Total Rehab Cost
+                  const equityCreated = totalValueAdd - totalRehabCost;
+                  
+                  // Calculate ROI on Rehab: (Equity Created ÷ Total Rehab Cost) × 100
+                  const roiOnRehab = totalRehabCost > 0 ? (equityCreated / totalRehabCost) * 100 : 0;
+
+                  return (
+                    <tr key={scenario.id} style={{ borderBottom: '1px solid #e5e7eb' }}>
+                      <td style={{ padding: 12 }}>
+                        <input
+                          type="number"
+                          value={scenario.raisedRent}
+                          onChange={(e) => {
+                            const newScenarios = [...valueAddScenarios];
+                            newScenarios[index].raisedRent = parseFloat(e.target.value) || 0;
+                            setValueAddScenarios(newScenarios);
+                          }}
+                          style={{ width: '100%', padding: 8, border: '1px solid #d1d5db', borderRadius: 6, fontSize: 14 }}
+                        />
+                      </td>
+                      <td style={{ padding: 12 }}>
+                        <input
+                          type="number"
+                          value={scenario.capRate}
+                          onChange={(e) => {
+                            const newScenarios = [...valueAddScenarios];
+                            newScenarios[index].capRate = parseFloat(e.target.value) || 0;
+                            setValueAddScenarios(newScenarios);
+                          }}
+                          step="0.1"
+                          style={{ width: '100%', padding: 8, border: '1px solid #d1d5db', borderRadius: 6, fontSize: 14 }}
+                        />
+                      </td>
+                      <td style={{ padding: 12 }}>
+                        <input
+                          type="number"
+                          value={scenario.unitCount}
+                          onChange={(e) => {
+                            const newScenarios = [...valueAddScenarios];
+                            newScenarios[index].unitCount = parseInt(e.target.value) || 0;
+                            setValueAddScenarios(newScenarios);
+                          }}
+                          style={{ width: '100%', padding: 8, border: '1px solid #d1d5db', borderRadius: 6, fontSize: 14 }}
+                        />
+                      </td>
+                      <td style={{ padding: 12 }}>
+                        <input
+                          type="number"
+                          value={scenario.rehabCostPerUnit}
+                          onChange={(e) => {
+                            const newScenarios = [...valueAddScenarios];
+                            newScenarios[index].rehabCostPerUnit = parseFloat(e.target.value) || 0;
+                            setValueAddScenarios(newScenarios);
+                          }}
+                          style={{ width: '100%', padding: 8, border: '1px solid #d1d5db', borderRadius: 6, fontSize: 14 }}
+                        />
+                      </td>
+                      <td style={{ padding: 12, textAlign: 'right', fontWeight: 600, color: '#059669' }}>
+                        ${valueAddPerUnit.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </td>
+                      <td style={{ padding: 12, textAlign: 'right', fontWeight: 700, fontSize: 15, color: '#059669' }}>
+                        ${totalValueAdd.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </td>
+                      <td style={{ padding: 12, textAlign: 'right', fontWeight: 600, color: '#dc2626' }}>
+                        ${totalRehabCost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </td>
+                      <td style={{ padding: 12, textAlign: 'right', fontWeight: 700, fontSize: 15, color: equityCreated >= 0 ? '#16a34a' : '#dc2626' }}>
+                        ${equityCreated.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </td>
+                      <td style={{ padding: 12, textAlign: 'right', fontWeight: 700, fontSize: 15, color: roiOnRehab >= 100 ? '#16a34a' : roiOnRehab >= 50 ? '#eab308' : '#dc2626' }}>
+                        {roiOnRehab.toFixed(2)}%
+                      </td>
+                      <td style={{ padding: 12, textAlign: 'center' }}>
+                        <button
+                          onClick={() => {
+                            setValueAddScenarios(valueAddScenarios.filter((_, i) => i !== index));
+                          }}
+                          style={{
+                            padding: '6px 12px',
+                            background: '#ef4444',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: 6,
+                            fontWeight: 600,
+                            cursor: 'pointer',
+                            fontSize: 12
+                          }}
+                        >
+                          Delete
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+              <tfoot>
+                <tr style={{ background: '#f9fafb', fontWeight: 700 }}>
+                  <td colSpan="5" style={{ padding: 16, textAlign: 'right', fontSize: 14, color: '#374151' }}>
+                    TOTAL ACROSS ALL SCENARIOS:
+                  </td>
+                  <td style={{ padding: 16, textAlign: 'right', fontSize: 16, color: '#059669', fontWeight: 800 }}>
+                    ${valueAddScenarios.reduce((sum, s) => sum + ((s.raisedRent * 12) / (s.capRate / 100)) * s.unitCount, 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </td>
+                  <td style={{ padding: 16, textAlign: 'right', fontSize: 16, color: '#dc2626', fontWeight: 800 }}>
+                    ${valueAddScenarios.reduce((sum, s) => sum + (s.rehabCostPerUnit * s.unitCount), 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </td>
+                  <td style={{ padding: 16, textAlign: 'right', fontSize: 16, color: '#16a34a', fontWeight: 800 }}>
+                    ${valueAddScenarios.reduce((sum, s) => {
+                      const totalValueAdd = ((s.raisedRent * 12) / (s.capRate / 100)) * s.unitCount;
+                      const totalRehabCost = s.rehabCostPerUnit * s.unitCount;
+                      return sum + (totalValueAdd - totalRehabCost);
+                    }, 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </td>
+                  <td colSpan="2"></td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+
+          <div style={{ marginTop: 20, padding: 16, background: 'white', borderRadius: 12, border: '1px solid #e5e7eb' }}>
+            <h4 style={{ fontSize: 16, fontWeight: 700, marginBottom: 12, color: '#374151' }}>💡 Formula Explanation:</h4>
+            <ul style={{ margin: 0, paddingLeft: 20, color: '#64748b', fontSize: 14, lineHeight: 1.8 }}>
+              <li><strong>Value Add per Unit</strong> = (Raised Rent × 12) ÷ Cap Rate</li>
+              <li><strong>Total Value Add</strong> = Value Add per Unit × Unit Count</li>
+              <li><strong>Total Rehab Cost</strong> = Rehab Cost per Unit × Unit Count</li>
+              <li><strong>Equity Created</strong> = Total Value Add - Total Rehab Cost</li>
+              <li><strong>ROI on Rehab</strong> = (Equity Created ÷ Total Rehab Cost) × 100</li>
+            </ul>
           </div>
         </div>
 
