@@ -1,92 +1,87 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Calculator, DollarSign, Building, TrendingUp, FileText, BarChart3, Download, Home, MessageCircle, Send, Bot, User, PieChart as PieChartIcon } from 'lucide-react';
-import { PieChart, Pie, Cell, BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, RadialBarChart, RadialBar, Area, AreaChart } from 'recharts';
+import { ArrowLeft, Calculator, DollarSign, Building, TrendingUp, FileText, BarChart3, Download, Activity, Bot, User, Send } from 'lucide-react';
+import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, LineChart, Line, CartesianGrid, Legend } from 'recharts';
 import { supabase } from './lib/supabase';
-
-// Modern color palette matching Upload Page
-const COLORS = {
-  primary: '#4F46E5',
-  secondary: '#10B981',
-  danger: '#EF4444',
-  warning: '#F59E0B',
-  info: '#3B82F6',
-  dark: '#111827',
-  light: '#F9FAFB',
-  border: '#E5E7EB'
-};
-
-const CHART_COLORS = ['#4F46E5', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899', '#14B8A6', '#F97316'];
 
 // Modern styling consistent with Upload Page
 const styles = {
   page: { minHeight: "100vh", background: "linear-gradient(to bottom, #f8fafc, #ffffff)" },
-  container: { maxWidth: 1400, margin: "0 auto", padding: 20 },
-  h1: { fontSize: "2.5rem", fontWeight: 800, color: "#111827", marginBottom: 8, textAlign: "center" },
+  container: { maxWidth: 1400, margin: "0 auto", padding: 16 },
+  h1: { fontSize: "1.75rem", fontWeight: 800, color: "#111827", marginBottom: 4, textAlign: "center" },
   card: { 
     background: "#fff", 
     border: "1px solid #e5e7eb", 
-    boxShadow: "0 4px 6px rgba(0,0,0,.04)", 
-    borderRadius: 16, 
-    padding: 20,
-    marginBottom: 10
+    boxShadow: "0 2px 4px rgba(0,0,0,.03)", 
+    borderRadius: 12, 
+    padding: 14,
+    marginBottom: 8
   },
   sectionTitle: {
-    fontSize: "1rem",
+    fontSize: "0.9rem",
     fontWeight: 700,
     color: "#111827",
-    marginBottom: 12,
+    marginBottom: 8,
     display: "flex",
     alignItems: "center",
-    gap: 8
+    gap: 6
   },
   inputGroup: {
-    marginBottom: 12
+    marginBottom: 8
   },
   label: {
     display: "block",
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: 600,
     color: "#374151",
-    marginBottom: 4
+    marginBottom: 3
   },
   input: {
     width: "100%",
-    padding: "8px 10px",
-    border: "1px solid #e5e7eb",
+    padding: "6px 8px",
+    border: "1px solid #d1d5db",
     borderRadius: 6,
-    fontSize: 13,
+    fontSize: 12,
     transition: "border-color 0.2s",
     outline: "none",
   },
   smallCard: {
     background: "#fff",
     border: "1px solid #e5e7eb",
-    borderRadius: 12,
-    padding: 16,
-    boxShadow: "0 1px 3px rgba(0,0,0,0.05)"
+    borderRadius: 10,
+    padding: 12,
+    boxShadow: "0 1px 2px rgba(0,0,0,0.04)"
   },
   sectionHeader: {
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: 700,
     color: "#111827",
-    marginBottom: 12,
+    marginBottom: 8,
     display: "flex",
     alignItems: "center",
-    gap: 6
+    gap: 5
   },
   button: {
     display: "inline-flex",
     alignItems: "center",
-    gap: 8,
-    padding: "12px 24px",
+    gap: 6,
+    padding: "8px 18px",
     background: "linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)",
     color: "#fff",
     border: "none",
-    borderRadius: 10,
-    fontSize: 15,
+    borderRadius: 8,
+    fontSize: 13,
     fontWeight: 600,
     cursor: "pointer",
     transition: "all 0.2s ease",
+  },
+  readOnlyInput: {
+    width: "100%",
+    padding: "6px 8px",
+    border: "1px solid #e5e7eb",
+    borderRadius: 6,
+    fontSize: 12,
+    background: "#f9fafb",
+    color: "#6b7280",
   },
   homeButton: {
     display: "inline-flex",
@@ -107,7 +102,7 @@ const styles = {
 
 const ManualUnderwritePage = ({ setCurrentPage }) => {
   // User tracking state
-  const [currentUser, setCurrentUser] = useState(null);
+  const [, setCurrentUser] = useState(null); // User tracking for analytics only
   const [loading, setLoading] = useState(true);
 
   // Initial state with all fields from spreadsheet - UNCHANGED
@@ -890,15 +885,14 @@ const ManualUnderwritePage = ({ setCurrentPage }) => {
     { name: 'Other', value: parseFloat(formData.electrical) + parseFloat(formData.water) + parseFloat(formData.sewer) + parseFloat(formData.trash) + parseFloat(formData.gas), color: '#64748b' }
   ].filter(item => item.value > 0);
 
-  // Sensitivity Analysis Data
-  const cashFlowReturns = [5, 6, 7, 8, 9, 10, 11, 12];
-  const exitReturns = [8, 9, 10, 11, 12, 13, 14, 15, 16];
-
-  const getCellColor = (cash, exit) => {
-    const total = cash + exit;
-    const cashRatio = cash / total;
-    return cashRatio >= 0.5 ? '#dcfce7' : '#fee2e2'; // green if balanced, red if exit-heavy
-  };
+  // Unused variables removed (sensitivity analysis now uses chart instead of table)
+  // const cashFlowReturns = [5, 6, 7, 8, 9, 10, 11, 12];
+  // const exitReturns = [8, 9, 10, 11, 12, 13, 14, 15, 16];
+  // const getCellColor = (cash, exit) => {
+  //   const total = cash + exit;
+  //   const cashRatio = cash / total;
+  //   return cashRatio >= 0.5 ? '#dcfce7' : '#fee2e2';
+  // };
 
   const leverageColor = calculations.capRate > calculations.loanConstant ? '#16a34a' : '#dc2626';
 
@@ -976,16 +970,16 @@ const ManualUnderwritePage = ({ setCurrentPage }) => {
           </div>
         </div>
 
-        {/* Main Grid Layout */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 16 }}>
+        {/* Main Input Grid - Clean 3 Column Layout */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 20 }}>
           
-          {/* Price Section */}
+          {/* LEFT: Price & Financing */}
           <div style={styles.smallCard}>
             <h3 style={styles.sectionHeader}>
-              <DollarSign size={18} /> Price
+              <DollarSign size={16} /> Price & Financing
             </h3>
             
-            <div style={{ marginBottom: 10 }}>
+            <div style={{ marginBottom: 12 }}>
               <label style={styles.label}>Purchase Price</label>
               <input
                 type="number"
@@ -995,7 +989,7 @@ const ManualUnderwritePage = ({ setCurrentPage }) => {
               />
             </div>
             
-            <div style={{ marginBottom: 10 }}>
+            <div style={{ marginBottom: 12 }}>
               <label style={styles.label}>Down Payment %</label>
               <input
                 type="number"
@@ -1005,7 +999,7 @@ const ManualUnderwritePage = ({ setCurrentPage }) => {
               />
             </div>
             
-            <div style={{ marginBottom: 10 }}>
+            <div style={{ marginBottom: 12 }}>
               <label style={styles.label}>Interest Rate %</label>
               <input
                 type="number"
@@ -1016,7 +1010,7 @@ const ManualUnderwritePage = ({ setCurrentPage }) => {
               />
             </div>
             
-            <div style={{ marginBottom: 10 }}>
+            <div style={{ marginBottom: 12 }}>
               <label style={styles.label}>Term (Years)</label>
               <input
                 type="number"
@@ -1026,7 +1020,62 @@ const ManualUnderwritePage = ({ setCurrentPage }) => {
               />
             </div>
             
-            <div style={{ marginBottom: 10 }}>
+            <div style={{ marginBottom: 0 }}>
+              <label style={styles.label}>Monthly Payment</label>
+              <div style={{ ...styles.readOnlyInput, fontWeight: 600, background: "#fef3c7", border: "2px solid #f59e0b", fontSize: 15 }}>
+                ${calculations.monthlyPayment.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </div>
+            </div>
+          </div>
+
+          {/* MIDDLE: Seller Finance */}
+          <div style={styles.smallCard}>
+            <h3 style={styles.sectionHeader}>
+              <FileText size={16} /> Seller Finance
+            </h3>
+            
+            <div style={{ marginBottom: 12 }}>
+              <label style={styles.label}>Seller Price</label>
+              <input
+                type="number"
+                value={formData.purchasePrice}
+                onChange={(e) => handleInputChange('purchasePrice', parseFloat(e.target.value) || 0)}
+                style={styles.input}
+              />
+            </div>
+            
+            <div style={{ marginBottom: 6 }}>
+              <label style={styles.label}>Down Payment %</label>
+              <input
+                type="number"
+                value={formData.downPaymentPercent}
+                onChange={(e) => handleInputChange('downPaymentPercent', parseFloat(e.target.value) || 0)}
+                style={styles.input}
+              />
+            </div>
+            
+            <div style={{ marginBottom: 6 }}>
+              <label style={styles.label}>Interest Rate %</label>
+              <input
+                type="number"
+                value={formData.interestRate}
+                onChange={(e) => handleInputChange('interestRate', parseFloat(e.target.value) || 0)}
+                step="0.01"
+                style={styles.input}
+              />
+            </div>
+            
+            <div style={{ marginBottom: 6 }}>
+              <label style={styles.label}>Term (Years)</label>
+              <input
+                type="number"
+                value={formData.term}
+                onChange={(e) => handleInputChange('term', parseInt(e.target.value) || 0)}
+                style={styles.input}
+              />
+            </div>
+            
+            <div style={{ marginBottom: 6 }}>
               <label style={styles.label}>Financing</label>
               <input
                 type="text"
@@ -1036,9 +1085,9 @@ const ManualUnderwritePage = ({ setCurrentPage }) => {
               />
             </div>
             
-            <div style={{ marginBottom: 10 }}>
+            <div style={{ marginBottom: 6 }}>
               <label style={styles.label}>Monthly Payment</label>
-              <div style={{ ...styles.readOnlyInput, fontWeight: 600, background: "#fef3c7", border: "2px solid #f59e0b" }}>
+              <div style={{ ...styles.readOnlyInput, fontWeight: 600, background: "#fef3c7", border: "1px solid #f59e0b" }}>
                 ${calculations.monthlyPayment.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </div>
             </div>
@@ -1697,14 +1746,14 @@ const ManualUnderwritePage = ({ setCurrentPage }) => {
         {/* VALUE ADD CALCULATOR - Full Width Section */}
         <div style={{
           ...styles.card,
-          marginTop: 24,
-          background: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)',
-          border: '2px solid #f59e0b',
-          padding: 24
+          marginTop: 16,
+          background: '#ffffff',
+          border: '1px solid #e5e7eb',
+          padding: 20
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-            <h3 style={{ fontSize: 24, fontWeight: 700, color: '#1e293b', margin: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
-              <TrendingUp size={28} color="#f59e0b" />
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+            <h3 style={{ fontSize: 18, fontWeight: 700, color: '#111827', margin: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <TrendingUp size={20} color="#4F46E5" />
               Value Add Calculator
             </h3>
             <button
@@ -1716,14 +1765,14 @@ const ManualUnderwritePage = ({ setCurrentPage }) => {
                 rehabCostPerUnit: 10000
               }])}
               style={{
-                padding: '10px 20px',
-                background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+                padding: '8px 16px',
+                background: 'linear-gradient(135deg, #4F46E5 0%, #3730a3 100%)',
                 color: 'white',
                 border: 'none',
                 borderRadius: 8,
                 fontWeight: 600,
                 cursor: 'pointer',
-                fontSize: 14
+                fontSize: 13
               }}
             >
               + Add Scenario
@@ -1888,147 +1937,168 @@ const ManualUnderwritePage = ({ setCurrentPage }) => {
           </div>
         </div>
 
-        {/* Summary Returns Box - Full Width */}
+        {/* Summary Returns Box - Compact */}
         <div style={{ 
           ...styles.card, 
-          background: "linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)", 
-          border: "2px solid #0ea5e9",
-          marginTop: 16
+          background: "#ffffff", 
+          border: "1px solid #e5e7eb",
+          marginTop: 12,
+          padding: 16
         }}>
-          <h3 style={{ fontSize: 24, fontWeight: 700, marginBottom: 12, color: "#1e293b", textAlign: "center" }}>
+          <h3 style={{ fontSize: 15, fontWeight: 700, marginBottom: 12, color: "#111827", display: 'flex', alignItems: 'center', gap: 6 }}>
+            <Activity size={16} color="#4F46E5" />
             Cash Flow - Cash on Cash Return
           </h3>
           
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 32 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '280px 1fr', gap: 20 }}>
             {/* Left side - Main metrics */}
-            <div style={{ textAlign: "center", padding: 24 }}>
+            <div style={{ textAlign: "center", padding: 16, background: '#f9fafb', borderRadius: 10, border: '1px solid #e5e7eb' }}>
               <div style={{ 
-                fontSize: 64, 
+                fontSize: 48, 
                 fontWeight: 800, 
                 color: calculations.cashOnCashReturn >= 8 ? '#16a34a' : calculations.cashOnCashReturn >= 5 ? '#eab308' : '#dc2626',
                 lineHeight: 1,
-                marginBottom: 8
+                marginBottom: 4
               }}>
                 {calculations.cashOnCashReturn.toFixed(2)}%
               </div>
-              <div style={{ fontSize: 14, color: "#64748b", marginBottom: 24 }}>
+              <div style={{ fontSize: 12, color: "#64748b", marginBottom: 16 }}>
                 per year
               </div>
               
-              <div style={{ display: 'grid', gap: 12 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 16px', background: '#fff', borderRadius: 8, border: '1px solid #e2e8f0' }}>
-                  <span style={{ color: '#64748b', fontSize: 14 }}>ROI:</span>
-                  <span style={{ fontWeight: 600, fontSize: 14 }}>{calculations.roi.toFixed(2)}%</span>
+              <div style={{ display: 'grid', gap: 8 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 12px', background: '#fff', borderRadius: 6, border: '1px solid #e2e8f0' }}>
+                  <span style={{ color: '#64748b', fontSize: 12 }}>ROI:</span>
+                  <span style={{ fontWeight: 600, fontSize: 12 }}>{calculations.roi.toFixed(2)}%</span>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 16px', background: '#fff', borderRadius: 8, border: '1px solid #e2e8f0' }}>
-                  <span style={{ color: '#64748b', fontSize: 14 }}>Monthly Cash Flow:</span>
-                  <span style={{ fontWeight: 600, fontSize: 14 }}>${calculations.cashFlow.toFixed(2)}</span>
+                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 12px', background: '#fff', borderRadius: 6, border: '1px solid #e2e8f0' }}>
+                  <span style={{ color: '#64748b', fontSize: 12 }}>Monthly Cash Flow:</span>
+                  <span style={{ fontWeight: 600, fontSize: 12 }}>${calculations.cashFlow.toFixed(2)}</span>
                 </div>
               </div>
             </div>
             
             {/* Right side - Detailed breakdown */}
             <div>
-              <div style={{ marginBottom: 12, padding: 16, background: '#fff', borderRadius: 12, border: '1px solid #e2e8f0' }}>
-                <h4 style={{ fontSize: 16, fontWeight: 600, marginBottom: 12, color: '#475569' }}>
-                  Debt Reduction
-                </h4>
-                <div style={{ fontSize: 14, color: '#64748b' }}>
-                  ${calculations.yearlyPayment.toFixed(2)} - Debt reduced from total debt service
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 10 }}>
+                <div style={{ padding: 12, background: '#f8fafc', borderRadius: 8, border: '1px solid #e2e8f0' }}>
+                  <h4 style={{ fontSize: 13, fontWeight: 600, marginBottom: 6, color: '#475569' }}>
+                    Debt Reduction
+                  </h4>
+                  <div style={{ fontSize: 12, color: '#64748b' }}>
+                    ${calculations.yearlyPayment.toFixed(2)} - Debt reduced from total debt service
+                  </div>
+                </div>
+                
+                <div style={{ padding: 12, background: '#f8fafc', borderRadius: 8, border: '1px solid #e2e8f0' }}>
+                  <h4 style={{ fontSize: 13, fontWeight: 600, marginBottom: 6, color: '#475569' }}>
+                    Appreciation
+                  </h4>
+                  <div style={{ fontSize: 12, color: '#64748b', marginBottom: 4 }}>
+                    ${calculations.appreciation.toFixed(2)} - 3% annual appreciation
+                  </div>
+                  <div style={{ fontSize: 11, color: '#64748b' }}>
+                    ROI: {calculations.roi.toFixed(2)}%
+                  </div>
                 </div>
               </div>
               
-              <div style={{ marginBottom: 12, padding: 16, background: '#fff', borderRadius: 12, border: '1px solid #e2e8f0' }}>
-                <h4 style={{ fontSize: 16, fontWeight: 600, marginBottom: 12, color: '#475569' }}>
-                  Appreciation
+              <div style={{ padding: 14, background: '#ffffff', borderRadius: 10, border: '2px solid #10b981' }}>
+                <h4 style={{ fontSize: 14, fontWeight: 700, marginBottom: 8, color: '#1e293b' }}>
+                  Year 1 Total Return Summary
                 </h4>
-                <div style={{ fontSize: 14, color: '#64748b', marginBottom: 8 }}>
-                  ${calculations.appreciation.toFixed(2)} - 3% annual appreciation on property
+                <div style={{ display: 'grid', gap: 6, fontSize: 12 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid #e5e7eb' }}>
+                    <span style={{ color: '#64748b' }}>Cash Flow</span>
+                    <div style={{ textAlign: 'right' }}>
+                      <span style={{ fontWeight: 600, marginRight: 12 }}>{calculations.cashOnCashReturn.toFixed(2)}%</span>
+                      <span style={{ color: '#64748b' }}>${(calculations.cashFlow * 12).toFixed(2)}</span>
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid #e5e7eb' }}>
+                    <span style={{ color: '#64748b' }}>Debt Reduction</span>
+                    <div style={{ textAlign: 'right' }}>
+                      <span style={{ fontWeight: 600, marginRight: 12 }}>{(calculations.yearlyPayment / calculations.totalInvestment * 100).toFixed(2)}%</span>
+                      <span style={{ color: '#64748b' }}>${calculations.yearlyPayment.toFixed(2)}</span>
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid #e5e7eb' }}>
+                    <span style={{ color: '#64748b' }}>Appreciation</span>
+                    <div style={{ textAlign: 'right' }}>
+                      <span style={{ fontWeight: 600, marginRight: 12 }}>{(calculations.appreciation / calculations.totalInvestment * 100).toFixed(2)}%</span>
+                      <span style={{ color: '#64748b' }}>${calculations.appreciation.toFixed(2)}</span>
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', marginTop: 4, background: '#ecfdf5', marginLeft: -14, marginRight: -14, paddingLeft: 14, paddingRight: 14, borderRadius: '0 0 8px 8px' }}>
+                    <span style={{ fontWeight: 700, color: '#065f46' }}>Total ROI Year 1</span>
+                    <div style={{ textAlign: 'right' }}>
+                      <span style={{ fontWeight: 700, marginRight: 12, color: '#065f46' }}>{calculations.roi.toFixed(2)}%</span>
+                      <span style={{ fontWeight: 700, color: '#065f46' }}>${calculations.totalReturnYear1.toFixed(2)}</span>
+                    </div>
+                  </div>
                 </div>
-                <div style={{ fontSize: 14, color: '#64748b' }}>
-                  ROI: {calculations.roi.toFixed(2)}%
-                </div>
-              </div>
-              
-              <div style={{ padding: 20, background: 'linear-gradient(135deg, #dcfce7, #bbf7d0)', borderRadius: 12, border: '2px solid #16a34a' }}>
-                <h4 style={{ fontSize: 18, fontWeight: 700, marginBottom: 10, color: '#1e293b' }}>
-                  Summarized Return on Investment After Year 1
-                </h4>
-                <table style={{ width: '100%', fontSize: 13 }}>
-                  <tbody>
-                    <tr>
-                      <td style={{ paddingBottom: 8 }}>{calculations.cashOnCashReturn.toFixed(2)}%</td>
-                      <td style={{ textAlign: 'right', paddingBottom: 8 }}>${(calculations.cashFlow * 12).toFixed(2)}</td>
-                      <td style={{ textAlign: 'right', paddingBottom: 8 }}>Cash Flow</td>
-                    </tr>
-                    <tr>
-                      <td style={{ paddingBottom: 8 }}>{(calculations.yearlyPayment / calculations.totalInvestment * 100).toFixed(2)}%</td>
-                      <td style={{ textAlign: 'right', paddingBottom: 8 }}>${calculations.yearlyPayment.toFixed(2)}</td>
-                      <td style={{ textAlign: 'right', paddingBottom: 8 }}>Debt Reduction</td>
-                    </tr>
-                    <tr>
-                      <td style={{ paddingBottom: 8 }}>{(calculations.appreciation / calculations.totalInvestment * 100).toFixed(2)}%</td>
-                      <td style={{ textAlign: 'right', paddingBottom: 8 }}>${calculations.appreciation.toFixed(2)}</td>
-                      <td style={{ textAlign: 'right', paddingBottom: 8 }}>Appreciation</td>
-                    </tr>
-                    <tr style={{ borderTop: '2px solid #16a34a', fontWeight: 700 }}>
-                      <td style={{ paddingTop: 12 }}>{calculations.roi.toFixed(2)}%</td>
-                      <td style={{ textAlign: 'right', paddingTop: 12 }}>${calculations.totalReturnYear1.toFixed(2)}</td>
-                      <td style={{ textAlign: 'right', paddingTop: 12 }}>Total Return on Investment for Year 1</td>
-                    </tr>
-                  </tbody>
-                </table>
               </div>
             </div>
           </div>
         </div>
 
         {/* Charts Row */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginTop: 16 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14, marginTop: 16 }}>
           
           {/* Income vs Expenses Pie Chart */}
           <div style={styles.card}>
             <h3 style={styles.sectionHeader}>
               Monthly Income Breakdown
             </h3>
-            <ResponsiveContainer width="100%" height={200}>
+            <ResponsiveContainer width="100%" height={220}>
               <PieChart>
                 <Pie
                   data={[
-                    { name: 'NOI', value: calculations.effectiveGrossIncome - (calculations.totalMonthlyExpenses - calculations.monthlyVacancy), color: '#10b981' },
-                    { name: 'Expenses', value: calculations.totalMonthlyExpenses - calculations.monthlyVacancy, color: '#ef4444' },
-                    { name: 'Vacancy', value: calculations.monthlyVacancy, color: '#f59e0b' }
+                    { name: 'NOI', value: calculations.effectiveGrossIncome - (calculations.totalMonthlyExpenses - calculations.monthlyVacancy), color: '#10B981' },
+                    { name: 'Expenses', value: calculations.totalMonthlyExpenses - calculations.monthlyVacancy, color: '#EF4444' },
+                    { name: 'Vacancy', value: calculations.monthlyVacancy, color: '#F59E0B' }
                   ]}
                   cx="50%"
                   cy="50%"
-                  innerRadius={35}
-                  outerRadius={70}
-                  paddingAngle={2}
+                  innerRadius={45}
+                  outerRadius={80}
+                  paddingAngle={3}
                   dataKey="value"
+                  label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                  labelLine={false}
                 >
                   {[
-                    { name: 'NOI', value: calculations.effectiveGrossIncome - (calculations.totalMonthlyExpenses - calculations.monthlyVacancy), color: '#10b981' },
-                    { name: 'Expenses', value: calculations.totalMonthlyExpenses - calculations.monthlyVacancy, color: '#ef4444' },
-                    { name: 'Vacancy', value: calculations.monthlyVacancy, color: '#f59e0b' }
+                    { name: 'NOI', value: calculations.effectiveGrossIncome - (calculations.totalMonthlyExpenses - calculations.monthlyVacancy), color: '#10B981' },
+                    { name: 'Expenses', value: calculations.totalMonthlyExpenses - calculations.monthlyVacancy, color: '#EF4444' },
+                    { name: 'Vacancy', value: calculations.monthlyVacancy, color: '#F59E0B' }
                   ].map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
                 </Pie>
-                <Tooltip formatter={(value) => `${parseFloat(value).toFixed(2)}`} />
+                <Tooltip formatter={(value) => `$${parseFloat(value).toFixed(2)}`} />
               </PieChart>
             </ResponsiveContainer>
-            <div style={{ fontSize: 12, marginTop: 12 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                <div style={{ width: 12, height: 12, backgroundColor: '#10b981', borderRadius: 2 }}></div>
-                <span>NOI: ${(calculations.effectiveGrossIncome - (calculations.totalMonthlyExpenses - calculations.monthlyVacancy)).toFixed(2)}</span>
+            <div style={{ fontSize: 11, marginTop: 10, display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <div style={{ width: 10, height: 10, backgroundColor: '#10B981', borderRadius: 2 }}></div>
+                  <span style={{ color: '#6b7280' }}>NOI</span>
+                </div>
+                <span style={{ fontWeight: 600 }}>${(calculations.effectiveGrossIncome - (calculations.totalMonthlyExpenses - calculations.monthlyVacancy)).toFixed(2)}</span>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                <div style={{ width: 12, height: 12, backgroundColor: '#ef4444', borderRadius: 2 }}></div>
-                <span>Expenses: ${(calculations.totalMonthlyExpenses - calculations.monthlyVacancy).toFixed(2)}</span>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <div style={{ width: 10, height: 10, backgroundColor: '#EF4444', borderRadius: 2 }}></div>
+                  <span style={{ color: '#6b7280' }}>Expenses</span>
+                </div>
+                <span style={{ fontWeight: 600 }}>${(calculations.totalMonthlyExpenses - calculations.monthlyVacancy).toFixed(2)}</span>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <div style={{ width: 12, height: 12, backgroundColor: '#f59e0b', borderRadius: 2 }}></div>
-                <span>Vacancy: ${calculations.monthlyVacancy.toFixed(2)}</span>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <div style={{ width: 10, height: 10, backgroundColor: '#F59E0B', borderRadius: 2 }}></div>
+                  <span style={{ color: '#6b7280' }}>Vacancy</span>
+                </div>
+                <span style={{ fontWeight: 600 }}>${calculations.monthlyVacancy.toFixed(2)}</span>
               </div>
             </div>
           </div>
@@ -2038,24 +2108,32 @@ const ManualUnderwritePage = ({ setCurrentPage }) => {
             <h3 style={styles.sectionHeader}>
               Year 1 Return Components
             </h3>
-            <ResponsiveContainer width="100%" height={200}>
+            <ResponsiveContainer width="100%" height={220}>
               <BarChart
                 data={[
-                  { name: 'Cash Flow', value: calculations.cashFlow * 12, fill: '#10b981' },
-                  { name: 'Debt Pay', value: calculations.yearlyPayment, fill: '#06b6d4' },
-                  { name: 'Appreciation', value: calculations.appreciation, fill: '#8b5cf6' }
+                  { name: 'Cash Flow', value: calculations.cashFlow * 12, fill: '#10B981' },
+                  { name: 'Debt Pay', value: calculations.yearlyPayment, fill: '#3B82F6' },
+                  { name: 'Appreciation', value: calculations.appreciation, fill: '#8B5CF6' }
                 ]}
-                margin={{ top: 5, right: 5, left: 5, bottom: 5 }}
+                margin={{ top: 10, right: 10, left: 10, bottom: 5 }}
               >
-                <XAxis dataKey="name" tick={{ fontSize: 12 }} />
-                <YAxis tick={{ fontSize: 12 }} />
-                <Tooltip formatter={(value) => `${parseFloat(value).toFixed(0)}`} />
-                <Bar dataKey="value" radius={[4, 4, 0, 0]} />
+                <XAxis dataKey="name" tick={{ fontSize: 11 }} stroke="#9ca3af" />
+                <YAxis tick={{ fontSize: 11 }} stroke="#9ca3af" />
+                <Tooltip formatter={(value) => `$${parseFloat(value).toFixed(0)}`} contentStyle={{ borderRadius: 8, border: '1px solid #e5e7eb' }} />
+                <Bar dataKey="value" radius={[6, 6, 0, 0]}>
+                  {[
+                    { name: 'Cash Flow', value: calculations.cashFlow * 12, fill: '#10B981' },
+                    { name: 'Debt Pay', value: calculations.yearlyPayment, fill: '#3B82F6' },
+                    { name: 'Appreciation', value: calculations.appreciation, fill: '#8B5CF6' }
+                  ].map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.fill} />
+                  ))}
+                </Bar>
               </BarChart>
             </ResponsiveContainer>
-            <div style={{ textAlign: 'center', marginTop: 16, padding: 16, background: '#f0f9ff', borderRadius: 8 }}>
-              <div style={{ fontSize: 12, color: '#64748b', marginBottom: 4 }}>Total Year 1 Return</div>
-              <div style={{ fontSize: 20, fontWeight: 700, color: '#0ea5e9' }}>
+            <div style={{ textAlign: 'center', marginTop: 12, padding: 12, background: '#f9fafb', borderRadius: 8, border: '1px solid #e5e7eb' }}>
+              <div style={{ fontSize: 11, color: '#6b7280', marginBottom: 3 }}>Total Year 1 Return</div>
+              <div style={{ fontSize: 18, fontWeight: 700, color: '#4F46E5' }}>
                 ${calculations.totalReturnYear1.toFixed(2)}
               </div>
             </div>
@@ -2066,7 +2144,7 @@ const ManualUnderwritePage = ({ setCurrentPage }) => {
             <h3 style={styles.sectionHeader}>
               Current vs Market Rents
             </h3>
-            <ResponsiveContainer width="100%" height={200}>
+            <ResponsiveContainer width="100%" height={220}>
               <BarChart
                 data={[
                   { 
@@ -2113,36 +2191,41 @@ const ManualUnderwritePage = ({ setCurrentPage }) => {
         </div>
 
         {/* Additional Charts Row */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 16, marginTop: 16 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 14, marginTop: 16 }}>
           
           {/* Expense Breakdown Pie Chart */}
           <div style={styles.card}>
             <h3 style={styles.sectionHeader}>
               Monthly Expense Breakdown
             </h3>
-            <ResponsiveContainer width="100%" height={200}>
+            <ResponsiveContainer width="100%" height={240}>
               <PieChart>
                 <Pie
                   data={expenseData}
                   cx="50%"
                   cy="50%"
-                  innerRadius={35}
-                  outerRadius={70}
-                  paddingAngle={2}
+                  innerRadius={50}
+                  outerRadius={85}
+                  paddingAngle={3}
                   dataKey="value"
+                  label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                  labelLine={false}
                 >
                   {expenseData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
                 </Pie>
-                <Tooltip formatter={(value) => `${parseFloat(value).toFixed(2)}`} />
+                <Tooltip formatter={(value) => `$${parseFloat(value).toFixed(2)}`} contentStyle={{ borderRadius: 8, border: '1px solid #e5e7eb' }} />
               </PieChart>
             </ResponsiveContainer>
-            <div style={{ fontSize: 12, marginTop: 12 }}>
+            <div style={{ fontSize: 11, marginTop: 10, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
               {expenseData.map((entry, index) => (
-                <div key={index} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-                  <div style={{ width: 12, height: 12, backgroundColor: entry.color, borderRadius: 2 }}></div>
-                  <span>{entry.name}: ${entry.value.toFixed(2)}</span>
+                <div key={index} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '4px 6px', background: '#f9fafb', borderRadius: 4 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <div style={{ width: 8, height: 8, backgroundColor: entry.color, borderRadius: 2 }}></div>
+                    <span style={{ color: '#6b7280', fontSize: 10 }}>{entry.name}</span>
+                  </div>
+                  <span style={{ fontWeight: 600, fontSize: 10 }}>${entry.value.toFixed(0)}</span>
                 </div>
               ))}
             </div>
@@ -2153,40 +2236,42 @@ const ManualUnderwritePage = ({ setCurrentPage }) => {
             <h3 style={styles.sectionHeader}>
               Investment Allocation
             </h3>
-            <ResponsiveContainer width="100%" height={200}>
+            <ResponsiveContainer width="100%" height={240}>
               <PieChart>
                 <Pie
                   data={[
-                    { name: 'Down Payment', value: calculations.downPayment, color: '#0ea5e9' },
-                    { name: 'Loan Amount', value: calculations.loanAmount, color: '#64748b' },
-                    { name: 'Closing Costs', value: parseFloat(formData.closingCosts), color: '#fbbf24' }
+                    { name: 'Down Payment', value: calculations.downPayment, color: '#4F46E5' },
+                    { name: 'Loan Amount', value: calculations.loanAmount, color: '#6B7280' },
+                    { name: 'Closing Costs', value: parseFloat(formData.closingCosts), color: '#F59E0B' }
                   ]}
                   cx="50%"
                   cy="50%"
-                  innerRadius={35}
-                  outerRadius={70}
-                  paddingAngle={2}
+                  innerRadius={50}
+                  outerRadius={85}
+                  paddingAngle={3}
                   dataKey="value"
+                  label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                  labelLine={false}
                 >
                   {[
-                    { name: 'Down Payment', value: calculations.downPayment, color: '#0ea5e9' },
-                    { name: 'Loan Amount', value: calculations.loanAmount, color: '#64748b' },
-                    { name: 'Closing Costs', value: parseFloat(formData.closingCosts), color: '#fbbf24' }
+                    { name: 'Down Payment', value: calculations.downPayment, color: '#4F46E5' },
+                    { name: 'Loan Amount', value: calculations.loanAmount, color: '#6B7280' },
+                    { name: 'Closing Costs', value: parseFloat(formData.closingCosts), color: '#F59E0B' }
                   ].map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
                 </Pie>
-                <Tooltip formatter={(value) => `${parseFloat(value).toLocaleString()}`} />
+                <Tooltip formatter={(value) => `$${parseFloat(value).toLocaleString()}`} contentStyle={{ borderRadius: 8, border: '1px solid #e5e7eb' }} />
               </PieChart>
             </ResponsiveContainer>
-            <div style={{ fontSize: 12, marginTop: 12 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8, padding: '8px 0', borderBottom: '1px solid #f3f4f6' }}>
-                <span style={{ color: '#64748b' }}>Total Investment:</span>
-                <span style={{ fontWeight: 600 }}>${calculations.totalInvestment.toLocaleString()}</span>
+            <div style={{ fontSize: 11, marginTop: 10 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8, padding: '10px 12px', background: '#f9fafb', borderRadius: 6 }}>
+                <span style={{ color: '#6b7280', fontWeight: 600 }}>Total Investment:</span>
+                <span style={{ fontWeight: 700, color: '#111827' }}>${calculations.totalInvestment.toLocaleString()}</span>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ color: '#64748b' }}>LTV:</span>
-                <span style={{ fontWeight: 600 }}>{(100 - formData.downPaymentPercent).toFixed(0)}%</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 12px', background: '#f9fafb', borderRadius: 6 }}>
+                <span style={{ color: '#6b7280', fontWeight: 600 }}>LTV:</span>
+                <span style={{ fontWeight: 700, color: '#111827' }}>{(100 - formData.downPaymentPercent).toFixed(0)}%</span>
               </div>
             </div>
           </div>
@@ -2195,44 +2280,54 @@ const ManualUnderwritePage = ({ setCurrentPage }) => {
         {/* Analysis Sections */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 16, marginTop: 16 }}>
           
-          {/* Sensitivity Analysis Matrix */}
+          {/* Interactive Sensitivity Analysis */}
           <div style={styles.card}>
             <h3 style={styles.sectionHeader}>
-              Sensitivity Analysis: Total IRR (Cash Flow % + Exit %)
+              IRR Sensitivity Analysis
             </h3>
-            <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 400 }}>
-                <thead>
-                  <tr style={{ background: '#f8fafc' }}>
-                    <th style={{ padding: 12, fontSize: 12, fontWeight: 600, color: '#475569', border: '1px solid #e2e8f0' }}>Exit \ Cash Flow</th>
-                    {cashFlowReturns.map(cash => (
-                      <th key={cash} style={{ padding: 12, fontSize: 12, fontWeight: 600, color: '#475569', border: '1px solid #e2e8f0' }}>{cash}%</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {exitReturns.map(exit => (
-                    <tr key={exit}>
-                      <td style={{ padding: 12, fontSize: 12, fontWeight: 600, border: '1px solid #e2e8f0', background: '#f8fafc' }}>{exit}%</td>
-                      {cashFlowReturns.map(cash => {
-                        const total = cash + exit;
-                        return (
-                          <td key={cash} style={{ 
-                            padding: 12, 
-                            fontSize: 12, 
-                            border: '1px solid #e2e8f0', 
-                            backgroundColor: getCellColor(cash, exit), 
-                            textAlign: 'center',
-                            fontWeight: 600
-                          }}>
-                            {total}%
-                          </td>
-                        );
-                      })}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div style={{ fontSize: 12, color: '#64748b', marginBottom: 12 }}>
+              Hover over the chart to see detailed IRR scenarios
+            </div>
+            <ResponsiveContainer width="100%" height={280}>
+              <LineChart data={[
+                { exitReturn: '8%', cf5: 13, cf7: 15, cf9: 17, cf11: 19, cf13: 21 },
+                { exitReturn: '10%', cf5: 15, cf7: 17, cf9: 19, cf11: 21, cf13: 23 },
+                { exitReturn: '12%', cf5: 17, cf7: 19, cf9: 21, cf11: 23, cf13: 25 },
+                { exitReturn: '14%', cf5: 19, cf7: 21, cf9: 23, cf11: 25, cf13: 27 },
+                { exitReturn: '16%', cf5: 21, cf7: 23, cf9: 25, cf11: 27, cf13: 29 }
+              ]}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <XAxis 
+                  dataKey="exitReturn" 
+                  tick={{ fontSize: 11, fill: '#64748b' }}
+                  label={{ value: 'Exit Return %', position: 'insideBottom', offset: -5, fontSize: 12, fill: '#475569' }}
+                />
+                <YAxis 
+                  tick={{ fontSize: 11, fill: '#64748b' }}
+                  label={{ value: 'Total IRR %', angle: -90, position: 'insideLeft', fontSize: 12, fill: '#475569' }}
+                />
+                <Tooltip 
+                  contentStyle={{ 
+                    background: '#fff', 
+                    border: '1px solid #e5e7eb', 
+                    borderRadius: 8,
+                    boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+                  }}
+                  formatter={(value) => [`${value}%`, 'IRR']}
+                />
+                <Legend 
+                  wrapperStyle={{ fontSize: 11 }}
+                  formatter={(value) => value.replace('cf', 'Cash Flow ')}
+                />
+                <Line type="monotone" dataKey="cf5" stroke="#ef4444" strokeWidth={2} name="cf5%" dot={{ r: 3 }} />
+                <Line type="monotone" dataKey="cf7" stroke="#f59e0b" strokeWidth={2} name="cf7%" dot={{ r: 3 }} />
+                <Line type="monotone" dataKey="cf9" stroke="#eab308" strokeWidth={2} name="cf9%" dot={{ r: 3 }} />
+                <Line type="monotone" dataKey="cf11" stroke="#10b981" strokeWidth={2} name="cf11%" dot={{ r: 3 }} />
+                <Line type="monotone" dataKey="cf13" stroke="#3b82f6" strokeWidth={2} name="cf13%" dot={{ r: 3 }} />
+              </LineChart>
+            </ResponsiveContainer>
+            <div style={{ fontSize: 11, color: '#64748b', marginTop: 12, padding: '10px 12px', background: '#f8fafc', borderRadius: 6 }}>
+              💡 <strong>Insight:</strong> Higher exit returns and cash flows significantly improve total IRR. Target 20%+ for strong deals.
             </div>
           </div>
 
