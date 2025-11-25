@@ -31,7 +31,7 @@ HAS_PARSER_V4 = False
 load_dotenv()
 
 # Configurable Anthropic model name (set ANTHROPIC_MODEL in env to override)
-ANTHROPIC_MODEL = os.getenv("ANTHROPIC_MODEL", "claude-3-5-sonnet-latest")
+ANTHROPIC_MODEL = os.getenv("ANTHROPIC_MODEL", "claude-3-5-sonnet-20241022")
 
 # ---------------- Config / Keys ----------------
 MISTRAL_API_KEY = os.getenv("MISTRAL_API_KEY")

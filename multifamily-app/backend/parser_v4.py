@@ -18,7 +18,7 @@ if not MISTRAL_API_KEY or not CLAUDE_API_KEY:
 
 mistral_client = Mistral(api_key=MISTRAL_API_KEY)
 anthropic_client = Anthropic(api_key=CLAUDE_API_KEY)
-ANTHROPIC_MODEL = os.getenv("ANTHROPIC_MODEL", "claude-3-5-sonnet-latest")
+ANTHROPIC_MODEL = os.getenv("ANTHROPIC_MODEL", "claude-3-5-sonnet-20241022")
 
 class RealEstateParser:
     """Parser for real estate offering memorandums and financial documents"""
