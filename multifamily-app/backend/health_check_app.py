@@ -32,7 +32,7 @@ MISTRAL = Mistral(api_key=MISTRAL_API_KEY)
 ANTHROPIC = Anthropic(api_key=CLAUDE_API_KEY)
 
 # Configurable Anthropic model name (set ANTHROPIC_MODEL in env to override)
-ANTHROPIC_MODEL = os.getenv("ANTHROPIC_MODEL", "claude-3-5-sonnet-latest")
+ANTHROPIC_MODEL = os.getenv("ANTHROPIC_MODEL", "claude-3-haiku-20240307")
 
 ALLOWED_ORIGINS = [o.strip() for o in (os.getenv("ALLOWED_ORIGINS") or "*").split(",")]
 MAX_BYTES = 50 * 1024 * 1024

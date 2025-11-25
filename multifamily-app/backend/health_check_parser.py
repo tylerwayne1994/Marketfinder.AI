@@ -11,7 +11,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-ANTHROPIC_MODEL = os.getenv("ANTHROPIC_MODEL", "claude-3-5-sonnet-latest")
+ANTHROPIC_MODEL = os.getenv("ANTHROPIC_MODEL", "claude-3-haiku-20240307")
 
 class HealthCheckParser:
     def __init__(self):
