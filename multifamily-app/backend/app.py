@@ -30,6 +30,9 @@ HAS_PARSER_V4 = False
 
 load_dotenv()
 
+# Configurable Anthropic model name (set ANTHROPIC_MODEL in env to override)
+ANTHROPIC_MODEL = os.getenv("ANTHROPIC_MODEL", "claude-3-5-sonnet-latest")
+
 # ---------------- Config / Keys ----------------
 MISTRAL_API_KEY = os.getenv("MISTRAL_API_KEY")
 # support both env names
@@ -242,7 +245,7 @@ Return ONLY JSON. Extract EVERYTHING into this schema.
 
     try:
         res = ANTHROPIC.messages.create(
-            model="claude-3-5-sonnet-20241022",
+            model=ANTHROPIC_MODEL,
             max_tokens=4000,
             temperature=0,
             messages=[{"role": "user", "content": prompt}],
@@ -789,7 +792,7 @@ def _calculate_deal_metrics(d: Dict[str, Any]) -> Dict[str, Any]:
     
     try:
         res = ANTHROPIC.messages.create(
-            model="claude-3-5-sonnet-20241022",
+            model=ANTHROPIC_MODEL,
             max_tokens=600,
             temperature=0,
             messages=[{"role": "user", "content": prompt}],
@@ -974,7 +977,7 @@ Return ONLY the JSON object, no additional text.
 
    try:
        response = ANTHROPIC.messages.create(
-           model="claude-3-5-sonnet-20241022",
+           model=ANTHROPIC_MODEL,
            max_tokens=4000,
            temperature=0,
            messages=[{"role": "user", "content": prompt}],
