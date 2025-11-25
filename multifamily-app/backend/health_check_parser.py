@@ -11,6 +11,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+ANTHROPIC_MODEL = os.getenv("ANTHROPIC_MODEL", "claude-3-5-sonnet-latest")
+
 class HealthCheckParser:
     def __init__(self):
         self.mistral = Mistral(api_key=os.getenv("MISTRAL_API_KEY"))
@@ -152,10 +154,10 @@ Return ONLY the JSON object."""
 
         try:
             response = self.anthropic.messages.create(
-                model="claude-3-5-sonnet-20241022",
-                max_tokens=4000,
-                temperature=0,
-                messages=[{"role": "user", "content": prompt}]
+              model=ANTHROPIC_MODEL,
+              max_tokens=4000,
+              temperature=0,
+              messages=[{"role": "user", "content": prompt}]
             )
             
             text = response.content[0].text.strip()
@@ -426,10 +428,10 @@ USE EXACT NUMBERS FROM THIS PROPERTY. NO GENERIC STATEMENTS."""
 
         try:
             response = self.anthropic.messages.create(
-                model="claude-3-5-sonnet-20241022",
-                max_tokens=4000,
-                temperature=0,
-                messages=[{"role": "user", "content": prompt}]
+              model=ANTHROPIC_MODEL,
+              max_tokens=4000,
+              temperature=0,
+              messages=[{"role": "user", "content": prompt}]
             )
             
             text = response.content[0].text.strip()
